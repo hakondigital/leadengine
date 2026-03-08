@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/toast';
 import {
   Inbox,
   Mail,
@@ -20,6 +21,7 @@ import {
   ArrowLeft,
   User,
   Clock,
+  Zap,
 } from 'lucide-react';
 
 type Channel = 'all' | 'email' | 'sms' | 'chat' | 'phone';
@@ -116,6 +118,14 @@ export default function InboxPage() {
   const [replyText, setReplyText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [replySending, setReplySending] = useState(false);
+  const { success: showSuccess } = useToast();
+
+  const replyTemplates = [
+    { label: 'Thank you', text: 'Thank you for reaching out! I\'ll get back to you shortly with more details.' },
+    { label: 'Schedule call', text: 'I\'d love to discuss this further. Would you be available for a quick call this week?' },
+    { label: 'Quote follow-up', text: 'Just following up on the quote I sent. Please let me know if you have any questions.' },
+    { label: 'Availability', text: 'Thanks for your inquiry! We have availability next week. What day works best for you?' },
+  ];
 
   const filtered = messages.filter((m) => {
     const channelMatch = activeChannel === 'all' || m.channel === activeChannel;
@@ -336,7 +346,20 @@ export default function InboxPage() {
                   </div>
 
                   {/* Reply area */}
-                  <div className="border-t border-[var(--le-border-subtle)] p-4">
+                  <div className="border-t border-[var(--le-border-subtle)] p-4 space-y-2">
+                    {/* Quick reply templates */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                      <Zap className="w-3 h-3 text-[var(--le-text-muted)] shrink-0" />
+                      {replyTemplates.map((t) => (
+                        <button
+                          key={t.label}
+                          onClick={() => setReplyText(t.text)}
+                          className="shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-accent-muted)] hover:text-[var(--le-accent)] transition-colors"
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <textarea
@@ -355,6 +378,7 @@ export default function InboxPage() {
                             await sendReply(selectedId, replyText);
                           }
                           setReplyText('');
+                          showSuccess('Reply sent');
                         } finally {
                           setReplySending(false);
                         }

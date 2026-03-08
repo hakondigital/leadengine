@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
 import {
   Image,
   Plus,
@@ -53,6 +54,7 @@ export default function PortfolioPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [projectSaving, setProjectSaving] = useState(false);
   const [projectForm, setProjectForm] = useState({ title: '', category: '', location: '', description: '' });
+  const { success: showSuccess } = useToast();
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -130,6 +132,7 @@ export default function PortfolioPage() {
       }
       setShowAddModal(false);
       setProjectForm({ title: '', category: '', location: '', description: '' });
+      showSuccess('Project added');
     } finally {
       setProjectSaving(false);
     }

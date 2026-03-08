@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
 import {
   Star,
   Send,
@@ -20,6 +21,8 @@ import {
   User,
   ExternalLink,
   CheckCircle2,
+  Filter,
+  Download,
 } from 'lucide-react';
 
 interface Review {
@@ -84,6 +87,9 @@ export default function ReviewsPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replySending, setReplySending] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
+  const { success: showSuccess } = useToast();
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -105,9 +111,28 @@ export default function ReviewsPage() {
       }))
     : mockReviews;
 
+  const filteredReviews = reviews.filter((r) => {
+    if (platformFilter !== 'all' && r.platform !== platformFilter) return false;
+    if (ratingFilter > 0 && r.rating !== ratingFilter) return false;
+    return true;
+  });
+
   const totalReviews = reviews.length;
   const avgRating = fetchedReviews.length > 0 ? averageRating.toFixed(1) : (reviews.reduce((a, r) => a + r.rating, 0) / (totalReviews || 1)).toFixed(1);
   const pendingReplies = reviews.filter((r) => !r.replied).length;
+
+  const exportReviewsCSV = () => {
+    const header = 'Reviewer,Rating,Platform,Date,Replied,Review\n';
+    const rows = reviews.map((r) => `"${r.reviewerName}",${r.rating},${r.platform},${r.date},${r.replied},"${r.text.replace(/"/g, '""')}"`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reviews-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showSuccess('Reviews exported');
+  };
 
   const stats = [
     { label: 'Total Reviews', value: totalReviews.toString(), icon: MessageSquare, color: '#5B8DEF' },
@@ -127,10 +152,16 @@ export default function ReviewsPage() {
               Monitor and manage your online reputation
             </p>
           </div>
-          <Button size="sm" onClick={() => setShowRequestModal(true)}>
-            <Send className="w-3.5 h-3.5" />
-            Request Review
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={exportReviewsCSV}>
+              <Download className="w-3.5 h-3.5" />
+              Export
+            </Button>
+            <Button size="sm" onClick={() => setShowRequestModal(true)}>
+              <Send className="w-3.5 h-3.5" />
+              Request Review
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -177,17 +208,51 @@ export default function ReviewsPage() {
           ))}
         </div>
 
+        {/* Filters */}
+        {reviews.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+            {['all', 'google', 'facebook', 'yelp', 'website'].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPlatformFilter(p)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                  platformFilter === p
+                    ? 'bg-[var(--le-accent)] text-white'
+                    : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                }`}
+              >
+                {p === 'all' ? 'All' : platformConfig[p]?.label || p}
+              </button>
+            ))}
+            <span className="w-px h-4 bg-[var(--le-border-subtle)]" />
+            {[0, 5, 4, 3, 2, 1].map((r) => (
+              <button
+                key={r}
+                onClick={() => setRatingFilter(r)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  ratingFilter === r
+                    ? 'bg-[var(--le-accent)] text-white'
+                    : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                }`}
+              >
+                {r === 0 ? 'All Stars' : <><Star className="w-2.5 h-2.5" /> {r}</>}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Reviews Grid */}
-        {reviews.length === 0 ? (
+        {filteredReviews.length === 0 ? (
           <EmptyState
             icon={Star}
-            title="No reviews yet"
-            description="Request reviews from your happy customers to build your reputation."
-            action={{ label: 'Request Review', onClick: () => setShowRequestModal(true) }}
+            title={reviews.length === 0 ? 'No reviews yet' : 'No matching reviews'}
+            description={reviews.length === 0 ? 'Request reviews from your happy customers to build your reputation.' : 'Try adjusting your filters.'}
+            action={reviews.length === 0 ? { label: 'Request Review', onClick: () => setShowRequestModal(true) } : { label: 'Clear Filters', onClick: () => { setPlatformFilter('all'); setRatingFilter(0); } }}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {reviews.map((review, i) => {
+            {filteredReviews.map((review, i) => {
               const platform = platformConfig[review.platform];
               return (
                 <motion.div
@@ -253,6 +318,7 @@ export default function ReviewsPage() {
                                 setReplySending(false);
                                 setReplyingTo(null);
                                 setReplyText('');
+                                showSuccess('Reply sent');
                               }
                             }}>
                               <Send className="w-3 h-3" />
@@ -309,6 +375,7 @@ export default function ReviewsPage() {
                       } catch {}
                       setRequestSending(null);
                       setShowRequestModal(false);
+                      showSuccess('Review request sent');
                     }}
                   >
                     <div className="flex items-center gap-3">

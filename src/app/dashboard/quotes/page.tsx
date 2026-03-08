@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
 import {
   FileText,
   Plus,
@@ -23,6 +24,7 @@ import {
   Copy,
   Trash2,
   X,
+  Download,
 } from 'lucide-react';
 
 interface Quote {
@@ -58,6 +60,7 @@ export default function QuotesPage() {
   const { organization } = useOrganization();
   const { quotes: fetchedQuotes, loading, sendQuote, createQuote } = useQuotes(organization?.id);
   const { canUseQuotes, planName, loading: planLoading } = usePlan();
+  const { success: showSuccess } = useToast();
   const [actionsOpen, setActionsOpen] = useState<string | null>(null);
   const [localQuotes, setLocalQuotes] = useState(mockQuotes);
   const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
@@ -120,6 +123,7 @@ export default function QuotesPage() {
       }
       setShowNewQuoteModal(false);
       setQuoteForm({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
+      showSuccess('Quote created successfully');
     } finally {
       setQuoteSaving(false);
     }
@@ -133,6 +137,20 @@ export default function QuotesPage() {
         prev.map((q) => (q.id === quoteId ? { ...q, status: 'sent' as const } : q))
       );
     }
+    showSuccess('Quote sent successfully');
+  };
+
+  const exportQuotesCSV = () => {
+    const header = 'Quote #,Client,Email,Total,Status,Created,Expires\n';
+    const rows = quotes.map((q) => `${q.number},${q.leadName},${q.email},${q.total},${q.status},${q.createdAt},${q.expiresAt}`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quotes-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showSuccess('Quotes exported');
   };
 
   const handleDuplicate = (quote: Quote) => {
@@ -170,10 +188,16 @@ export default function QuotesPage() {
               Create and manage quotes for your leads
             </p>
           </div>
-          <Button size="sm" onClick={openNewQuote}>
-            <Plus className="w-3.5 h-3.5" />
-            New Quote
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={exportQuotesCSV}>
+              <Download className="w-3.5 h-3.5" />
+              Export
+            </Button>
+            <Button size="sm" onClick={openNewQuote}>
+              <Plus className="w-3.5 h-3.5" />
+              New Quote
+            </Button>
+          </div>
         </div>
       </header>
 

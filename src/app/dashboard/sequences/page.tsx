@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
 import {
   Zap,
   Plus,
@@ -23,6 +24,7 @@ import {
   Play,
   Pause,
   Settings,
+  X,
 } from 'lucide-react';
 
 interface SequenceStep {
@@ -123,6 +125,10 @@ export default function SequencesPage() {
   const { sequences: fetchedSequences, loading, createSequence, toggleSequence } = useSequences(organization?.id);
   const [localSequences, setLocalSequences] = useState(mockSequences);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [seqForm, setSeqForm] = useState({ name: '', trigger: 'new_lead' });
+  const [seqSaving, setSeqSaving] = useState(false);
+  const { success: showSuccess } = useToast();
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -161,6 +167,45 @@ export default function SequencesPage() {
       setLocalSequences((prev) =>
         prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s))
       );
+    }
+    const seq = sequences.find((s) => s.id === id);
+    showSuccess(seq?.active ? 'Sequence paused' : 'Sequence activated');
+  };
+
+  const openCreateSequence = () => {
+    setSeqForm({ name: '', trigger: 'new_lead' });
+    setShowCreateModal(true);
+  };
+
+  const handleCreateSequence = async () => {
+    if (!seqForm.name) return;
+    setSeqSaving(true);
+    try {
+      if (fetchedSequences.length > 0) {
+        await createSequence?.({
+          name: seqForm.name,
+          trigger: seqForm.trigger as 'new_lead' | 'status_change' | 'manual',
+          steps: [],
+        });
+      } else {
+        const triggerLabels: Record<string, string> = { new_lead: 'New Lead Created', quote_sent: 'Quote Sent', no_response: 'No Response (7 days)', job_completed: 'Job Completed' };
+        const newSeq: Sequence = {
+          id: `mock-${Date.now()}`,
+          name: seqForm.name,
+          triggerType: seqForm.trigger,
+          triggerLabel: triggerLabels[seqForm.trigger] || seqForm.trigger,
+          stepsCount: 0,
+          activeEnrollments: 0,
+          totalCompleted: 0,
+          active: false,
+          steps: [],
+        };
+        setLocalSequences((prev) => [newSeq, ...prev]);
+      }
+      setShowCreateModal(false);
+      showSuccess('Sequence created');
+    } finally {
+      setSeqSaving(false);
     }
   };
 
@@ -268,7 +313,7 @@ export default function SequencesPage() {
               Automate your lead follow-up with multi-step sequences
             </p>
           </div>
-          <Button size="sm">
+          <Button size="sm" onClick={openCreateSequence}>
             <Plus className="w-3.5 h-3.5" />
             Create Sequence
           </Button>
@@ -287,7 +332,7 @@ export default function SequencesPage() {
             icon={Zap}
             title="No sequences yet"
             description="Create automated follow-up sequences to nurture your leads."
-            action={{ label: 'Create Sequence', onClick: () => {} }}
+            action={{ label: 'Create Sequence', onClick: openCreateSequence }}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -350,6 +395,58 @@ export default function SequencesPage() {
           </div>
         )}
       </div>
+
+      {/* Create Sequence Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Create Sequence</h2>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowCreateModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Sequence Name</label>
+                <input
+                  value={seqForm.name}
+                  onChange={(e) => setSeqForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  placeholder="e.g. New Lead Welcome"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Trigger</label>
+                <select
+                  value={seqForm.trigger}
+                  onChange={(e) => setSeqForm((f) => ({ ...f, trigger: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                >
+                  <option value="new_lead">New Lead Created</option>
+                  <option value="quote_sent">Quote Sent</option>
+                  <option value="no_response">No Response (7 days)</option>
+                  <option value="job_completed">Job Completed</option>
+                </select>
+              </div>
+              <p className="text-xs text-[var(--le-text-muted)]">
+                You can add steps to the sequence after creating it.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+              <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button size="sm" disabled={!seqForm.name || seqSaving} onClick={handleCreateSequence}>
+                {seqSaving ? 'Creating...' : 'Create Sequence'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

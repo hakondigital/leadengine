@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
 import {
   Calendar,
   Plus,
@@ -23,6 +24,10 @@ import {
   MapPin,
   X,
   Loader2,
+  RefreshCw,
+  Copy,
+  Check,
+  Smartphone,
 } from 'lucide-react';
 
 interface Appointment {
@@ -80,6 +85,9 @@ export default function AppointmentsPage() {
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
   const [bookingSaving, setBookingSaving] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncCopied, setSyncCopied] = useState(false);
+  const { success: showSuccess } = useToast();
   const { canUseAppointments, planName, loading: planLoading } = usePlan();
 
   if (planLoading) {
@@ -120,6 +128,8 @@ export default function AppointmentsPage() {
         prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
       );
     }
+    const labels = { confirm: 'Appointment confirmed', complete: 'Appointment completed', cancel: 'Appointment cancelled' };
+    showSuccess(labels[action]);
   };
 
   const handleBook = async () => {
@@ -153,6 +163,7 @@ export default function AppointmentsPage() {
     setBookingSaving(false);
     setShowBookModal(false);
     setBookingForm({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
+    showSuccess('Appointment booked successfully');
   };
 
   const formatHour = (h: number) => {
@@ -172,10 +183,16 @@ export default function AppointmentsPage() {
               Manage your schedule and upcoming bookings
             </p>
           </div>
-          <Button size="sm" onClick={() => setShowBookModal(true)}>
-            <Plus className="w-3.5 h-3.5" />
-            Book New
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowSyncModal(true)}>
+              <RefreshCw className="w-3.5 h-3.5" />
+              Sync Calendar
+            </Button>
+            <Button size="sm" onClick={() => setShowBookModal(true)}>
+              <Plus className="w-3.5 h-3.5" />
+              Book New
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -427,6 +444,105 @@ export default function AppointmentsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Sync Calendar Modal */}
+      {showSyncModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSyncModal(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-[var(--le-bg-secondary)] rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-[var(--le-accent)]" />
+                <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Sync to Your Calendar</h2>
+              </div>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowSyncModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-[var(--le-text-tertiary)]">
+                Subscribe to this calendar feed and all appointments will automatically appear on your phone, tablet, and computer.
+              </p>
+
+              {/* Subscription URL */}
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Calendar Feed URL</label>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={organization?.id ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/calendar/${organization.id}` : 'Sign up to get your calendar feed URL'}
+                    className="flex-1 px-3 py-2 text-xs rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-[var(--le-bg-primary)] text-[var(--le-text-secondary)] font-mono truncate"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!organization?.id}
+                    onClick={() => {
+                      const url = `${window.location.origin}/api/calendar/${organization?.id}`;
+                      navigator.clipboard.writeText(url);
+                      setSyncCopied(true);
+                      setTimeout(() => setSyncCopied(false), 2000);
+                    }}
+                  >
+                    {syncCopied ? <Check className="w-3.5 h-3.5 text-[#4ADE80]" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-[var(--le-text-primary)] uppercase tracking-wider">How to Subscribe</h3>
+
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(66,133,244,0.1)' }}>
+                      <Calendar className="w-3.5 h-3.5" style={{ color: '#4285F4' }} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Google Calendar</p>
+                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                        Settings &rarr; Add calendar &rarr; From URL &rarr; Paste the feed URL
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
+                      <Smartphone className="w-3.5 h-3.5 text-[var(--le-text-secondary)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Apple Calendar (iPhone/Mac)</p>
+                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                        Settings &rarr; Calendar &rarr; Accounts &rarr; Add &rarr; Other &rarr; Add Subscribed Calendar
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(0,120,212,0.1)' }}>
+                      <Calendar className="w-3.5 h-3.5" style={{ color: '#0078D4' }} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Outlook</p>
+                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                        Add calendar &rarr; Subscribe from web &rarr; Paste the feed URL
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-[var(--le-text-muted)] pt-1">
+                Once subscribed, new appointments will sync automatically. Most calendar apps refresh every 15-30 minutes.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrganization } from '@/hooks/use-organization';
+import { useToast } from '@/components/ui/toast';
 import {
   Building2,
   Palette,
@@ -47,8 +48,11 @@ function Toggle({
 
 export default function SettingsPage() {
   const { organization, loading } = useOrganization();
+  const { success, error: showError } = useToast();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [autoQualify, setAutoQualify] = useState(true);
+  const [aiEmailSummary, setAiEmailSummary] = useState(true);
 
   // Form state
   const [orgName, setOrgName] = useState('');
@@ -93,10 +97,13 @@ export default function SettingsPage() {
 
       if (res.ok) {
         setSaved(true);
+        success('Settings saved successfully');
         setTimeout(() => setSaved(false), 3000);
+      } else {
+        showError('Failed to save settings');
       }
     } catch {
-      // silent
+      showError('Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -294,11 +301,11 @@ export default function SettingsPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-[var(--le-text-secondary)]">Auto-qualify new leads</span>
-                <Toggle enabled={true} onChange={() => {}} />
+                <Toggle enabled={autoQualify} onChange={setAutoQualify} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-[var(--le-text-secondary)]">Include AI summary in emails</span>
-                <Toggle enabled={true} onChange={() => {}} />
+                <Toggle enabled={aiEmailSummary} onChange={setAiEmailSummary} />
               </div>
               <div className="pt-2 border-t border-[var(--le-border-subtle)]">
                 <p className="text-xs text-[var(--le-text-muted)]">
