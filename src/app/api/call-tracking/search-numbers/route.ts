@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkFeature } from '@/lib/check-plan';
+import { checkSuperAdmin } from '@/lib/super-admin';
 
 const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
 
@@ -16,10 +17,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
   }
 
-  // Check plan access
-  const featureCheck = await checkFeature(orgId, 'call_tracking');
-  if (!featureCheck.allowed) {
-    return NextResponse.json({ error: 'Call tracking not available on your plan' }, { status: 403 });
+  // Check plan access — super admin bypasses
+  const { isSuperAdmin } = await checkSuperAdmin(request);
+  if (!isSuperAdmin) {
+    const featureCheck = await checkFeature(orgId, 'call_tracking');
+    if (!featureCheck.allowed) {
+      return NextResponse.json({ error: 'Call tracking not available on your plan' }, { status: 403 });
+    }
   }
 
   if (!TELNYX_API_KEY) {

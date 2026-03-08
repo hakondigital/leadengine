@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { checkFeature, checkLimit, countTrackingNumbers } from '@/lib/check-plan';
+import { checkSuperAdmin } from '@/lib/super-admin';
 
 const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
 
@@ -17,23 +18,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check call tracking feature access
-    const featureCheck = await checkFeature(organization_id, 'call_tracking');
-    if (!featureCheck.allowed) {
-      return NextResponse.json(
-        { error: 'Call tracking is not available on your plan. Upgrade to Professional or Enterprise.' },
-        { status: 403 }
-      );
-    }
+    // Super admin bypasses plan checks
+    const { isSuperAdmin } = await checkSuperAdmin(request);
 
-    // Check tracking number limit
-    const numCount = await countTrackingNumbers(organization_id);
-    const limitCheck = await checkLimit(organization_id, 'tracking_numbers', numCount);
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: `Tracking number limit reached (${limitCheck.limit}). Upgrade your plan for more.` },
-        { status: 403 }
-      );
+    if (!isSuperAdmin) {
+      // Check call tracking feature access
+      const featureCheck = await checkFeature(organization_id, 'call_tracking');
+      if (!featureCheck.allowed) {
+        return NextResponse.json(
+          { error: 'Call tracking is not available on your plan. Upgrade to Professional or Enterprise.' },
+          { status: 403 }
+        );
+      }
+
+      // Check tracking number limit
+      const numCount = await countTrackingNumbers(organization_id);
+      const limitCheck = await checkLimit(organization_id, 'tracking_numbers', numCount);
+      if (!limitCheck.allowed) {
+        return NextResponse.json(
+          { error: `Tracking number limit reached (${limitCheck.limit}). Upgrade your plan for more.` },
+          { status: 403 }
+        );
+      }
     }
 
     if (!TELNYX_API_KEY) {
