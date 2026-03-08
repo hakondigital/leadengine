@@ -122,6 +122,7 @@ export default function SequencesPage() {
   const { canUseSequences, planName, loading: planLoading } = usePlan();
   const { sequences: fetchedSequences, loading, createSequence, toggleSequence } = useSequences(organization?.id);
   const [localSequences, setLocalSequences] = useState(mockSequences);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -149,7 +150,6 @@ export default function SequencesPage() {
         })),
       }))
     : localSequences;
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedSequence = sequences.find((s) => s.id === selectedId);
 

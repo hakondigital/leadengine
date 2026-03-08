@@ -57,6 +57,7 @@ export default function QuotesPage() {
   const { organization } = useOrganization();
   const { quotes: fetchedQuotes, loading, sendQuote } = useQuotes(organization?.id);
   const { canUseQuotes, planName, loading: planLoading } = usePlan();
+  const [actionsOpen, setActionsOpen] = useState<string | null>(null);
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -79,7 +80,6 @@ export default function QuotesPage() {
         items: q.line_items?.length || 0,
       }))
     : mockQuotes;
-  const [actionsOpen, setActionsOpen] = useState<string | null>(null);
 
   const totalQuotes = quotes.length;
   const pending = quotes.filter((q) => q.status === 'sent' || q.status === 'viewed').length;

@@ -45,6 +45,7 @@ export default function ROIPage() {
   const { organization } = useOrganization();
   const { channels: fetchedChannels, totalRevenue: hookTotalRevenue, totalSpend: hookTotalSpend, loading } = useROI(organization?.id);
   const { canUseAdvancedAnalytics, planName, loading: planLoading } = usePlan();
+  const [period, setPeriod] = useState('30d');
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -67,7 +68,6 @@ export default function ROIPage() {
         trend: c.roi > 0 ? 'up' as const : c.roi < 0 ? 'down' as const : 'flat' as const,
       }))
     : mockChannels;
-  const [period, setPeriod] = useState('30d');
 
   const totalSpend = channels.reduce((a, c) => a + c.spend, 0);
   const totalRevenue = channels.reduce((a, c) => a + c.revenue, 0);
