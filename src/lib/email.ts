@@ -297,12 +297,23 @@ export async function sendFollowUpEmail(
   });
 }
 
-// Google Review request email
+// Google Review request email — supports custom AI-generated content
 export async function sendReviewRequestEmail(
   lead: Lead,
   org: Organization,
-  reviewLink: string
+  reviewLink: string,
+  customSubject?: string,
+  customBody?: string
 ) {
+  // Convert plain text body to HTML paragraphs if custom body provided
+  const bodyHtml = customBody
+    ? customBody.split('\n\n').map(p => `<p style="margin:0 0 16px;color:#4A5568;font-size:14px;line-height:1.7;">${p.replace(/\n/g, '<br>')}</p>`).join('')
+    : `<p style="margin:0 0 24px;color:#4A5568;font-size:14px;line-height:1.7;">
+        Hi ${lead.first_name}, thanks for choosing ${org.name}! We hope you're happy with the work. If you had a great experience, we'd really appreciate a quick Google review — it helps other people find us.
+      </p>`;
+
+  const heading = customBody ? '' : `<h1 style="margin:0 0 12px;color:#1A2332;font-size:20px;font-weight:600;">How did we go?</h1>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -313,12 +324,8 @@ export async function sendReviewRequestEmail(
       <h2 style="margin:0;color:#1A2332;font-size:18px;font-weight:600;">${org.name}</h2>
     </div>
     <div style="background:#FFFFFF;border:1px solid #EEF1F5;border-radius:12px;padding:32px 24px;text-align:center;box-shadow:0 1px 3px rgba(28,42,58,0.06);">
-      <h1 style="margin:0 0 12px;color:#1A2332;font-size:20px;font-weight:600;">
-        How did we go?
-      </h1>
-      <p style="margin:0 0 24px;color:#4A5568;font-size:14px;line-height:1.7;">
-        Hi ${lead.first_name}, thanks for choosing ${org.name}! We hope you're happy with the work. If you had a great experience, we'd really appreciate a quick Google review — it helps other people find us.
-      </p>
+      ${heading}
+      ${bodyHtml}
       <a href="${reviewLink}" style="display:inline-block;padding:14px 32px;background:#2F3E4F;color:#FFFFFF;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">
         Leave a Review
       </a>
@@ -333,7 +340,7 @@ export async function sendReviewRequestEmail(
   return sendEmail({
     from: `${org.name} <${FROM_EMAIL}>`,
     to: lead.email,
-    subject: `How was your experience? — ${org.name}`,
+    subject: customSubject || `How was your experience? — ${org.name}`,
     html,
   });
 }

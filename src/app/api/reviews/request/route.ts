@@ -6,7 +6,7 @@ import { sendReviewRequestSMS } from '@/lib/sms';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lead_id, channels } = body;
+    const { lead_id, channels, custom_subject, custom_email_body, custom_sms_body } = body;
 
     if (!lead_id) {
       return NextResponse.json({ error: 'lead_id required' }, { status: 400 });
@@ -34,20 +34,28 @@ export async function POST(request: NextRequest) {
     const sendChannels = channels || ['email'];
     const results: Record<string, string> = {};
 
-    // Send email review request
+    // Send email review request (with optional custom content)
     if (sendChannels.includes('email') && lead.email) {
-      const emailResult = await sendReviewRequestEmail(lead, org, reviewLink);
+      const emailResult = await sendReviewRequestEmail(
+        lead,
+        org,
+        reviewLink,
+        custom_subject,
+        custom_email_body
+      );
       results.email = emailResult ? 'sent' : 'failed';
     }
 
-    // Send SMS review request
+    // Send SMS review request (with optional custom body)
     if (sendChannels.includes('sms') && lead.phone) {
-      const smsResult = await sendReviewRequestSMS(
-        lead.phone,
-        lead.first_name,
-        org.name,
-        reviewLink
-      );
+      const smsBody = custom_sms_body
+        ? `${custom_sms_body} ${reviewLink}`
+        : undefined;
+
+      const smsResult = smsBody
+        ? await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink, smsBody)
+        : await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink);
+
       results.sms = smsResult ? 'sent' : 'failed';
 
       // Log SMS

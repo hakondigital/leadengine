@@ -66,6 +66,10 @@ export function useReviews(organizationId: string | undefined) {
     lead_email: string;
     lead_name: string;
     message?: string;
+    channels?: string[];
+    custom_subject?: string;
+    custom_email_body?: string;
+    custom_sms_body?: string;
   }) => {
     if (!organizationId) return null;
 

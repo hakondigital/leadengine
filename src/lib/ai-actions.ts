@@ -406,7 +406,68 @@ Respond in JSON:
   };
 }
 
-// ─── 6. AI CHAT (for lead capture widget) ────────────────────
+// ─── 6. AI REVIEW REQUEST WRITER ────────────────────────────────
+
+export interface ReviewRequestDraft {
+  email_subject: string;
+  email_body: string;
+  sms_body: string;
+}
+
+export async function generateReviewRequest(
+  customerName: string,
+  serviceType: string,
+  orgName: string,
+  tone: 'friendly' | 'professional' | 'casual' = 'friendly'
+): Promise<ReviewRequestDraft> {
+  const toneGuide = {
+    friendly: 'Warm, genuine, and grateful. Like texting a friend — but professional.',
+    professional: 'Polished and courteous. Business-appropriate but not stiff.',
+    casual: 'Very relaxed, conversational, almost like a mate checking in.',
+  };
+
+  const system = `You are writing a review request message on behalf of ${orgName}. Write something genuine that makes the customer feel valued — not like an automated template. Always respond in JSON format.`;
+
+  const prompt = `Write a review request for this customer:
+
+Customer: ${customerName}
+Service completed: ${serviceType}
+Business: ${orgName}
+Tone: ${toneGuide[tone]}
+
+Rules:
+- Reference their specific service naturally
+- Make it feel personal, not automated
+- Don't be pushy or desperate
+- Keep email body to 2-3 short paragraphs
+- SMS must be under 160 characters
+- Don't use "Dear" or "Valued customer"
+- Include a subtle mention that reviews help other people find them
+
+Respond in JSON:
+{
+  "email_subject": "Short, natural subject line (no caps, no exclamation marks)",
+  "email_body": "Email body text (plain text, no HTML). Use their first name. 2-3 short paragraphs. Sign off warmly as ${orgName}.",
+  "sms_body": "SMS version under 160 chars. Casual, genuine."
+}`;
+
+  const result = await callAI(system, prompt);
+  if (result) {
+    try {
+      return JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || result);
+    } catch { /* fall through */ }
+  }
+
+  // Fallback
+  const firstName = customerName.split(' ')[0];
+  return {
+    email_subject: `How did we go, ${firstName}?`,
+    email_body: `Hi ${firstName},\n\nThanks for choosing ${orgName} for your ${serviceType || 'recent project'}. We hope everything turned out great!\n\nIf you have a moment, we'd really appreciate a quick Google review. It helps other people in the area find us, and it means a lot to our team.\n\nCheers,\n${orgName}`,
+    sms_body: `Hey ${firstName}, thanks for choosing ${orgName}! If you had a great experience, a quick review would mean a lot: `,
+  };
+}
+
+// ─── 7. AI CHAT (for lead capture widget) ────────────────────
 
 export async function chatWithLead(
   messages: { role: 'user' | 'assistant'; content: string }[],

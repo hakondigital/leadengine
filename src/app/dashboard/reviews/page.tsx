@@ -23,6 +23,11 @@ import {
   CheckCircle2,
   Filter,
   Download,
+  Sparkles,
+  RefreshCw,
+  Mail,
+  Phone,
+  ChevronRight,
 } from 'lucide-react';
 
 interface Review {
@@ -84,6 +89,13 @@ export default function ReviewsPage() {
   const { canUseReviewRequests, planName, loading: planLoading } = usePlan();
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestSending, setRequestSending] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<WonLead | null>(null);
+  const [reviewChannels, setReviewChannels] = useState<string[]>(['email']);
+  const [reviewSubject, setReviewSubject] = useState('');
+  const [reviewEmailBody, setReviewEmailBody] = useState('');
+  const [reviewSmsBody, setReviewSmsBody] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiTone, setAiTone] = useState<'friendly' | 'professional' | 'casual'>('friendly');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replySending, setReplySending] = useState(false);
@@ -336,66 +348,250 @@ export default function ReviewsPage() {
         )}
       </div>
 
-      {/* Request Review Modal */}
+      {/* Request Review Modal — AI-Powered */}
       {showRequestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowRequestModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowRequestModal(false); setSelectedLead(null); }} />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-lg mx-4 overflow-hidden max-h-[85vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Request Review</h2>
-              <Button variant="ghost" size="icon-sm" onClick={() => setShowRequestModal(false)}>
+              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">
+                {selectedLead ? 'Customise Review Request' : 'Request Review'}
+              </h2>
+              <Button variant="ghost" size="icon-sm" onClick={() => { setShowRequestModal(false); setSelectedLead(null); }}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-5">
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-4">
-                Select a completed lead to send a review request:
-              </p>
-              <div className="space-y-2">
-                {mockWonLeads.map((lead) => (
-                  <button
-                    key={lead.id}
-                    disabled={requestSending === lead.id}
-                    className="w-full flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-bg-tertiary)] transition-colors text-left disabled:opacity-50"
+
+            {!selectedLead ? (
+              /* Step 1: Select a lead */
+              <div className="p-5">
+                <p className="text-sm text-[var(--le-text-tertiary)] mb-4">
+                  Select a completed client to send a review request:
+                </p>
+                <div className="space-y-2">
+                  {mockWonLeads.map((lead) => (
+                    <button
+                      key={lead.id}
+                      className="w-full flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-bg-tertiary)] transition-colors text-left"
+                      onClick={async () => {
+                        setSelectedLead(lead);
+                        setReviewChannels(['email']);
+                        setAiGenerating(true);
+                        try {
+                          const res = await fetch('/api/reviews/generate-message', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              customerName: lead.name,
+                              serviceType: lead.service,
+                              orgName: organization?.name || 'Our Business',
+                              tone: aiTone,
+                            }),
+                          });
+                          if (res.ok) {
+                            const draft = await res.json();
+                            setReviewSubject(draft.email_subject);
+                            setReviewEmailBody(draft.email_body);
+                            setReviewSmsBody(draft.sms_body);
+                          }
+                        } catch {}
+                        setAiGenerating(false);
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--le-bg-tertiary)]">
+                          <User className="w-4 h-4 text-[var(--le-text-muted)]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-[var(--le-text-primary)]">{lead.name}</p>
+                          <p className="text-xs text-[var(--le-text-muted)]">{lead.service}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Step 2: Customise message */
+              <div className="p-5 space-y-4">
+                {/* Selected lead info */}
+                <div className="flex items-center justify-between p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-tertiary)]">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[var(--le-text-muted)]" />
+                    <div>
+                      <p className="text-sm font-medium text-[var(--le-text-primary)]">{selectedLead.name}</p>
+                      <p className="text-[10px] text-[var(--le-text-muted)]">{selectedLead.service}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedLead(null)}>Change</Button>
+                </div>
+
+                {/* Channel selection */}
+                <div>
+                  <p className="text-xs font-medium text-[var(--le-text-secondary)] mb-2">Send via</p>
+                  <div className="flex gap-2">
+                    {[
+                      { id: 'email', label: 'Email', icon: Mail },
+                      { id: 'sms', label: 'SMS', icon: Phone },
+                    ].map((ch) => (
+                      <button
+                        key={ch.id}
+                        onClick={() => {
+                          setReviewChannels((prev) =>
+                            prev.includes(ch.id) ? prev.filter((c) => c !== ch.id) : [...prev, ch.id]
+                          );
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                          reviewChannels.includes(ch.id)
+                            ? 'bg-[var(--le-accent)] text-white border-[var(--le-accent)]'
+                            : 'bg-white text-[var(--le-text-secondary)] border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30'
+                        }`}
+                      >
+                        <ch.icon className="w-3 h-3" />
+                        {ch.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tone + regenerate */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-medium text-[var(--le-text-secondary)]">Tone:</p>
+                    <select
+                      value={aiTone}
+                      onChange={(e) => setAiTone(e.target.value as any)}
+                      className="text-xs px-2 py-1 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)]"
+                    >
+                      <option value="friendly">Friendly</option>
+                      <option value="professional">Professional</option>
+                      <option value="casual">Casual</option>
+                    </select>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={aiGenerating}
                     onClick={async () => {
-                      setRequestSending(lead.id);
+                      setAiGenerating(true);
                       try {
-                        await requestReview({
-                          lead_id: lead.id,
-                          lead_email: lead.email,
-                          lead_name: lead.name,
+                        const res = await fetch('/api/reviews/generate-message', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            customerName: selectedLead.name,
+                            serviceType: selectedLead.service,
+                            orgName: organization?.name || 'Our Business',
+                            tone: aiTone,
+                          }),
                         });
+                        if (res.ok) {
+                          const draft = await res.json();
+                          setReviewSubject(draft.email_subject);
+                          setReviewEmailBody(draft.email_body);
+                          setReviewSmsBody(draft.sms_body);
+                        }
                       } catch {}
-                      setRequestSending(null);
-                      setShowRequestModal(false);
-                      showSuccess('Review request sent');
+                      setAiGenerating(false);
                     }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--le-bg-tertiary)]">
-                        <User className="w-4 h-4 text-[var(--le-text-muted)]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--le-text-primary)]">{lead.name}</p>
-                        <p className="text-xs text-[var(--le-text-muted)]">{lead.service}</p>
-                      </div>
-                    </div>
-                    {requestSending === lead.id ? (
-                      <div className="w-3.5 h-3.5 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+                    {aiGenerating ? (
+                      <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <Send className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                      <RefreshCw className="w-3 h-3" />
                     )}
-                  </button>
-                ))}
+                    {aiGenerating ? 'Generating...' : 'Regenerate'}
+                  </Button>
+                </div>
+
+                {aiGenerating ? (
+                  <div className="flex items-center justify-center py-8 gap-2 text-xs text-[var(--le-text-muted)]">
+                    <Sparkles className="w-4 h-4 text-[var(--le-accent)] animate-pulse" />
+                    AI is writing your message...
+                  </div>
+                ) : (
+                  <>
+                    {/* Email preview */}
+                    {reviewChannels.includes('email') && (
+                      <div>
+                        <p className="text-xs font-medium text-[var(--le-text-secondary)] mb-1">Email subject</p>
+                        <input
+                          value={reviewSubject}
+                          onChange={(e) => setReviewSubject(e.target.value)}
+                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                        />
+                        <p className="text-xs font-medium text-[var(--le-text-secondary)] mt-3 mb-1">Email body</p>
+                        <textarea
+                          value={reviewEmailBody}
+                          onChange={(e) => setReviewEmailBody(e.target.value)}
+                          rows={5}
+                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* SMS preview */}
+                    {reviewChannels.includes('sms') && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-medium text-[var(--le-text-secondary)]">SMS message</p>
+                          <span className={`text-[10px] ${reviewSmsBody.length > 160 ? 'text-red-500' : 'text-[var(--le-text-muted)]'}`}>
+                            {reviewSmsBody.length}/160
+                          </span>
+                        </div>
+                        <textarea
+                          value={reviewSmsBody}
+                          onChange={(e) => setReviewSmsBody(e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Footer actions */}
+            {selectedLead && !aiGenerating && (
+              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+                <Button variant="ghost" size="sm" onClick={() => { setShowRequestModal(false); setSelectedLead(null); }}>Cancel</Button>
+                <Button
+                  size="sm"
+                  disabled={reviewChannels.length === 0 || !!requestSending}
+                  onClick={async () => {
+                    setRequestSending(selectedLead.id);
+                    try {
+                      await requestReview({
+                        lead_id: selectedLead.id,
+                        lead_email: selectedLead.email,
+                        lead_name: selectedLead.name,
+                        channels: reviewChannels,
+                        custom_subject: reviewSubject || undefined,
+                        custom_email_body: reviewEmailBody || undefined,
+                        custom_sms_body: reviewSmsBody || undefined,
+                      });
+                    } catch {}
+                    setRequestSending(null);
+                    setSelectedLead(null);
+                    setShowRequestModal(false);
+                    showSuccess('Review request sent');
+                  }}
+                >
+                  {requestSending ? (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  {requestSending ? 'Sending...' : `Send via ${reviewChannels.join(' & ')}`}
+                </Button>
+              </div>
+            )}
           </motion.div>
         </div>
       )}

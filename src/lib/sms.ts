@@ -101,9 +101,10 @@ export async function sendReviewRequestSMS(
   customerPhone: string,
   customerName: string,
   orgName: string,
-  reviewLink: string
+  reviewLink: string,
+  customBody?: string
 ): Promise<{ id: string } | null> {
-  const message = `Hi ${customerName}, thanks for choosing ${orgName}! If you had a great experience, we'd really appreciate a quick review: ${reviewLink}`;
+  const message = customBody || `Hi ${customerName}, thanks for choosing ${orgName}! If you had a great experience, we'd really appreciate a quick review: ${reviewLink}`;
 
   return sendSMS({ to: customerPhone, body: message });
 }
