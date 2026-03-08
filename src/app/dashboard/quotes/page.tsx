@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Copy,
   Trash2,
+  X,
 } from 'lucide-react';
 
 interface Quote {
@@ -55,9 +56,14 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
 
 export default function QuotesPage() {
   const { organization } = useOrganization();
-  const { quotes: fetchedQuotes, loading, sendQuote } = useQuotes(organization?.id);
+  const { quotes: fetchedQuotes, loading, sendQuote, createQuote } = useQuotes(organization?.id);
   const { canUseQuotes, planName, loading: planLoading } = usePlan();
   const [actionsOpen, setActionsOpen] = useState<string | null>(null);
+  const [localQuotes, setLocalQuotes] = useState(mockQuotes);
+  const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
+  const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
+  const [quoteSaving, setQuoteSaving] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -79,7 +85,66 @@ export default function QuotesPage() {
         expiresAt: q.valid_until?.split('T')[0] || '',
         items: q.line_items?.length || 0,
       }))
-    : mockQuotes;
+    : localQuotes;
+
+  const openNewQuote = () => {
+    setQuoteForm({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
+    setShowNewQuoteModal(true);
+  };
+
+  const handleCreateQuote = async () => {
+    if (!quoteForm.title || !quoteForm.leadName) return;
+    setQuoteSaving(true);
+    try {
+      const amount = parseFloat(quoteForm.amount) || 0;
+      if (fetchedQuotes.length > 0) {
+        await createQuote({
+          lead_id: '',
+          title: quoteForm.title,
+          line_items: [{ description: quoteForm.title, quantity: 1, unit_price: amount, total: amount }],
+          notes: quoteForm.notes || undefined,
+        });
+      } else {
+        const newQuote: Quote = {
+          id: `mock-${Date.now()}`,
+          number: `QT-${String(localQuotes.length + 1).padStart(3, '0')}`,
+          leadName: quoteForm.leadName,
+          email: quoteForm.leadEmail,
+          total: amount,
+          status: 'draft',
+          createdAt: new Date().toISOString().split('T')[0],
+          expiresAt: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+          items: 1,
+        };
+        setLocalQuotes((prev) => [newQuote, ...prev]);
+      }
+      setShowNewQuoteModal(false);
+      setQuoteForm({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
+    } finally {
+      setQuoteSaving(false);
+    }
+  };
+
+  const handleSendQuote = async (quoteId: string) => {
+    if (fetchedQuotes.length > 0) {
+      await sendQuote(quoteId);
+    } else {
+      setLocalQuotes((prev) =>
+        prev.map((q) => (q.id === quoteId ? { ...q, status: 'sent' as const } : q))
+      );
+    }
+  };
+
+  const handleDuplicate = (quote: Quote) => {
+    setQuoteForm({
+      title: `${quote.leadName} - Copy`,
+      leadName: quote.leadName,
+      leadEmail: quote.email,
+      amount: quote.total.toString(),
+      notes: '',
+    });
+    setShowNewQuoteModal(true);
+  };
 
   const totalQuotes = quotes.length;
   const pending = quotes.filter((q) => q.status === 'sent' || q.status === 'viewed').length;
@@ -105,7 +170,7 @@ export default function QuotesPage() {
               Create and manage quotes for your leads
             </p>
           </div>
-          <Button size="sm">
+          <Button size="sm" onClick={openNewQuote}>
             <Plus className="w-3.5 h-3.5" />
             New Quote
           </Button>
@@ -163,7 +228,7 @@ export default function QuotesPage() {
                 icon={FileText}
                 title="No quotes yet"
                 description="Create your first quote to send professional estimates to your leads."
-                action={{ label: 'Create Quote', onClick: () => {} }}
+                action={{ label: 'Create Quote', onClick: openNewQuote }}
               />
             ) : (
               <div className="overflow-x-auto">
@@ -215,15 +280,15 @@ export default function QuotesPage() {
                           </td>
                           <td className="py-3 text-right">
                             <div className="flex items-center justify-end gap-1 relative">
-                              <Button variant="ghost" size="icon-sm" title="View">
+                              <Button variant="ghost" size="icon-sm" title="View" onClick={() => setViewingQuote(quote)}>
                                 <Eye className="w-3.5 h-3.5" />
                               </Button>
                               {quote.status === 'draft' && (
-                                <Button variant="ghost" size="icon-sm" title="Send">
+                                <Button variant="ghost" size="icon-sm" title="Send" onClick={() => handleSendQuote(quote.id)}>
                                   <Send className="w-3.5 h-3.5" />
                                 </Button>
                               )}
-                              <Button variant="ghost" size="icon-sm" title="Duplicate">
+                              <Button variant="ghost" size="icon-sm" title="Duplicate" onClick={() => handleDuplicate(quote)}>
                                 <Copy className="w-3.5 h-3.5" />
                               </Button>
                             </div>
@@ -238,6 +303,153 @@ export default function QuotesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* New Quote Modal */}
+      {showNewQuoteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowNewQuoteModal(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">New Quote</h2>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowNewQuoteModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Quote Title</label>
+                <input
+                  value={quoteForm.title}
+                  onChange={(e) => setQuoteForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  placeholder="e.g. Kitchen Renovation Quote"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Client Name</label>
+                  <input
+                    value={quoteForm.leadName}
+                    onChange={(e) => setQuoteForm((f) => ({ ...f, leadName: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    placeholder="Client name"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Client Email</label>
+                  <input
+                    type="email"
+                    value={quoteForm.leadEmail}
+                    onChange={(e) => setQuoteForm((f) => ({ ...f, leadEmail: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    placeholder="client@email.com"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Amount ($)</label>
+                <input
+                  type="number"
+                  value={quoteForm.amount}
+                  onChange={(e) => setQuoteForm((f) => ({ ...f, amount: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Notes</label>
+                <textarea
+                  value={quoteForm.notes}
+                  onChange={(e) => setQuoteForm((f) => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+              <Button variant="ghost" size="sm" onClick={() => setShowNewQuoteModal(false)}>Cancel</Button>
+              <Button size="sm" disabled={!quoteForm.title || !quoteForm.leadName || quoteSaving} onClick={handleCreateQuote}>
+                {quoteSaving ? 'Creating...' : 'Create Quote'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Quote Modal */}
+      {viewingQuote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setViewingQuote(null)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">{viewingQuote.number}</h2>
+              <Button variant="ghost" size="icon-sm" onClick={() => setViewingQuote(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Client</p>
+                  <p className="text-sm font-medium text-[var(--le-text-primary)] mt-1">{viewingQuote.leadName}</p>
+                  <p className="text-xs text-[var(--le-text-muted)]">{viewingQuote.email}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Status</p>
+                  <span
+                    className="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-[4px] border mt-1"
+                    style={{
+                      color: statusConfig[viewingQuote.status].color,
+                      backgroundColor: statusConfig[viewingQuote.status].bg,
+                      borderColor: statusConfig[viewingQuote.status].border,
+                    }}
+                  >
+                    {statusConfig[viewingQuote.status].label}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Total</p>
+                  <p className="text-xl font-bold text-[var(--le-text-primary)] mt-1">${viewingQuote.total.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Items</p>
+                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.items} line items</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Created</p>
+                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.createdAt}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Expires</p>
+                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.expiresAt}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+              {viewingQuote.status === 'draft' && (
+                <Button size="sm" onClick={() => { handleSendQuote(viewingQuote.id); setViewingQuote(null); }}>
+                  <Send className="w-3.5 h-3.5" />
+                  Send Quote
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setViewingQuote(null)}>Close</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

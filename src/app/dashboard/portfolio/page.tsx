@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   ArrowLeftRight,
+  X,
 } from 'lucide-react';
 
 interface Project {
@@ -42,11 +43,16 @@ const mockProjects: Project[] = [
   { id: '6', title: 'Roof Restoration', location: 'Chatswood, NSW', date: '2026-03-01', category: 'Roofing', featured: false, published: false, beforeLabel: 'Damaged tiles and rusted gutters', afterLabel: 'Restored tiles and new Colorbond gutters' },
 ];
 
+const categories = ['Kitchen', 'Bathroom', 'Painting', 'Outdoor', 'Electrical', 'Roofing', 'Plumbing', 'HVAC', 'General'];
+
 export default function PortfolioPage() {
   const { organization } = useOrganization();
   const { projects: fetchedProjects, loading, createProject, updateProject, deleteProject } = usePortfolio(organization?.id);
   const [localProjects, setLocalProjects] = useState(mockProjects);
   const { canUsePortfolio, planName, loading: planLoading } = usePlan();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [projectSaving, setProjectSaving] = useState(false);
+  const [projectForm, setProjectForm] = useState({ title: '', category: '', location: '', description: '' });
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -92,6 +98,43 @@ export default function PortfolioPage() {
     }
   };
 
+  const openAddProject = () => {
+    setProjectForm({ title: '', category: '', location: '', description: '' });
+    setShowAddModal(true);
+  };
+
+  const handleCreateProject = async () => {
+    if (!projectForm.title) return;
+    setProjectSaving(true);
+    try {
+      if (fetchedProjects.length > 0) {
+        await createProject({
+          title: projectForm.title,
+          category: projectForm.category || undefined,
+          location: projectForm.location || undefined,
+          description: projectForm.description || undefined,
+        });
+      } else {
+        const newProject: Project = {
+          id: `mock-${Date.now()}`,
+          title: projectForm.title,
+          location: projectForm.location,
+          date: new Date().toISOString().split('T')[0],
+          category: projectForm.category,
+          featured: false,
+          published: false,
+          beforeLabel: '',
+          afterLabel: '',
+        };
+        setLocalProjects((prev) => [newProject, ...prev]);
+      }
+      setShowAddModal(false);
+      setProjectForm({ title: '', category: '', location: '', description: '' });
+    } finally {
+      setProjectSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
@@ -104,7 +147,7 @@ export default function PortfolioPage() {
               Showcase your best work with before &amp; after photos
             </p>
           </div>
-          <Button size="sm">
+          <Button size="sm" onClick={openAddProject}>
             <Plus className="w-3.5 h-3.5" />
             Add Project
           </Button>
@@ -123,7 +166,7 @@ export default function PortfolioPage() {
             icon={Image}
             title="No projects yet"
             description="Add your first project with before and after photos to showcase your work."
-            action={{ label: 'Add Project', onClick: () => {} }}
+            action={{ label: 'Add Project', onClick: openAddProject }}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -216,6 +259,76 @@ export default function PortfolioPage() {
           </div>
         )}
       </div>
+
+      {/* Add Project Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Add Project</h2>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowAddModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Project Title</label>
+                <input
+                  value={projectForm.title}
+                  onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  placeholder="e.g. Modern Kitchen Transformation"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Category</label>
+                  <select
+                    value={projectForm.category}
+                    onChange={(e) => setProjectForm((f) => ({ ...f, category: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  >
+                    <option value="">Select...</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Location</label>
+                  <input
+                    value={projectForm.location}
+                    onChange={(e) => setProjectForm((f) => ({ ...f, location: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    placeholder="e.g. Sydney, NSW"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Description</label>
+                <textarea
+                  value={projectForm.description}
+                  onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                  placeholder="Describe the project..."
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+              <Button variant="ghost" size="sm" onClick={() => setShowAddModal(false)}>Cancel</Button>
+              <Button size="sm" disabled={!projectForm.title || projectSaving} onClick={handleCreateProject}>
+                {projectSaving ? 'Adding...' : 'Add Project'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

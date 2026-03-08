@@ -115,6 +115,7 @@ export default function InboxPage() {
   const [activeChannel, setActiveChannel] = useState<Channel>('all');
   const [replyText, setReplyText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [replySending, setReplySending] = useState(false);
 
   const filtered = messages.filter((m) => {
     const channelMatch = activeChannel === 'all' || m.channel === activeChannel;
@@ -346,9 +347,20 @@ export default function InboxPage() {
                           className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] focus:border-transparent resize-none"
                         />
                       </div>
-                      <Button size="sm" disabled={!replyText.trim()}>
+                      <Button size="sm" disabled={!replyText.trim() || replySending} onClick={async () => {
+                        if (!selectedId || !replyText.trim()) return;
+                        setReplySending(true);
+                        try {
+                          if (fetchedMessages.length > 0) {
+                            await sendReply(selectedId, replyText);
+                          }
+                          setReplyText('');
+                        } finally {
+                          setReplySending(false);
+                        }
+                      }}>
                         <Send className="w-3.5 h-3.5" />
-                        Send
+                        {replySending ? 'Sending...' : 'Send'}
                       </Button>
                     </div>
                   </div>

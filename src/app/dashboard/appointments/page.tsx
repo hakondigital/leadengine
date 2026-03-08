@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useAppointments } from '@/hooks/use-appointments';
 import { usePlan } from '@/hooks/use-plan';
@@ -9,6 +9,7 @@ import { UpgradeBanner } from '@/components/upgrade-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   Calendar,
@@ -20,6 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  X,
+  Loader2,
 } from 'lucide-react';
 
 interface Appointment {
@@ -51,15 +54,32 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
   cancelled: { label: 'Cancelled', color: '#C44E56', bg: 'rgba(232,99,108,0.08)' },
 };
 
-const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const weekDates = ['Mar 9', 'Mar 10', 'Mar 11', 'Mar 12', 'Mar 13'];
 const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+
+function getWeekDates(offset: number) {
+  const base = new Date('2026-03-09');
+  base.setDate(base.getDate() + offset * 7);
+  const days: { day: string; date: string; full: string }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + i);
+    days.push({
+      day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      full: d.toISOString().split('T')[0],
+    });
+  }
+  return days;
+}
 
 export default function AppointmentsPage() {
   const { organization } = useOrganization();
-  const { appointments: fetchedAppointments, loading, updateAppointment } = useAppointments(organization?.id);
+  const { appointments: fetchedAppointments, loading, updateAppointment, createAppointment } = useAppointments(organization?.id);
   const [appointments, setAppointments] = useState(mockAppointments);
-  const [showEmpty, setShowEmpty] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [showBookModal, setShowBookModal] = useState(false);
+  const [bookingForm, setBookingForm] = useState({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
+  const [bookingSaving, setBookingSaving] = useState(false);
   const { canUseAppointments, planName, loading: planLoading } = usePlan();
 
   if (planLoading) {
@@ -70,9 +90,11 @@ export default function AppointmentsPage() {
     return <UpgradeBanner feature="Appointments" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  // Map hook data to local shape when available, fall back to mock data
+  const week = getWeekDates(weekOffset);
+  const weekLabel = `${week[0].date} - ${week[4].date}, 2026`;
+
   const activeAppointments: Appointment[] = fetchedAppointments.length > 0
-    ? fetchedAppointments.map((a, i) => ({
+    ? fetchedAppointments.map((a) => ({
         id: a.id,
         leadName: a.lead_name || a.title,
         service: a.title,
@@ -81,21 +103,56 @@ export default function AppointmentsPage() {
         duration: a.duration_minutes,
         status: a.status === 'scheduled' ? 'pending' as const : a.status === 'no_show' ? 'cancelled' as const : a.status,
         location: a.location || '',
-        dayIndex: new Date(a.scheduled_at).getDay() - 1,
+        dayIndex: (() => { const d = new Date(a.scheduled_at).getDay(); return d === 0 ? 6 : d - 1; })(),
         hour: new Date(a.scheduled_at).getHours(),
       }))
     : appointments;
 
-  const todayAppointments = activeAppointments.filter((a) => a.date === '2026-03-09');
+  const todayFull = week[0].full;
+  const todayAppointments = activeAppointments.filter((a) => a.date === todayFull);
 
   const handleAction = (id: string, action: 'confirm' | 'complete' | 'cancel') => {
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? { ...a, status: action === 'confirm' ? 'confirmed' : action === 'complete' ? 'completed' : 'cancelled' }
-          : a
-      )
-    );
+    const newStatus: 'confirmed' | 'completed' | 'cancelled' = action === 'confirm' ? 'confirmed' : action === 'complete' ? 'completed' : 'cancelled';
+    if (fetchedAppointments.length > 0) {
+      updateAppointment(id, newStatus);
+    } else {
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
+      );
+    }
+  };
+
+  const handleBook = async () => {
+    if (!bookingForm.leadName || !bookingForm.service || !bookingForm.date) return;
+    setBookingSaving(true);
+    if (fetchedAppointments.length > 0 || organization?.id) {
+      await createAppointment?.({
+        lead_id: '',
+        title: bookingForm.service,
+        scheduled_at: `${bookingForm.date}T${bookingForm.time}:00`,
+        duration_minutes: parseInt(bookingForm.duration) || 60,
+        location: bookingForm.location,
+        notes: bookingForm.leadName,
+      });
+    } else {
+      const dt = new Date(`${bookingForm.date}T${bookingForm.time}:00`);
+      const newApt: Appointment = {
+        id: Date.now().toString(),
+        leadName: bookingForm.leadName,
+        service: bookingForm.service,
+        date: bookingForm.date,
+        time: dt.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        duration: parseInt(bookingForm.duration) || 60,
+        status: 'pending',
+        location: bookingForm.location,
+        dayIndex: dt.getDay() === 0 ? 6 : dt.getDay() - 1,
+        hour: dt.getHours(),
+      };
+      setAppointments((prev) => [...prev, newApt]);
+    }
+    setBookingSaving(false);
+    setShowBookModal(false);
+    setBookingForm({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
   };
 
   const formatHour = (h: number) => {
@@ -115,7 +172,7 @@ export default function AppointmentsPage() {
               Manage your schedule and upcoming bookings
             </p>
           </div>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowBookModal(true)}>
             <Plus className="w-3.5 h-3.5" />
             Book New
           </Button>
@@ -138,13 +195,13 @@ export default function AppointmentsPage() {
                 <CardTitle>Week View</CardTitle>
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon-sm">
+                <Button variant="ghost" size="icon-sm" onClick={() => setWeekOffset((w) => w - 1)}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <span className="text-xs font-medium text-[var(--le-text-secondary)] px-2">
-                  Mar 9 - Mar 13, 2026
+                  {weekLabel}
                 </span>
-                <Button variant="ghost" size="icon-sm">
+                <Button variant="ghost" size="icon-sm" onClick={() => setWeekOffset((w) => w + 1)}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -156,10 +213,10 @@ export default function AppointmentsPage() {
                 {/* Day headers */}
                 <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-[var(--le-border-subtle)] pb-2 mb-2">
                   <div />
-                  {weekDays.map((day, i) => (
-                    <div key={day} className="text-center">
-                      <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">{day}</p>
-                      <p className="text-xs font-medium text-[var(--le-text-secondary)]">{weekDates[i]}</p>
+                  {week.map((d) => (
+                    <div key={d.full} className="text-center">
+                      <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">{d.day}</p>
+                      <p className="text-xs font-medium text-[var(--le-text-secondary)]">{d.date}</p>
                     </div>
                   ))}
                 </div>
@@ -170,9 +227,9 @@ export default function AppointmentsPage() {
                       <div className="text-[10px] text-[var(--le-text-muted)] pr-2 text-right pt-0.5">
                         {formatHour(hour)}
                       </div>
-                      {[0, 1, 2, 3, 4].map((dayIdx) => {
+                      {week.map((d, dayIdx) => {
                         const apt = activeAppointments.find(
-                          (a) => a.dayIndex === dayIdx && a.hour === hour && a.status !== 'cancelled'
+                          (a) => a.date === d.full && a.hour === hour && a.status !== 'cancelled'
                         );
                         return (
                           <div key={dayIdx} className="border-l border-[var(--le-border-subtle)]/50 px-1 relative">
@@ -221,7 +278,7 @@ export default function AppointmentsPage() {
                 icon={Calendar}
                 title="No appointments today"
                 description="Your schedule is clear. Book a new appointment to get started."
-                action={{ label: 'Book Appointment', onClick: () => {} }}
+                action={{ label: 'Book Appointment', onClick: () => setShowBookModal(true) }}
               />
             ) : (
               <div className="space-y-3">
@@ -287,6 +344,89 @@ export default function AppointmentsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Book Appointment Modal */}
+      <AnimatePresence>
+        {showBookModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowBookModal(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              className="relative bg-[var(--le-bg-secondary)] rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+                <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Book New Appointment</h2>
+                <Button variant="ghost" size="icon-sm" onClick={() => setShowBookModal(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="p-5 space-y-4">
+                <Input
+                  label="Client Name"
+                  placeholder="e.g. Sarah Mitchell"
+                  value={bookingForm.leadName}
+                  onChange={(e) => setBookingForm((f) => ({ ...f, leadName: e.target.value }))}
+                />
+                <Input
+                  label="Service / Reason"
+                  placeholder="e.g. Kitchen Renovation Quote"
+                  value={bookingForm.service}
+                  onChange={(e) => setBookingForm((f) => ({ ...f, service: e.target.value }))}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Date"
+                    type="date"
+                    value={bookingForm.date}
+                    onChange={(e) => setBookingForm((f) => ({ ...f, date: e.target.value }))}
+                  />
+                  <Input
+                    label="Time"
+                    type="time"
+                    value={bookingForm.time}
+                    onChange={(e) => setBookingForm((f) => ({ ...f, time: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--le-text-secondary)] mb-1.5">Duration</label>
+                    <select
+                      value={bookingForm.duration}
+                      onChange={(e) => setBookingForm((f) => ({ ...f, duration: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-[var(--le-bg-primary)] text-[var(--le-text-primary)]"
+                    >
+                      <option value="30">30 min</option>
+                      <option value="45">45 min</option>
+                      <option value="60">1 hour</option>
+                      <option value="90">1.5 hours</option>
+                      <option value="120">2 hours</option>
+                    </select>
+                  </div>
+                  <Input
+                    label="Location"
+                    placeholder="Address"
+                    value={bookingForm.location}
+                    onChange={(e) => setBookingForm((f) => ({ ...f, location: e.target.value }))}
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="ghost" size="sm" onClick={() => setShowBookModal(false)}>Cancel</Button>
+                  <Button
+                    size="sm"
+                    onClick={handleBook}
+                    disabled={bookingSaving || !bookingForm.leadName || !bookingForm.service || !bookingForm.date}
+                  >
+                    {bookingSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Calendar className="w-3.5 h-3.5" />}
+                    {bookingSaving ? 'Booking...' : 'Book Appointment'}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

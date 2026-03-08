@@ -79,6 +79,11 @@ export default function ReviewsPage() {
   const { organization } = useOrganization();
   const { reviews: fetchedReviews, averageRating, loading, requestReview } = useReviews(organization?.id);
   const { canUseReviewRequests, planName, loading: planLoading } = usePlan();
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestSending, setRequestSending] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySending, setReplySending] = useState(false);
 
   if (planLoading) {
     return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
@@ -99,7 +104,6 @@ export default function ReviewsPage() {
         replied: !!r.response || !!r.responded_at,
       }))
     : mockReviews;
-  const [showRequestModal, setShowRequestModal] = useState(false);
 
   const totalReviews = reviews.length;
   const avgRating = fetchedReviews.length > 0 ? averageRating.toFixed(1) : (reviews.reduce((a, r) => a + r.rating, 0) / (totalReviews || 1)).toFixed(1);
@@ -222,11 +226,41 @@ export default function ReviewsPage() {
                             Replied
                           </span>
                         ) : (
-                          <Button variant="ghost" size="icon-sm" title="Reply">
+                          <Button variant="ghost" size="icon-sm" title="Reply" onClick={() => {
+                            setReplyingTo(replyingTo === review.id ? null : review.id);
+                            setReplyText('');
+                          }}>
                             <Send className="w-3 h-3" />
                           </Button>
                         )}
                       </div>
+                      {replyingTo === review.id && (
+                        <div className="mt-3 pt-3 border-t border-[var(--le-border-subtle)]">
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Write your reply..."
+                            rows={2}
+                            className="w-full px-3 py-2 text-xs rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] focus:border-transparent resize-none"
+                          />
+                          <div className="flex items-center justify-end gap-2 mt-2">
+                            <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>Cancel</Button>
+                            <Button size="sm" disabled={!replyText.trim() || replySending} onClick={async () => {
+                              setReplySending(true);
+                              try {
+                                await new Promise(r => setTimeout(r, 500));
+                              } finally {
+                                setReplySending(false);
+                                setReplyingTo(null);
+                                setReplyText('');
+                              }
+                            }}>
+                              <Send className="w-3 h-3" />
+                              {replySending ? 'Sending...' : 'Reply'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -262,8 +296,20 @@ export default function ReviewsPage() {
                 {mockWonLeads.map((lead) => (
                   <button
                     key={lead.id}
-                    className="w-full flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-bg-tertiary)] transition-colors text-left"
-                    onClick={() => setShowRequestModal(false)}
+                    disabled={requestSending === lead.id}
+                    className="w-full flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-bg-tertiary)] transition-colors text-left disabled:opacity-50"
+                    onClick={async () => {
+                      setRequestSending(lead.id);
+                      try {
+                        await requestReview({
+                          lead_id: lead.id,
+                          lead_email: lead.email,
+                          lead_name: lead.name,
+                        });
+                      } catch {}
+                      setRequestSending(null);
+                      setShowRequestModal(false);
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--le-bg-tertiary)]">
@@ -274,7 +320,11 @@ export default function ReviewsPage() {
                         <p className="text-xs text-[var(--le-text-muted)]">{lead.service}</p>
                       </div>
                     </div>
-                    <Send className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                    {requestSending === lead.id ? (
+                      <div className="w-3.5 h-3.5 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                    )}
                   </button>
                 ))}
               </div>

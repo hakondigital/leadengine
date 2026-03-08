@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formTemplates } from '@/lib/form-templates';
 import { useOrganization } from '@/hooks/use-organization';
+import Link from 'next/link';
 import {
   FileText,
   ExternalLink,
@@ -21,6 +22,7 @@ export default function FormsPage() {
   const { organization } = useOrganization();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
 
   const orgSlug = organization?.slug || 'general';
 
@@ -51,7 +53,7 @@ export default function FormsPage() {
                 Manage your capture form templates
               </p>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={() => { setShowNotice(true); setTimeout(() => setShowNotice(false), 3000); }}>
               <Plus className="w-3.5 h-3.5" />
               New Form
             </Button>
@@ -59,6 +61,12 @@ export default function FormsPage() {
         </div>
       </header>
 
+      {showNotice && (
+        <div className="mx-4 lg:mx-6 mt-4 flex items-center gap-2 p-3 rounded-lg bg-[rgba(79,209,229,0.08)] border border-[rgba(79,209,229,0.15)] text-sm text-[var(--le-accent)]">
+          <Zap className="w-4 h-4 shrink-0" />
+          Custom form builder coming soon! Use the existing templates below to get started.
+        </div>
+      )}
       <div className="px-4 lg:px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {formTemplates.map((template, i) => (
@@ -120,8 +128,10 @@ export default function FormsPage() {
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </Button>
-                    <Button variant="ghost" size="icon-sm">
-                      <Settings className="w-3.5 h-3.5" />
+                    <Button variant="ghost" size="icon-sm" asChild>
+                      <Link href="/dashboard/settings">
+                        <Settings className="w-3.5 h-3.5" />
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -135,7 +145,7 @@ export default function FormsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: formTemplates.length * 0.05 }}
           >
-            <button className="w-full h-full min-h-[200px] rounded-[var(--le-radius-lg)] border border-dashed border-[var(--le-border-default)] bg-[var(--le-bg-secondary)]/30 flex flex-col items-center justify-center gap-3 hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-accent-muted)] transition-all duration-200 group">
+            <button onClick={() => { setShowNotice(true); setTimeout(() => setShowNotice(false), 3000); }} className="w-full h-full min-h-[200px] rounded-[var(--le-radius-lg)] border border-dashed border-[var(--le-border-default)] bg-[var(--le-bg-secondary)]/30 flex flex-col items-center justify-center gap-3 hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-accent-muted)] transition-all duration-200 group">
               <div className="w-10 h-10 rounded-xl bg-[var(--le-bg-tertiary)] border border-[var(--le-border-subtle)] flex items-center justify-center group-hover:bg-[var(--le-accent)]/10 group-hover:border-[var(--le-accent)]/20 transition-all">
                 <Plus className="w-5 h-5 text-[var(--le-text-muted)] group-hover:text-[var(--le-accent)] transition-colors" />
               </div>
