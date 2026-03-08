@@ -90,7 +90,17 @@ export async function POST(request: NextRequest) {
       const settings = (trackingNumber.organizations?.settings as Record<string, unknown>) || {};
       const isEnterprise = settings.plan === 'enterprise';
 
-      if (isEnterprise) {
+      // Check if org has a super admin (they get full features regardless of plan)
+      const { data: orgUsers } = await supabase
+        .from('users')
+        .select('email')
+        .eq('organization_id', trackingNumber.organization_id);
+
+      const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+      const hasSuperAdmin = orgUsers?.some(u => SUPER_ADMIN_EMAILS.includes(u.email?.toLowerCase())) || false;
+      const canRecord = isEnterprise || hasSuperAdmin;
+
+      if (canRecord) {
         // Enterprise: play recording disclaimer first, then transfer will happen on speak.ended
         await telnyxCommand(callControlId, 'speak', {
           payload: 'For quality and training purposes, this call may be recorded.',
