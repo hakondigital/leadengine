@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PLANS, type PlanId } from '@/lib/stripe';
+import { PLANS, type PlanId } from '@/lib/plans';
 import { useOrganization } from '@/hooks/use-organization';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
