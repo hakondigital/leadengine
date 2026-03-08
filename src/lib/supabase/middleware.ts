@@ -27,11 +27,10 @@ export async function updateSession(request: NextRequest) {
 
   let user = null;
   try {
-    const { data } = await supabase.auth.getUser();
-    user = data?.user ?? null;
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user ?? null;
   } catch {
     // Auth cookie check failed — treat as unauthenticated
-    // This happens on Vercel when SSR cookies aren't properly set
   }
 
   // Protect dashboard routes
