@@ -1,0 +1,52 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { handleObjection } from '@/lib/ai-actions';
+
+export async function POST(request: NextRequest) {
+  try {
+    const authClient = await createServerSupabaseClient();
+    const { data: { user: authUser } } = await authClient.auth.getUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabase = await createServiceRoleClient();
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('organization_id')
+      .eq('auth_id', authUser.id)
+      .single();
+
+    if (!userProfile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { leadId, context } = await request.json();
+    if (!leadId || !context) {
+      return NextResponse.json({ error: 'leadId and context are required' }, { status: 400 });
+    }
+
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('id', leadId)
+      .eq('organization_id', userProfile.organization_id)
+      .single();
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    }
+
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', userProfile.organization_id)
+      .single();
+
+    const strategy = await handleObjection(lead, org?.name || 'Our Company', context);
+    return NextResponse.json(strategy);
+  } catch (error) {
+    console.error('AI objection error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
