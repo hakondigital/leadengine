@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getFollowUpSchedule } from '@/lib/follow-ups';
 import { sendReviewRequestSMS } from '@/lib/sms';
+import { autoSetRevenueFromQuotes } from '@/lib/automation-pipeline';
 
 export async function GET(
   _request: NextRequest,
@@ -100,6 +101,14 @@ export async function PATCH(
       // Auto-set won_date when marking as Won
       if (newStatus === 'won' && !body.won_date) {
         body.won_date = new Date().toISOString();
+      }
+
+      // Auto-set won_value from associated quotes if not manually set
+      if (newStatus === 'won' && !body.won_value && !current.won_value) {
+        const autoValue = await autoSetRevenueFromQuotes(id, current.organization_id, supabase);
+        if (autoValue) {
+          body.won_value = autoValue;
+        }
       }
 
       // Schedule follow-up reminders

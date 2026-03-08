@@ -6,6 +6,7 @@ import { sendNewLeadSMS } from '@/lib/sms';
 import { fireWebhooks } from '@/lib/webhooks';
 import { getPlanLimits } from '@/lib/plan-limits';
 import { countLeadsThisMonth } from '@/lib/check-plan';
+import { runLeadAutomation } from '@/lib/automation-pipeline';
 
 export async function POST(request: NextRequest) {
   try {
@@ -269,17 +270,29 @@ export async function POST(request: NextRequest) {
         if (org?.auto_reply_enabled !== false) {
           sendSmartAutoReply(lead, org!, analysis.quality_score, analysis.recommended_action).catch(console.error);
         }
+
+        // 3. Run automation pipeline (auto-quote, auto-appointment, auto-sequence)
+        if (org) {
+          // Re-fetch lead with AI data so automations have full context
+          const { data: updatedLead } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('id', lead.id)
+            .single();
+
+          runLeadAutomation(updatedLead || lead, org, supabase).catch(console.error);
+        }
       }
     }).catch(console.error);
 
     if (org) {
-      // 3. Email notification to business
+      // 4. Email notification to business
       sendBusinessNotification(lead, org).catch(console.error);
 
-      // 4. Confirmation email to prospect
+      // 5. Confirmation email to prospect
       sendProspectConfirmation(lead, org).catch(console.error);
 
-      // 5. SMS notification to business (if enabled)
+      // 6. SMS notification to business (if enabled)
       if (org.sms_notifications_enabled && org.phone) {
         sendNewLeadSMS(lead, org).then(async (result) => {
           if (result) {
@@ -297,7 +310,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Fire webhooks
+    // 7. Fire webhooks
     fireWebhooks(organization_id, 'lead.created', {
       lead_id: lead.id,
       first_name: lead.first_name,

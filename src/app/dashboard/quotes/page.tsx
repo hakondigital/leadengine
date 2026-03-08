@@ -25,6 +25,7 @@ import {
   Trash2,
   X,
   Download,
+  Sparkles,
 } from 'lucide-react';
 
 interface Quote {
@@ -37,6 +38,7 @@ interface Quote {
   createdAt: string;
   expiresAt: string;
   items: number;
+  isAiGenerated?: boolean;
 }
 
 const mockQuotes: Quote[] = [
@@ -87,6 +89,7 @@ export default function QuotesPage() {
         createdAt: q.created_at.split('T')[0],
         expiresAt: q.valid_until?.split('T')[0] || '',
         items: q.line_items?.length || 0,
+        isAiGenerated: (q as any).is_ai_generated || false,
       }))
     : localQuotes;
 
@@ -185,7 +188,7 @@ export default function QuotesPage() {
               Quotes &amp; Estimates
             </h1>
             <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
-              Create and manage quotes for your leads
+              Auto-generated from leads &middot; review and send
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -279,7 +282,15 @@ export default function QuotesPage() {
                           className="border-b border-[var(--le-border-subtle)] last:border-0 hover:bg-[var(--le-bg-tertiary)]/50 transition-colors"
                         >
                           <td className="py-3 pr-4">
-                            <span className="text-sm font-semibold text-[var(--le-accent)]">{quote.number}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-semibold text-[var(--le-accent)]">{quote.number}</span>
+                              {quote.isAiGenerated && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1 py-0.5 rounded bg-[var(--le-accent)]/10 text-[var(--le-accent)]">
+                                  <Sparkles className="w-2.5 h-2.5" />
+                                  AI
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 pr-4">
                             <p className="text-sm font-medium text-[var(--le-text-primary)]">{quote.leadName}</p>
