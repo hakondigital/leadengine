@@ -179,13 +179,13 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
   const CopyButton = ({ text, field }: { text: string; field: string }) => (
     <button
       onClick={() => copyToClipboard(text, field)}
-      className="p-1 rounded hover:bg-[var(--le-bg-elevated)] transition-colors"
+      className="p-1 rounded hover:bg-[var(--od-bg-elevated)] transition-colors"
       title="Copy to clipboard"
     >
       {copiedField === field ? (
         <Check className="w-3 h-3 text-[#4ADE80]" />
       ) : (
-        <Copy className="w-3 h-3 text-[var(--le-text-muted)]" />
+        <Copy className="w-3 h-3 text-[var(--od-text-muted)]" />
       )}
     </button>
   );
@@ -229,8 +229,8 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 mb-3">
-        <Sparkles className="w-3.5 h-3.5 text-[var(--le-accent)]" />
-        <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">
+        <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)]" />
+        <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">
           AI Tools
         </h4>
       </div>
@@ -238,11 +238,11 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
       {visibleTools.map((tool) => (
         <div
           key={tool.id}
-          className="border border-[var(--le-border-subtle)] rounded-[var(--le-radius-md)] overflow-hidden"
+          className="border border-[var(--od-border-subtle)] rounded-[var(--od-radius-md)] overflow-hidden"
         >
           <button
             onClick={() => toggleTool(tool.id)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--le-bg-secondary)] transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--od-bg-secondary)] transition-colors"
           >
             <div
               className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -251,13 +251,13 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
               <tool.icon className="w-3.5 h-3.5" style={{ color: tool.color }} />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <p className="text-xs font-medium text-[var(--le-text-primary)]">{tool.label}</p>
-              <p className="text-[10px] text-[var(--le-text-muted)] truncate">{tool.description}</p>
+              <p className="text-xs font-medium text-[var(--od-text-primary)]">{tool.label}</p>
+              <p className="text-[10px] text-[var(--od-text-muted)] truncate">{tool.description}</p>
             </div>
             {expandedTool === tool.id ? (
-              <ChevronUp className="w-3.5 h-3.5 text-[var(--le-text-muted)] shrink-0" />
+              <ChevronUp className="w-3.5 h-3.5 text-[var(--od-text-muted)] shrink-0" />
             ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-[var(--le-text-muted)] shrink-0" />
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--od-text-muted)] shrink-0" />
             )}
           </button>
 
@@ -270,7 +270,7 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="px-3 pb-3 border-t border-[var(--le-border-subtle)]">
+                <div className="px-3 pb-3 border-t border-[var(--od-border-subtle)]">
                   {/* Follow-Up Writer */}
                   {tool.id === 'follow-up' && (
                     <div className="pt-3 space-y-3">
@@ -301,23 +301,23 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           animate={{ opacity: 1, y: 0 }}
                           className="space-y-2"
                         >
-                          <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3 space-y-2">
+                          <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase">Email</span>
+                              <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase">Email</span>
                               <CopyButton text={`Subject: ${followUpDraft.subject}\n\n${followUpDraft.email_body}`} field="email" />
                             </div>
-                            <p className="text-[11px] font-medium text-[var(--le-accent)]">{followUpDraft.subject}</p>
-                            <p className="text-xs text-[var(--le-text-secondary)] whitespace-pre-line leading-relaxed">
+                            <p className="text-[11px] font-medium text-[var(--od-accent)]">{followUpDraft.subject}</p>
+                            <p className="text-xs text-[var(--od-text-secondary)] whitespace-pre-line leading-relaxed">
                               {followUpDraft.email_body}
                             </p>
                           </div>
 
-                          <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
+                          <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase">SMS</span>
+                              <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase">SMS</span>
                               <CopyButton text={followUpDraft.sms_body} field="sms" />
                             </div>
-                            <p className="text-xs text-[var(--le-text-secondary)]">{followUpDraft.sms_body}</p>
+                            <p className="text-xs text-[var(--od-text-secondary)]">{followUpDraft.sms_body}</p>
                           </div>
 
                           {/* Send buttons */}
@@ -391,32 +391,32 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           animate={{ opacity: 1, y: 0 }}
                           className="space-y-2"
                         >
-                          <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
-                            <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase mb-1">Likely Reason</p>
-                            <p className="text-xs text-[var(--le-text-secondary)]">{objectionStrategy.likely_reason}</p>
+                          <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
+                            <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase mb-1">Likely Reason</p>
+                            <p className="text-xs text-[var(--od-text-secondary)]">{objectionStrategy.likely_reason}</p>
                           </div>
 
-                          <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
+                          <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase">Re-engagement Email</span>
+                              <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase">Re-engagement Email</span>
                               <CopyButton text={objectionStrategy.re_engagement_message} field="objection-email" />
                             </div>
-                            <p className="text-xs text-[var(--le-text-secondary)] whitespace-pre-line leading-relaxed">
+                            <p className="text-xs text-[var(--od-text-secondary)] whitespace-pre-line leading-relaxed">
                               {objectionStrategy.re_engagement_message}
                             </p>
                           </div>
 
-                          <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
+                          <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase">SMS</span>
+                              <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase">SMS</span>
                               <CopyButton text={objectionStrategy.sms_message} field="objection-sms" />
                             </div>
-                            <p className="text-xs text-[var(--le-text-secondary)]">{objectionStrategy.sms_message}</p>
+                            <p className="text-xs text-[var(--od-text-secondary)]">{objectionStrategy.sms_message}</p>
                           </div>
 
                           <div className="bg-[#4FD1E5]/10 rounded-lg p-3">
-                            <p className="text-[10px] font-semibold text-[var(--le-accent)] uppercase mb-1">Alternative Offer</p>
-                            <p className="text-xs text-[var(--le-text-secondary)]">{objectionStrategy.alternative_offer}</p>
+                            <p className="text-[10px] font-semibold text-[var(--od-accent)] uppercase mb-1">Alternative Offer</p>
+                            <p className="text-xs text-[var(--od-text-secondary)]">{objectionStrategy.alternative_offer}</p>
                           </div>
 
                           {/* Send buttons */}
@@ -446,8 +446,8 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                             <div className="space-y-1">
                               {objectionStrategy.tips.map((tip, i) => (
                                 <div key={i} className="flex items-start gap-2">
-                                  <Lightbulb className="w-3 h-3 text-[var(--le-accent)] mt-0.5 shrink-0" />
-                                  <span className="text-[11px] text-[var(--le-text-secondary)]">{tip}</span>
+                                  <Lightbulb className="w-3 h-3 text-[var(--od-accent)] mt-0.5 shrink-0" />
+                                  <span className="text-[11px] text-[var(--od-text-secondary)]">{tip}</span>
                                 </div>
                               ))}
                             </div>
@@ -482,26 +482,26 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                               <Clock className="w-4 h-4 text-[#60C3D0]" />
                               <span className="text-sm font-semibold text-[#60C3D0]">{contactSuggestion.best_time}</span>
                             </div>
-                            <p className="text-xs text-[var(--le-text-secondary)]">{contactSuggestion.reasoning}</p>
+                            <p className="text-xs text-[var(--od-text-secondary)]">{contactSuggestion.reasoning}</p>
                           </div>
 
-                          <div className="flex items-center gap-2 bg-[var(--le-bg-tertiary)] rounded-lg p-3">
-                            <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase">Best Channel:</span>
+                          <div className="flex items-center gap-2 bg-[var(--od-bg-tertiary)] rounded-lg p-3">
+                            <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase">Best Channel:</span>
                             <Badge size="sm" variant={contactSuggestion.channel === 'phone' ? 'success' : 'default'}>
                               {contactSuggestion.channel === 'phone' ? <Phone className="w-3 h-3" /> : contactSuggestion.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <Mail className="w-3 h-3" />}
                               {contactSuggestion.channel}
                             </Badge>
-                            <span className="text-[10px] text-[var(--le-text-muted)] ml-auto">{contactSuggestion.estimated_duration}</span>
+                            <span className="text-[10px] text-[var(--od-text-muted)] ml-auto">{contactSuggestion.estimated_duration}</span>
                           </div>
 
                           {contactSuggestion.talking_points.length > 0 && (
-                            <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
-                              <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase mb-2">Talking Points</p>
+                            <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
+                              <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase mb-2">Talking Points</p>
                               <ul className="space-y-1.5">
                                 {contactSuggestion.talking_points.map((point, i) => (
                                   <li key={i} className="flex items-start gap-2">
-                                    <span className="text-[var(--le-accent)] text-xs mt-0.5">-</span>
-                                    <span className="text-xs text-[var(--le-text-secondary)]">{point}</span>
+                                    <span className="text-[var(--od-accent)] text-xs mt-0.5">-</span>
+                                    <span className="text-xs text-[var(--od-text-secondary)]">{point}</span>
                                   </li>
                                 ))}
                               </ul>
@@ -533,11 +533,11 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           className="space-y-2"
                         >
                           <div className="bg-[#4ADE80]/10 rounded-lg p-3 border border-[#4ADE80]/20">
-                            <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase mb-2">Estimated Range ({quoteEstimate.currency})</p>
+                            <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase mb-2">Estimated Range ({quoteEstimate.currency})</p>
                             <div className="flex items-end gap-3">
                               <div className="text-center">
-                                <p className="text-[10px] text-[var(--le-text-muted)]">Low</p>
-                                <p className="text-sm font-semibold text-[var(--le-text-secondary)]">
+                                <p className="text-[10px] text-[var(--od-text-muted)]">Low</p>
+                                <p className="text-sm font-semibold text-[var(--od-text-secondary)]">
                                   ${quoteEstimate.low_range.toLocaleString()}
                                 </p>
                               </div>
@@ -548,8 +548,8 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                                 </p>
                               </div>
                               <div className="text-center">
-                                <p className="text-[10px] text-[var(--le-text-muted)]">High</p>
-                                <p className="text-sm font-semibold text-[var(--le-text-secondary)]">
+                                <p className="text-[10px] text-[var(--od-text-muted)]">High</p>
+                                <p className="text-sm font-semibold text-[var(--od-text-secondary)]">
                                   ${quoteEstimate.high_range.toLocaleString()}
                                 </p>
                               </div>
@@ -557,7 +557,7 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-[var(--le-text-muted)]">Confidence:</span>
+                            <span className="text-[10px] text-[var(--od-text-muted)]">Confidence:</span>
                             <Badge size="sm" variant={
                               quoteEstimate.confidence === 'high' ? 'success' :
                               quoteEstimate.confidence === 'medium' ? 'warning' : 'default'
@@ -567,12 +567,12 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           </div>
 
                           {quoteEstimate.factors.length > 0 && (
-                            <div className="bg-[var(--le-bg-tertiary)] rounded-lg p-3">
-                              <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase mb-2">Price Factors</p>
+                            <div className="bg-[var(--od-bg-tertiary)] rounded-lg p-3">
+                              <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase mb-2">Price Factors</p>
                               <ul className="space-y-1">
                                 {quoteEstimate.factors.map((factor, i) => (
-                                  <li key={i} className="text-xs text-[var(--le-text-secondary)] flex items-start gap-2">
-                                    <span className="text-[var(--le-accent)]">-</span> {factor}
+                                  <li key={i} className="text-xs text-[var(--od-text-secondary)] flex items-start gap-2">
+                                    <span className="text-[var(--od-accent)]">-</span> {factor}
                                   </li>
                                 ))}
                               </ul>
@@ -580,8 +580,8 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                           )}
 
                           {quoteEstimate.upsell_opportunities.length > 0 && (
-                            <div className="bg-[var(--le-accent-muted)] rounded-lg p-3 border border-[rgba(79,209,229,0.2)]">
-                              <p className="text-[10px] font-semibold text-[var(--le-accent)] uppercase mb-2">Upsell Opportunities</p>
+                            <div className="bg-[var(--od-accent-muted)] rounded-lg p-3 border border-[rgba(79,209,229,0.2)]">
+                              <p className="text-[10px] font-semibold text-[var(--od-accent)] uppercase mb-2">Upsell Opportunities</p>
                               <div className="flex flex-wrap gap-1">
                                 {quoteEstimate.upsell_opportunities.map((opp, i) => (
                                   <Badge key={i} size="sm" variant="default">{opp}</Badge>
@@ -590,7 +590,7 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
                             </div>
                           )}
 
-                          <p className="text-[10px] text-[var(--le-text-muted)] italic">{quoteEstimate.disclaimer}</p>
+                          <p className="text-[10px] text-[var(--od-text-muted)] italic">{quoteEstimate.disclaimer}</p>
                         </motion.div>
                       )}
                     </div>

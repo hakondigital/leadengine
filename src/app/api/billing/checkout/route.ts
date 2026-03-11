@@ -27,18 +27,18 @@ export async function POST(req: NextRequest) {
 
     // Check if this org has already used a free trial
     const serviceClient = await createServiceRoleClient();
-    const { data: member } = await serviceClient
-      .from('organization_members')
+    const { data: orgUser } = await serviceClient
+      .from('users')
       .select('organization_id')
-      .eq('user_id', user.id)
-      .single();
+      .eq('id', user.id)
+      .maybeSingle();
 
     let hasUsedTrial = false;
-    if (member) {
+    if (orgUser?.organization_id) {
       const { data: org } = await serviceClient
         .from('organizations')
         .select('settings')
-        .eq('id', member.organization_id)
+        .eq('id', orgUser.organization_id)
         .single();
 
       const settings = (org?.settings as Record<string, unknown>) || {};

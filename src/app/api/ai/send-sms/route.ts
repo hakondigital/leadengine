@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to send SMS. Check Telnyx configuration.' },
+      { error: 'Failed to send SMS. Check Twilio configuration.' },
       { status: 500 }
     );
   } catch (error) {

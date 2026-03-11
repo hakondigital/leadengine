@@ -1,4 +1,4 @@
-// Database schema types — LeadEngine
+// Database schema types — Odyssey
 // Designed for extensibility, multi-tenancy, and white-labelling
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];

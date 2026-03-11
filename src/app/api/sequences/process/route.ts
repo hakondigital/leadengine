@@ -11,7 +11,7 @@ export async function POST(_request: NextRequest) {
     // Find active enrollments where next_send_at <= now
     const { data: dueEnrollments, error: fetchError } = await supabase
       .from('sequence_enrollments')
-      .select('*, sequence:sequences(*, organization:organizations(*)), lead:leads(*)')
+      .select('*, sequence:follow_up_sequences(*, organization:organizations(*)), lead:leads(*)')
       .eq('status', 'active')
       .lte('next_send_at', now);
 
@@ -35,10 +35,9 @@ export async function POST(_request: NextRequest) {
           .select('*')
           .eq('sequence_id', enrollment.sequence_id)
           .eq('step_order', enrollment.current_step)
-          .single();
+          .maybeSingle();
 
         if (!step || !enrollment.lead || !enrollment.sequence) {
-          // Skip if step not found
           await supabase
             .from('sequence_enrollments')
             .update({ status: 'completed' })
@@ -49,19 +48,23 @@ export async function POST(_request: NextRequest) {
         const lead = enrollment.lead;
         const org = enrollment.sequence.organization;
 
-        // Send based on channel
-        if (step.channel === 'email' && lead.email) {
-          await sendFollowUpEmail(lead, org, step.body);
-        } else if (step.channel === 'sms' && lead.phone) {
-          await sendFollowUpSMS(lead.phone, step.body);
+        // Send based on channel — use message_template (DB column name)
+        const messageBody = step.message_template || step.body || '';
+        if ((step.channel === 'email' || step.channel === 'both') && lead.email) {
+          await sendFollowUpEmail(lead, org, messageBody).catch((e: Error) =>
+            console.error('[Process] Email error:', e)
+          );
+        }
+        if ((step.channel === 'sms' || step.channel === 'both') && lead.phone) {
+          await sendFollowUpSMS(lead.phone, messageBody).catch((e: Error) =>
+            console.error('[Process] SMS error:', e)
+          );
         }
 
-        // Log the send
-        await supabase.from('sequence_send_logs').insert({
+        // Log the send — only fields that exist in sequence_logs schema
+        await supabase.from('sequence_logs').insert({
           enrollment_id: enrollment.id,
-          sequence_id: enrollment.sequence_id,
-          lead_id: enrollment.lead_id,
-          step_order: enrollment.current_step,
+          step_id: step.id,
           channel: step.channel,
           status: 'sent',
           sent_at: now,
@@ -73,12 +76,11 @@ export async function POST(_request: NextRequest) {
           .select('*')
           .eq('sequence_id', enrollment.sequence_id)
           .eq('step_order', enrollment.current_step + 1)
-          .single();
+          .maybeSingle();
 
         if (nextStep) {
-          // Advance to next step
           const nextSendAt = new Date(
-            Date.now() + (nextStep.delay_hours || 0) * 3600000
+            Date.now() + (nextStep.delay_hours || 24) * 3600000
           ).toISOString();
 
           await supabase

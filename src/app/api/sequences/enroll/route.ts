@@ -15,6 +15,31 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServiceRoleClient();
 
+    // Verify sequence and lead belong to the same organization
+    const { data: sequence } = await supabase
+      .from('follow_up_sequences')
+      .select('organization_id')
+      .eq('id', sequence_id)
+      .single();
+
+    if (!sequence) {
+      return NextResponse.json({ error: 'Sequence not found' }, { status: 404 });
+    }
+
+    const { data: lead } = await supabase
+      .from('leads')
+      .select('organization_id')
+      .eq('id', lead_id)
+      .single();
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    }
+
+    if (sequence.organization_id !== lead.organization_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Check if already enrolled
     const { data: existing } = await supabase
       .from('sequence_enrollments')
@@ -22,7 +47,7 @@ export async function POST(request: NextRequest) {
       .eq('sequence_id', sequence_id)
       .eq('lead_id', lead_id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -38,7 +63,7 @@ export async function POST(request: NextRequest) {
       .eq('sequence_id', sequence_id)
       .order('step_order', { ascending: true })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!firstStep) {
       return NextResponse.json(

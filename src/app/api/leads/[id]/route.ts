@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getFollowUpSchedule } from '@/lib/follow-ups';
 import { sendReviewRequestSMS } from '@/lib/sms';
 import { autoSetRevenueFromQuotes } from '@/lib/automation-pipeline';
+import { triggerSequenceEvent } from '@/lib/sequence-triggers';
 
 export async function GET(
   _request: NextRequest,
@@ -139,6 +140,14 @@ export async function PATCH(
         content: `Status changed from ${oldStatus} to ${newStatus}`,
         is_system: true,
       });
+
+      // Trigger smart sequences (fire and forget)
+      triggerSequenceEvent('status_change', id, current.organization_id, supabase).catch(console.error);
+
+      // Trigger job_completed sequences when lead is won
+      if (newStatus === 'won') {
+        triggerSequenceEvent('job_completed', id, current.organization_id, supabase).catch(console.error);
+      }
     }
 
     // If won_value is being set, add a note

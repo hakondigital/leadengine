@@ -4,69 +4,17 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServiceRoleClient();
-    const { searchParams } = new URL(request.url);
-
-    const orgId = searchParams.get('organization_id');
-    const serviceType = searchParams.get('service_type');
+    const orgId = request.nextUrl.searchParams.get('organization_id');
 
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
     }
 
-    // If service_type provided, calculate estimate
-    if (serviceType) {
-      const { data: config, error } = await supabase
-        .from('estimator_configs')
-        .select('*')
-        .eq('organization_id', orgId)
-        .eq('service_type', serviceType)
-        .single();
-
-      if (error || !config) {
-        return NextResponse.json(
-          { error: 'No estimator config found for this service type' },
-          { status: 404 }
-        );
-      }
-
-      // Parse query params for estimate calculation
-      const quantity = parseFloat(searchParams.get('quantity') || '1');
-      const complexity = searchParams.get('complexity') || 'standard'; // basic, standard, premium
-
-      const complexityMultiplier: Record<string, number> = {
-        basic: 0.8,
-        standard: 1.0,
-        premium: 1.5,
-        complex: 2.0,
-      };
-
-      const multiplier = complexityMultiplier[complexity] || 1.0;
-      const basePrice = config.base_price || 0;
-      const perUnitPrice = config.per_unit_price || 0;
-
-      const estimate = {
-        service_type: serviceType,
-        base_price: basePrice,
-        per_unit_price: perUnitPrice,
-        quantity,
-        complexity,
-        multiplier,
-        subtotal: (basePrice + perUnitPrice * quantity) * multiplier,
-        low_estimate: Math.round((basePrice + perUnitPrice * quantity) * multiplier * 0.85),
-        high_estimate: Math.round((basePrice + perUnitPrice * quantity) * multiplier * 1.2),
-        unit_label: config.unit_label || 'units',
-        notes: config.notes || null,
-        disclaimer: config.disclaimer || 'This is an estimate only. Final pricing may vary.',
-      };
-
-      return NextResponse.json(estimate);
-    }
-
-    // Otherwise, list all configs
     const { data: configs, error } = await supabase
       .from('estimator_configs')
-      .select('*')
+      .select('id, service_type, min_price, max_price, unit, is_active, created_at')
       .eq('organization_id', orgId)
+      .eq('is_active', true)
       .order('service_type', { ascending: true });
 
     if (error) {
@@ -74,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch estimator configs' }, { status: 500 });
     }
 
-    return NextResponse.json({ configs });
+    return NextResponse.json({ configs: configs ?? [] });
   } catch (error) {
     console.error('Estimator fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -84,16 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      organization_id,
-      service_type,
-      base_price,
-      per_unit_price,
-      unit_label,
-      notes,
-      disclaimer,
-      options,
-    } = body;
+    const { organization_id, service_type, min_price, max_price, unit } = body;
 
     if (!organization_id || !service_type) {
       return NextResponse.json(
@@ -104,27 +43,24 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServiceRoleClient();
 
-    const { data: config, error } = await supabase
+    const { data, error } = await supabase
       .from('estimator_configs')
-      .upsert({
+      .insert({
         organization_id,
         service_type,
-        base_price: base_price || 0,
-        per_unit_price: per_unit_price || 0,
-        unit_label: unit_label || 'units',
-        notes: notes || null,
-        disclaimer: disclaimer || 'This is an estimate only. Final pricing may vary.',
-        options: options || [],
-      }, { onConflict: 'organization_id,service_type' })
+        min_price: min_price || 0,
+        max_price: max_price || 0,
+        unit: unit || 'job',
+      })
       .select()
       .single();
 
     if (error) {
       console.error('Estimator config save error:', error);
-      return NextResponse.json({ error: 'Failed to save estimator config' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create estimator config' }, { status: 500 });
     }
 
-    return NextResponse.json(config, { status: 201 });
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error('Estimator config save error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

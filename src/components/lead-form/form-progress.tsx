@@ -26,9 +26,9 @@ export function FormProgress({ steps, currentStep, className }: FormProgressProp
               <motion.div
                 className={cn(
                   'flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold shrink-0 transition-colors duration-300',
-                  isCompleted && 'bg-[var(--le-accent)] text-white',
-                  isActive && 'bg-[var(--le-accent)]/15 text-[var(--le-accent)] ring-2 ring-[var(--le-accent)]/30',
-                  !isActive && !isCompleted && 'bg-[var(--le-bg-elevated)] text-[var(--le-text-muted)]'
+                  isCompleted && 'bg-[var(--od-accent)] text-white',
+                  isActive && 'bg-[var(--od-accent)]/15 text-[var(--od-accent)] ring-2 ring-[var(--od-accent)]/30',
+                  !isActive && !isCompleted && 'bg-[var(--od-bg-elevated)] text-[var(--od-text-muted)]'
                 )}
                 layout
               >
@@ -47,7 +47,7 @@ export function FormProgress({ steps, currentStep, className }: FormProgressProp
               <div className="hidden sm:block min-w-0">
                 <p className={cn(
                   'text-xs font-medium truncate transition-colors duration-200',
-                  isActive ? 'text-[var(--le-text-primary)]' : 'text-[var(--le-text-muted)]'
+                  isActive ? 'text-[var(--od-text-primary)]' : 'text-[var(--od-text-muted)]'
                 )}>
                   {step.title}
                 </p>
@@ -56,9 +56,9 @@ export function FormProgress({ steps, currentStep, className }: FormProgressProp
 
             {/* Connector line */}
             {index < steps.length - 1 && (
-              <div className="flex-1 h-px bg-[var(--le-border-subtle)] mx-2 relative overflow-hidden">
+              <div className="flex-1 h-px bg-[var(--od-border-subtle)] mx-2 relative overflow-hidden">
                 <motion.div
-                  className="absolute inset-y-0 left-0 bg-[var(--le-accent)]"
+                  className="absolute inset-y-0 left-0 bg-[var(--od-accent)]"
                   initial={{ width: '0%' }}
                   animate={{ width: isCompleted ? '100%' : '0%' }}
                   transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}

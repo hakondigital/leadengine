@@ -57,7 +57,7 @@ export default function PortfolioPage() {
   const { success: showSuccess } = useToast();
 
   if (planLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   if (!canUsePortfolio) {
@@ -140,13 +140,13 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+            <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
               Project Portfolio
             </h1>
-            <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+            <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
               Showcase your best work with before &amp; after photos
             </p>
           </div>
@@ -159,8 +159,8 @@ export default function PortfolioPage() {
 
       <div className="px-4 lg:px-6 py-6">
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--le-text-muted)] mb-4">
-            <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)] mb-4">
+            <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
             Loading projects...
           </div>
         )}
@@ -180,22 +180,22 @@ export default function PortfolioPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Card className="overflow-hidden hover:border-[var(--le-accent)]/30 transition-colors">
+                <Card className="overflow-hidden hover:border-[var(--od-accent)]/30 transition-colors">
                   {/* Before/After Image Placeholders */}
                   <div className="relative">
                     <div className="grid grid-cols-2 h-40">
-                      <div className="bg-[var(--le-bg-tertiary)] flex flex-col items-center justify-center border-r border-[var(--le-border-subtle)] relative">
-                        <Image className="w-8 h-8 text-[var(--le-text-muted)] opacity-30 mb-1" />
-                        <span className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Before</span>
+                      <div className="bg-[var(--od-bg-tertiary)] flex flex-col items-center justify-center border-r border-[var(--od-border-subtle)] relative">
+                        <Image className="w-8 h-8 text-[var(--od-text-muted)] opacity-30 mb-1" />
+                        <span className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Before</span>
                       </div>
-                      <div className="bg-[var(--le-bg-secondary)] flex flex-col items-center justify-center relative">
-                        <Image className="w-8 h-8 text-[var(--le-accent)] opacity-30 mb-1" />
-                        <span className="text-[10px] font-semibold text-[var(--le-accent)] uppercase tracking-wider">After</span>
+                      <div className="bg-[var(--od-bg-secondary)] flex flex-col items-center justify-center relative">
+                        <Image className="w-8 h-8 text-[var(--od-accent)] opacity-30 mb-1" />
+                        <span className="text-[10px] font-semibold text-[var(--od-accent)] uppercase tracking-wider">After</span>
                       </div>
                     </div>
                     {/* Center divider icon */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-[var(--le-border-subtle)] flex items-center justify-center shadow-sm">
-                      <ArrowLeftRight className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-[var(--od-border-subtle)] flex items-center justify-center shadow-sm">
+                      <ArrowLeftRight className="w-3.5 h-3.5 text-[var(--od-text-muted)]" />
                     </div>
                     {/* Featured badge */}
                     {project.featured && (
@@ -209,26 +209,26 @@ export default function PortfolioPage() {
                   </div>
 
                   <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold text-[var(--le-text-primary)] mb-1">
+                    <h3 className="text-sm font-semibold text-[var(--od-text-primary)] mb-1">
                       {project.title}
                     </h3>
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="flex items-center gap-1 text-xs text-[var(--le-text-muted)]">
+                      <span className="flex items-center gap-1 text-xs text-[var(--od-text-muted)]">
                         <MapPin className="w-3 h-3" />
                         {project.location}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-[var(--le-text-muted)]">
+                      <span className="flex items-center gap-1 text-xs text-[var(--od-text-muted)]">
                         <Calendar className="w-3 h-3" />
                         {project.date}
                       </span>
                     </div>
                     <Badge variant="default" size="sm">{project.category}</Badge>
 
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--le-border-subtle)]">
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--od-border-subtle)]">
                       <button
                         onClick={() => toggleFeatured(project.id)}
                         className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                          project.featured ? 'text-[#D97706]' : 'text-[var(--le-text-muted)] hover:text-[#D97706]'
+                          project.featured ? 'text-[#D97706]' : 'text-[var(--od-text-muted)] hover:text-[#D97706]'
                         }`}
                       >
                         <Star className={`w-3 h-3 ${project.featured ? 'fill-current' : ''}`} />
@@ -236,10 +236,10 @@ export default function PortfolioPage() {
                       </button>
                       <button
                         onClick={() => togglePublish(project.id)}
-                        className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-[var(--le-radius-sm)] transition-colors ${
+                        className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-[var(--od-radius-sm)] transition-colors ${
                           project.published
                             ? 'text-[#1F9B5A] bg-[rgba(52,199,123,0.08)]'
-                            : 'text-[var(--le-text-muted)] bg-[var(--le-bg-tertiary)]'
+                            : 'text-[var(--od-text-muted)] bg-[var(--od-bg-tertiary)]'
                         }`}
                       >
                         {project.published ? (
@@ -270,31 +270,31 @@ export default function PortfolioPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Add Project</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--od-text-primary)]">Add Project</h2>
               <Button variant="ghost" size="icon-sm" onClick={() => setShowAddModal(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Project Title</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Project Title</label>
                 <input
                   value={projectForm.title}
                   onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                   placeholder="e.g. Modern Kitchen Transformation"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Category</label>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Category</label>
                   <select
                     value={projectForm.category}
                     onChange={(e) => setProjectForm((f) => ({ ...f, category: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                   >
                     <option value="">Select...</option>
                     {categories.map((c) => (
@@ -303,27 +303,27 @@ export default function PortfolioPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Location</label>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Location</label>
                   <input
                     value={projectForm.location}
                     onChange={(e) => setProjectForm((f) => ({ ...f, location: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                     placeholder="e.g. Sydney, NSW"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Description</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Description</label>
                 <textarea
                   value={projectForm.description}
                   onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)] resize-none"
                   placeholder="Describe the project..."
                 />
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--od-border-subtle)]">
               <Button variant="ghost" size="sm" onClick={() => setShowAddModal(false)}>Cancel</Button>
               <Button size="sm" disabled={!projectForm.title || projectSaving} onClick={handleCreateProject}>
                 {projectSaving ? 'Adding...' : 'Add Project'}

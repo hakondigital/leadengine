@@ -1,7 +1,12 @@
 import type { Lead, Organization } from './database.types';
 
-const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
-const TELNYX_PHONE_NUMBER = process.env.TELNYX_PHONE_NUMBER;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+
+function twilioAuth(): string {
+  return 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+}
 
 interface SMSPayload {
   to: string;
@@ -9,32 +14,35 @@ interface SMSPayload {
 }
 
 async function sendSMS(payload: SMSPayload): Promise<{ id: string } | null> {
-  if (!TELNYX_API_KEY || !TELNYX_PHONE_NUMBER) {
-    console.warn('Telnyx not configured — SMS skipped');
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    console.warn('Twilio not configured — SMS skipped');
     return null;
   }
 
-  const response = await fetch('https://api.telnyx.com/v2/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TELNYX_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: TELNYX_PHONE_NUMBER,
-      to: payload.to,
-      text: payload.body,
-    }),
-  });
+  const response = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: twilioAuth(),
+      },
+      body: new URLSearchParams({
+        From: TWILIO_PHONE_NUMBER,
+        To: payload.to,
+        Body: payload.body,
+      }).toString(),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Telnyx SMS error:', error);
+    console.error('Twilio SMS error:', error);
     return null;
   }
 
   const data = await response.json();
-  return { id: data.data?.id || '' };
+  return { id: data.sid || '' };
 }
 
 function formatUrgency(urgency: string | null): string {

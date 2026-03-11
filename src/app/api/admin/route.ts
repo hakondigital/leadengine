@@ -71,13 +71,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     case 'delete_org': {
-      // Delete all org data (cascading)
-      await supabase.from('leads').delete().eq('organization_id', organization_id);
-      await supabase.from('forms').delete().eq('organization_id', organization_id);
-      await supabase.from('sequences').delete().eq('organization_id', organization_id);
-      await supabase.from('tracking_numbers').delete().eq('organization_id', organization_id);
-      await supabase.from('call_logs').delete().eq('organization_id', organization_id);
-      await supabase.from('users').delete().eq('organization_id', organization_id);
+      // Delete org — CASCADE constraints on child tables handle cleanup
       await supabase.from('organizations').delete().eq('id', organization_id);
       break;
     }

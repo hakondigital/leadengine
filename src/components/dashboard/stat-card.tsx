@@ -19,7 +19,7 @@ export function StatCard({ label, value, change, icon: Icon, color, index = 0 }:
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-[var(--le-radius-lg)] border border-[var(--le-border-default)] bg-white p-5 hover:shadow-[0_4px_12px_rgba(28,42,58,0.08)] transition-all duration-200 group"
+      className="rounded-[var(--od-radius-lg)] border border-[var(--od-border-default)] bg-white p-5 hover:shadow-[0_4px_12px_rgba(28,42,58,0.08)] transition-all duration-200 group"
     >
       <div className="flex items-start justify-between mb-4">
         <div
@@ -46,13 +46,13 @@ export function StatCard({ label, value, change, icon: Icon, color, index = 0 }:
         )}
       </div>
       <div>
-        <p className="text-2xl font-bold text-[var(--le-text-primary)] tracking-tight">
+        <p className="text-2xl font-bold text-[var(--od-text-primary)] tracking-tight">
           {value}
         </p>
-        <p className="text-xs text-[var(--le-text-tertiary)] mt-0.5">
+        <p className="text-xs text-[var(--od-text-tertiary)] mt-0.5">
           {label}
           {change && (
-            <span className="text-[var(--le-text-muted)]"> &middot; {change.label}</span>
+            <span className="text-[var(--od-text-muted)]"> &middot; {change.label}</span>
           )}
         </p>
       </div>

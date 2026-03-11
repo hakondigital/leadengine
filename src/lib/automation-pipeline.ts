@@ -1,4 +1,5 @@
 import { estimateQuote } from './ai-actions';
+import { triggerSequenceEvent } from './sequence-triggers';
 import type { Lead } from './database.types';
 
 // ─── AUTOMATION PIPELINE ──────────────────────────────────────
@@ -102,7 +103,7 @@ async function autoGenerateQuote(
         organization_id: org.id,
         lead_id: lead.id,
         quote_number: quoteNumber,
-        items,
+        line_items: items,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,
@@ -217,7 +218,7 @@ async function autoCreateAppointment(
 }
 
 // ─── AUTO-ENROLL IN SEQUENCE ──────────────────────────────────
-// Finds active sequences with "new_lead" trigger and enrolls the lead.
+// Uses the shared trigger engine to enroll leads in matching sequences.
 
 async function autoEnrollSequence(
   lead: Lead,
@@ -225,65 +226,13 @@ async function autoEnrollSequence(
   supabase: any
 ): Promise<boolean> {
   try {
-    // Find active sequences with new_lead trigger
-    const { data: sequences } = await supabase
-      .from('sequences')
-      .select('id')
-      .eq('organization_id', org.id)
-      .eq('trigger', 'new_lead')
-      .eq('is_active', true);
-
-    if (!sequences || sequences.length === 0) {
-      return false; // No matching sequence — that's fine
+    // Guard: only enroll if lead belongs to this org
+    if (lead.organization_id !== org.id) {
+      console.error('[Automation] Org mismatch — refusing to enroll lead', lead.id, 'for org', org.id);
+      return false;
     }
-
-    let enrolled = false;
-    for (const seq of sequences) {
-      // Check not already enrolled
-      const { data: existing } = await supabase
-        .from('sequence_enrollments')
-        .select('id')
-        .eq('sequence_id', seq.id)
-        .eq('lead_id', lead.id)
-        .eq('status', 'active')
-        .single();
-
-      if (existing) continue;
-
-      // Get first step for timing
-      const { data: firstStep } = await supabase
-        .from('sequence_steps')
-        .select('*')
-        .eq('sequence_id', seq.id)
-        .order('step_order', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (!firstStep) continue;
-
-      const nextSendAt = new Date(
-        Date.now() + (firstStep.delay_hours || 0) * 3600000
-      ).toISOString();
-
-      const { error } = await supabase
-        .from('sequence_enrollments')
-        .insert({
-          sequence_id: seq.id,
-          lead_id: lead.id,
-          current_step: 1,
-          status: 'active',
-          next_send_at: nextSendAt,
-        })
-        .select()
-        .single();
-
-      if (!error) enrolled = true;
-    }
-
-    if (enrolled) {
-      console.log(`[Automation] Lead ${lead.id} enrolled in follow-up sequence`);
-    }
-    return enrolled;
+    const count = await triggerSequenceEvent('new_lead', lead.id, org.id, supabase);
+    return count > 0;
   } catch (error) {
     console.error('[Automation] Auto-enroll error:', error);
     return false;

@@ -2,9 +2,14 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { checkFeature } from '@/lib/check-plan';
 import { checkSuperAdmin } from '@/lib/super-admin';
 
-const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 
-// Search Telnyx for available phone numbers
+function twilioAuth(): string {
+  return 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+}
+
+// Search Twilio for available phone numbers
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const orgId = searchParams.get('organization_id');
@@ -26,46 +31,73 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (!TELNYX_API_KEY) {
-    return NextResponse.json({ error: 'Telnyx not configured' }, { status: 500 });
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    return NextResponse.json({ error: 'Twilio not configured' }, { status: 500 });
   }
 
   try {
-    const params = new URLSearchParams({
-      'filter[country_code]': countryCode,
-      'filter[phone_number_type]': numberType,
-      'filter[limit]': limit,
-    });
+    // Map number types to Twilio endpoints
+    const typeEndpoints: Record<string, string> = {
+      local: 'Local',
+      mobile: 'Mobile',
+      toll_free: 'TollFree',
+      national: 'National',
+    };
 
-    if (areaCode) {
-      params.set('filter[national_destination_code]', areaCode);
-    }
+    const typesToTry = numberType === 'local'
+      ? ['Local', 'Mobile', 'TollFree']
+      : [typeEndpoints[numberType] || 'Local'];
 
-    const res = await fetch(
-      `https://api.telnyx.com/v2/available_phone_numbers?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${TELNYX_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+    let allNumbers: Record<string, unknown>[] = [];
+
+    for (const type of typesToTry) {
+      if (allNumbers.length >= parseInt(limit)) break;
+
+      const params = new URLSearchParams();
+      if (areaCode) params.set('AreaCode', areaCode);
+      params.set('PageSize', String(parseInt(limit) - allNumbers.length));
+
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/${countryCode}/${type}.json?${params.toString()}`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: twilioAuth() },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        allNumbers = allNumbers.concat(data.available_phone_numbers || []);
       }
-    );
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('Telnyx search error:', err);
-      return NextResponse.json({ error: 'Failed to search numbers' }, { status: 502 });
     }
 
-    const data = await res.json();
+    // If still empty and area code was set, retry without area code
+    if (allNumbers.length === 0 && areaCode) {
+      for (const type of typesToTry) {
+        if (allNumbers.length >= parseInt(limit)) break;
 
-    // Map to a simpler format
-    const numbers = (data.data || []).map((n: Record<string, unknown>) => ({
+        const params = new URLSearchParams();
+        params.set('PageSize', String(parseInt(limit) - allNumbers.length));
+
+        const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/${countryCode}/${type}.json?${params.toString()}`;
+
+        const res = await fetch(url, {
+          headers: { Authorization: twilioAuth() },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          allNumbers = allNumbers.concat(data.available_phone_numbers || []);
+        }
+      }
+    }
+
+    // Map to a consistent format
+    const numbers = allNumbers.slice(0, parseInt(limit)).map((n) => ({
       phone_number: n.phone_number,
-      region: n.region_information,
-      cost: n.cost_information,
-      type: n.phone_number_type,
-      features: n.features,
+      friendly_name: n.friendly_name,
+      region: n.region,
+      locality: n.locality,
+      type: n.address_requirements,
+      capabilities: n.capabilities,
     }));
 
     return NextResponse.json({ numbers });

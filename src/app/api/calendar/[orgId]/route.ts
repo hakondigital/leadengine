@@ -42,7 +42,7 @@ export async function GET(
       .eq('id', orgId)
       .single();
 
-    const calName = org?.name ? `${org.name} - Appointments` : 'LeadEngine Appointments';
+    const calName = org?.name ? `${org.name} - Appointments` : 'Odyssey Appointments';
 
     // Build iCalendar feed
     const events = (appointments || []).map((apt) => {
@@ -69,7 +69,7 @@ export async function GET(
 
       return [
         'BEGIN:VEVENT',
-        `UID:apt-${apt.id}@leadengine`,
+        `UID:apt-${apt.id}@odyssey`,
         `DTSTAMP:${formatICSDate(new Date())}`,
         `DTSTART:${formatICSDate(start)}`,
         `DTEND:${formatICSDate(end)}`,
@@ -84,7 +84,7 @@ export async function GET(
     const ical = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//LeadEngine//Appointments//EN',
+      'PRODID:-//Odyssey//Appointments//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       `X-WR-CALNAME:${escapeICS(calName)}`,

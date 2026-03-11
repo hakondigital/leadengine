@@ -132,7 +132,7 @@ export async function countSequences(organizationId: string): Promise<number> {
   const supabase = await createServiceRoleClient();
 
   const { count } = await supabase
-    .from('sequences')
+    .from('follow_up_sequences')
     .select('*', { count: 'exact', head: true })
     .eq('organization_id', organizationId);
 

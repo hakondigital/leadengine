@@ -193,11 +193,11 @@ export function LeadCaptureForm({
           transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-[var(--le-text-primary)] tracking-tight">
+            <h2 className="text-xl font-semibold text-[var(--od-text-primary)] tracking-tight">
               {template.steps[currentStep - 1]?.title}
             </h2>
             {template.steps[currentStep - 1]?.description && (
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-1">
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-1">
                 {template.steps[currentStep - 1].description}
               </p>
             )}
@@ -272,7 +272,7 @@ export function LeadCaptureForm({
       )}
 
       {/* Navigation */}
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--le-border-subtle)]">
+      <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--od-border-subtle)]">
         <div>
           {currentStep > 1 && (
             <Button variant="ghost" size="md" onClick={handleBack} type="button">
@@ -313,8 +313,8 @@ export function LeadCaptureForm({
 
       {/* Trust indicator */}
       <div className="flex items-center justify-center gap-1.5 mt-5">
-        <Shield className="w-3 h-3 text-[var(--le-text-muted)]" />
-        <p className="text-[11px] text-[var(--le-text-muted)]">
+        <Shield className="w-3 h-3 text-[var(--od-text-muted)]" />
+        <p className="text-[11px] text-[var(--od-text-muted)]">
           Your information is secure and will never be shared.
         </p>
       </div>

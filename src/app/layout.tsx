@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LeadEngine — AI-Powered Lead Capture & Qualification',
+  title: 'Odyssey — AI-Powered Lead Capture & Qualification',
   description:
     'Premium lead capture, AI qualification, and pipeline management for service businesses. Never miss another lead.',
   keywords: ['lead capture', 'CRM', 'AI qualification', 'service business', 'lead management'],

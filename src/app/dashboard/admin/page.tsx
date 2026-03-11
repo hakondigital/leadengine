@@ -142,8 +142,8 @@ export default function AdminPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Shield className="w-16 h-16 text-red-400 mb-4" />
-        <h2 className="text-xl font-semibold text-[var(--le-text-primary)]">Access Denied</h2>
-        <p className="text-[var(--le-text-secondary)] mt-2">This page is restricted to super administrators.</p>
+        <h2 className="text-xl font-semibold text-[var(--od-text-primary)]">Access Denied</h2>
+        <p className="text-[var(--od-text-secondary)] mt-2">This page is restricted to super administrators.</p>
       </div>
     );
   }
@@ -169,16 +169,16 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-[var(--le-accent)]" />
+            <Shield className="w-6 h-6 text-[var(--od-accent)]" />
             <div>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                 Operator Panel
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
-                LeadEngine platform management
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
+                Odyssey platform management
               </p>
             </div>
           </div>
@@ -196,8 +196,8 @@ export default function AdminPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === tab.id
-                  ? 'text-[var(--le-accent)] bg-[var(--le-accent-muted)] border-b-2 border-[var(--le-accent)]'
-                  : 'text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)]'
+                  ? 'text-[var(--od-accent)] bg-[var(--od-accent-muted)] border-b-2 border-[var(--od-accent)]'
+                  : 'text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)]'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -228,8 +228,8 @@ export default function AdminPage() {
                           <stat.icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-[var(--le-text-primary)]">{stat.value}</p>
-                          <p className="text-[10px] text-[var(--le-text-muted)] uppercase tracking-wider font-semibold">{stat.label}</p>
+                          <p className="text-2xl font-bold text-[var(--od-text-primary)]">{stat.value}</p>
+                          <p className="text-[10px] text-[var(--od-text-muted)] uppercase tracking-wider font-semibold">{stat.label}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -248,18 +248,18 @@ export default function AdminPage() {
                   {loading ? (
                     <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
                   ) : recentOrgs.length === 0 ? (
-                    <p className="text-[var(--le-text-muted)] text-center py-4 text-sm">No organizations yet</p>
+                    <p className="text-[var(--od-text-muted)] text-center py-4 text-sm">No organizations yet</p>
                   ) : (
                     <div className="space-y-2">
                       {recentOrgs.map((org) => (
-                        <div key={org.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--le-bg-tertiary)]">
+                        <div key={org.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--od-bg-tertiary)]">
                           <div>
-                            <p className="text-sm font-medium text-[var(--le-text-primary)]">{org.name}</p>
-                            <p className="text-[10px] text-[var(--le-text-muted)]">
+                            <p className="text-sm font-medium text-[var(--od-text-primary)]">{org.name}</p>
+                            <p className="text-[10px] text-[var(--od-text-muted)]">
                               {new Date(org.created_at).toLocaleDateString()} &middot; {org.lead_count} leads
                             </p>
                           </div>
-                          <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--le-bg-muted)] text-[var(--le-text-muted)]'}>
+                          <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--od-bg-muted)] text-[var(--od-text-muted)]'}>
                             {org.plan ? org.plan.charAt(0).toUpperCase() + org.plan.slice(1) : 'Free'}
                           </Badge>
                         </div>
@@ -289,10 +289,10 @@ export default function AdminPage() {
                         return (
                           <div key={item.plan}>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-[var(--le-text-secondary)]">{item.plan}</span>
-                              <span className="text-xs font-bold text-[var(--le-text-primary)]">{item.count}</span>
+                              <span className="text-xs text-[var(--od-text-secondary)]">{item.plan}</span>
+                              <span className="text-xs font-bold text-[var(--od-text-primary)]">{item.count}</span>
                             </div>
-                            <div className="h-2 bg-[var(--le-bg-tertiary)] rounded-full overflow-hidden">
+                            <div className="h-2 bg-[var(--od-bg-tertiary)] rounded-full overflow-hidden">
                               <motion.div
                                 className="h-full rounded-full"
                                 style={{ backgroundColor: item.color }}
@@ -338,13 +338,13 @@ export default function AdminPage() {
           <>
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--le-text-muted)]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--od-text-muted)]" />
               <input
                 type="text"
                 placeholder="Search organizations by name, slug, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-[var(--le-bg-secondary)] border border-[var(--le-border-subtle)] rounded-lg text-sm text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:border-[var(--le-accent)]"
+                className="w-full pl-10 pr-4 py-2.5 bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)] rounded-lg text-sm text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:border-[var(--od-accent)]"
               />
             </div>
 
@@ -359,36 +359,36 @@ export default function AdminPage() {
                 {loading ? (
                   <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
                 ) : filteredOrgs.length === 0 ? (
-                  <p className="text-[var(--le-text-muted)] text-center py-8">
+                  <p className="text-[var(--od-text-muted)] text-center py-8">
                     {searchQuery ? 'No organizations match your search' : 'No organizations found'}
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {filteredOrgs.map((org) => (
-                      <motion.div key={org.id} layout className="border border-[var(--le-border-subtle)] rounded-lg overflow-hidden">
+                      <motion.div key={org.id} layout className="border border-[var(--od-border-subtle)] rounded-lg overflow-hidden">
                         <button
                           onClick={() => setExpandedOrg(expandedOrg === org.id ? null : org.id)}
-                          className="w-full flex items-center justify-between p-4 hover:bg-[var(--le-bg-muted)]/50 transition-colors text-left"
+                          className="w-full flex items-center justify-between p-4 hover:bg-[var(--od-bg-muted)]/50 transition-colors text-left"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-9 h-9 rounded-lg bg-[var(--le-bg-elevated)] border border-[var(--le-border-subtle)] flex items-center justify-center text-xs font-bold text-[var(--le-text-secondary)]">
+                            <div className="w-9 h-9 rounded-lg bg-[var(--od-bg-elevated)] border border-[var(--od-border-subtle)] flex items-center justify-center text-xs font-bold text-[var(--od-text-secondary)]">
                               {org.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-medium text-[var(--le-text-primary)]">{org.name}</p>
-                              <p className="text-xs text-[var(--le-text-muted)]">{org.slug}</p>
+                              <p className="font-medium text-[var(--od-text-primary)]">{org.name}</p>
+                              <p className="text-xs text-[var(--od-text-muted)]">{org.slug}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <div className="hidden md:flex items-center gap-4 text-xs text-[var(--le-text-secondary)]">
+                            <div className="hidden md:flex items-center gap-4 text-xs text-[var(--od-text-secondary)]">
                               <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {org.lead_count}</span>
                               <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {org.user_count}</span>
                               <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {org.form_count}</span>
                             </div>
-                            <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--le-bg-muted)] text-[var(--le-text-muted)]'}>
+                            <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--od-bg-muted)] text-[var(--od-text-muted)]'}>
                               {org.plan ? org.plan.charAt(0).toUpperCase() + org.plan.slice(1) : 'Free'}
                             </Badge>
-                            <ChevronDown className={`w-4 h-4 text-[var(--le-text-muted)] transition-transform ${expandedOrg === org.id ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-4 h-4 text-[var(--od-text-muted)] transition-transform ${expandedOrg === org.id ? 'rotate-180' : ''}`} />
                           </div>
                         </button>
 
@@ -396,55 +396,55 @@ export default function AdminPage() {
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
-                            className="border-t border-[var(--le-border-subtle)] p-4 bg-[var(--le-bg-muted)]/30 space-y-4"
+                            className="border-t border-[var(--od-border-subtle)] p-4 bg-[var(--od-bg-muted)]/30 space-y-4"
                           >
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                               <div>
-                                <p className="text-[var(--le-text-muted)] text-xs">Org ID</p>
+                                <p className="text-[var(--od-text-muted)] text-xs">Org ID</p>
                                 <div className="flex items-center gap-1">
-                                  <p className="text-[var(--le-text-secondary)] font-mono text-xs truncate">{org.id}</p>
-                                  <button onClick={() => copyToClipboard(org.id, org.id)} className="shrink-0 p-0.5 rounded hover:bg-[var(--le-bg-tertiary)]">
-                                    {copiedId === org.id ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-[var(--le-text-muted)]" />}
+                                  <p className="text-[var(--od-text-secondary)] font-mono text-xs truncate">{org.id}</p>
+                                  <button onClick={() => copyToClipboard(org.id, org.id)} className="shrink-0 p-0.5 rounded hover:bg-[var(--od-bg-tertiary)]">
+                                    {copiedId === org.id ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-[var(--od-text-muted)]" />}
                                   </button>
                                 </div>
                               </div>
                               <div>
-                                <p className="text-[var(--le-text-muted)] text-xs">Created</p>
-                                <p className="text-[var(--le-text-secondary)]">{new Date(org.created_at).toLocaleDateString()}</p>
+                                <p className="text-[var(--od-text-muted)] text-xs">Created</p>
+                                <p className="text-[var(--od-text-secondary)]">{new Date(org.created_at).toLocaleDateString()}</p>
                               </div>
                               <div>
-                                <p className="text-[var(--le-text-muted)] text-xs">Billing</p>
-                                <p className="text-[var(--le-text-secondary)]">{org.billing_status || 'None'}</p>
+                                <p className="text-[var(--od-text-muted)] text-xs">Billing</p>
+                                <p className="text-[var(--od-text-secondary)]">{org.billing_status || 'None'}</p>
                               </div>
                               <div>
-                                <p className="text-[var(--le-text-muted)] text-xs">Contact Email</p>
-                                <p className="text-[var(--le-text-secondary)] truncate text-xs">{org.notification_email || 'Not set'}</p>
+                                <p className="text-[var(--od-text-muted)] text-xs">Contact Email</p>
+                                <p className="text-[var(--od-text-secondary)] truncate text-xs">{org.notification_email || 'Not set'}</p>
                               </div>
                               <div>
-                                <p className="text-[var(--le-text-muted)] text-xs">Phone</p>
-                                <p className="text-[var(--le-text-secondary)] text-xs">{org.phone || 'Not set'}</p>
+                                <p className="text-[var(--od-text-muted)] text-xs">Phone</p>
+                                <p className="text-[var(--od-text-secondary)] text-xs">{org.phone || 'Not set'}</p>
                               </div>
                             </div>
 
                             {orgUsers[org.id] && orgUsers[org.id].length > 0 && (
                               <div>
-                                <p className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-2">Team Members</p>
+                                <p className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-2">Team Members</p>
                                 <div className="space-y-1">
                                   {orgUsers[org.id].map((u) => (
-                                    <div key={u.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--le-bg-secondary)]">
+                                    <div key={u.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--od-bg-secondary)]">
                                       <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-[var(--le-accent-muted)] flex items-center justify-center text-[10px] font-bold text-[var(--le-accent)]">
+                                        <div className="w-6 h-6 rounded-full bg-[var(--od-accent-muted)] flex items-center justify-center text-[10px] font-bold text-[var(--od-accent)]">
                                           {(u.full_name || u.email).charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                          <p className="text-xs text-[var(--le-text-primary)] font-medium">{u.full_name || 'No name'}</p>
-                                          <p className="text-[10px] text-[var(--le-text-muted)]">{u.email}</p>
+                                          <p className="text-xs text-[var(--od-text-primary)] font-medium">{u.full_name || 'No name'}</p>
+                                          <p className="text-[10px] text-[var(--od-text-muted)]">{u.email}</p>
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         {u.email && (
-                                          <a href={`mailto:${u.email}`} className="p-1 rounded hover:bg-[var(--le-bg-tertiary)]" title="Email user">
-                                            <Mail className="w-3 h-3 text-[var(--le-text-muted)]" />
+                                          <a href={`mailto:${u.email}`} className="p-1 rounded hover:bg-[var(--od-bg-tertiary)]" title="Email user">
+                                            <Mail className="w-3 h-3 text-[var(--od-text-muted)]" />
                                           </a>
                                         )}
                                         <Badge variant="default" className="text-[10px] capitalize">{u.role}</Badge>
@@ -455,8 +455,8 @@ export default function AdminPage() {
                               </div>
                             )}
 
-                            <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--le-border-subtle)]">
-                              <p className="text-xs text-[var(--le-text-muted)] w-full mb-1">Set Plan:</p>
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--od-border-subtle)]">
+                              <p className="text-xs text-[var(--od-text-muted)] w-full mb-1">Set Plan:</p>
                               {(['starter', 'professional', 'enterprise'] as const).map((plan) => (
                                 <Button key={plan} size="sm" variant={org.plan === plan ? 'default' : 'secondary'} onClick={() => handleAction(org.id, 'set_plan', plan)} disabled={actionLoading === `${org.id}-set_plan`}>
                                   {plan.charAt(0).toUpperCase() + plan.slice(1)}
@@ -486,13 +486,13 @@ export default function AdminPage() {
         {activeTab === 'support' && (
           <>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--le-text-muted)]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--od-text-muted)]" />
               <input
                 type="text"
                 placeholder="Search by organization name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-[var(--le-bg-secondary)] border border-[var(--le-border-subtle)] rounded-lg text-sm text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:border-[var(--le-accent)]"
+                className="w-full pl-10 pr-4 py-2.5 bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)] rounded-lg text-sm text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:border-[var(--od-accent)]"
               />
             </div>
 
@@ -500,8 +500,8 @@ export default function AdminPage() {
               <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
             ) : filteredOrgs.length === 0 ? (
               <div className="text-center py-12">
-                <Headphones className="w-12 h-12 text-[var(--le-text-muted)] mx-auto mb-3" />
-                <p className="text-[var(--le-text-muted)]">
+                <Headphones className="w-12 h-12 text-[var(--od-text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--od-text-muted)]">
                   {searchQuery ? 'No clients match your search' : 'No clients yet'}
                 </p>
               </div>
@@ -509,47 +509,47 @@ export default function AdminPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredOrgs.map((org) => (
                   <motion.div key={org.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                    <Card className="hover:border-[var(--le-accent)]/30 transition-colors">
+                    <Card className="hover:border-[var(--od-accent)]/30 transition-colors">
                       <CardContent className="pt-4 pb-4 space-y-3">
                         {/* Client header */}
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-[var(--le-bg-elevated)] border border-[var(--le-border-subtle)] flex items-center justify-center text-sm font-bold text-[var(--le-text-secondary)]">
+                            <div className="w-10 h-10 rounded-lg bg-[var(--od-bg-elevated)] border border-[var(--od-border-subtle)] flex items-center justify-center text-sm font-bold text-[var(--od-text-secondary)]">
                               {org.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-medium text-[var(--le-text-primary)] text-sm">{org.name}</p>
-                              <p className="text-[10px] text-[var(--le-text-muted)]">
+                              <p className="font-medium text-[var(--od-text-primary)] text-sm">{org.name}</p>
+                              <p className="text-[10px] text-[var(--od-text-muted)]">
                                 Since {new Date(org.created_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
-                          <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--le-bg-muted)] text-[var(--le-text-muted)]'}>
+                          <Badge className={org.plan ? planColors[org.plan] || '' : 'bg-[var(--od-bg-muted)] text-[var(--od-text-muted)]'}>
                             {org.plan ? org.plan.charAt(0).toUpperCase() + org.plan.slice(1) : 'Free'}
                           </Badge>
                         </div>
 
                         {/* Stats row */}
-                        <div className="flex items-center gap-4 text-xs text-[var(--le-text-secondary)]">
+                        <div className="flex items-center gap-4 text-xs text-[var(--od-text-secondary)]">
                           <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {org.lead_count} leads</span>
                           <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {org.user_count} users</span>
                           <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {org.form_count} forms</span>
                         </div>
 
                         {/* Contact info */}
-                        <div className="text-xs space-y-1 pt-2 border-t border-[var(--le-border-subtle)]">
+                        <div className="text-xs space-y-1 pt-2 border-t border-[var(--od-border-subtle)]">
                           {org.notification_email && (
-                            <div className="flex items-center gap-2 text-[var(--le-text-secondary)]">
-                              <Mail className="w-3 h-3 text-[var(--le-text-muted)]" />
-                              <a href={`mailto:${org.notification_email}`} className="hover:text-[var(--le-accent)] truncate">
+                            <div className="flex items-center gap-2 text-[var(--od-text-secondary)]">
+                              <Mail className="w-3 h-3 text-[var(--od-text-muted)]" />
+                              <a href={`mailto:${org.notification_email}`} className="hover:text-[var(--od-accent)] truncate">
                                 {org.notification_email}
                               </a>
                             </div>
                           )}
                           {org.phone && (
-                            <div className="flex items-center gap-2 text-[var(--le-text-secondary)]">
-                              <svg className="w-3 h-3 text-[var(--le-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                              <a href={`tel:${org.phone}`} className="hover:text-[var(--le-accent)]">{org.phone}</a>
+                            <div className="flex items-center gap-2 text-[var(--od-text-secondary)]">
+                              <svg className="w-3 h-3 text-[var(--od-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                              <a href={`tel:${org.phone}`} className="hover:text-[var(--od-accent)]">{org.phone}</a>
                             </div>
                           )}
                         </div>
@@ -557,7 +557,7 @@ export default function AdminPage() {
                         {/* Actions */}
                         <div className="flex items-center gap-2 pt-2">
                           {org.notification_email && (
-                            <a href={`mailto:${org.notification_email}?subject=LeadEngine Support`}>
+                            <a href={`mailto:${org.notification_email}?subject=Odyssey Support`}>
                               <Button size="sm" variant="secondary">
                                 <Mail className="w-3.5 h-3.5" />
                                 Email
@@ -570,7 +570,7 @@ export default function AdminPage() {
                           </Button>
                           <button
                             onClick={() => copyToClipboard(org.id, `support-${org.id}`)}
-                            className="ml-auto p-1.5 rounded hover:bg-[var(--le-bg-tertiary)] text-[var(--le-text-muted)]"
+                            className="ml-auto p-1.5 rounded hover:bg-[var(--od-bg-tertiary)] text-[var(--od-text-muted)]"
                             title="Copy Org ID"
                           >
                             {copiedId === `support-${org.id}` ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}

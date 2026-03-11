@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +17,9 @@ export async function GET(request: NextRequest) {
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
     }
+
+    const { unauthorized } = await requireCallerOwnsOrg(orgId);
+    if (unauthorized) return unauthorized;
 
     let query = supabase
       .from('appointments')
@@ -94,6 +98,13 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Appointment create error:', error);
       return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
+    }
+
+    // Auto-progress pipeline stage when appointment is linked to a lead (fire and forget)
+    if (lead_id) {
+      import('@/lib/pipeline-automation').then(({ autoPipelineProgress }) =>
+        autoPipelineProgress('appointment_created', lead_id, supabase)
+      ).catch(console.error);
     }
 
     return NextResponse.json(appointment, { status: 201 });

@@ -28,6 +28,14 @@ export interface PlanLimits {
   quotes: boolean;
   portfolio: boolean;
   lead_import: boolean;
+  inbox_compose: boolean;
+  // Automation features
+  daily_game_plan: boolean;
+  revenue_gap_closer: boolean;
+  ghost_recovery: boolean;
+  post_job_lifecycle: boolean;
+  meeting_briefing: boolean;
+  ai_strategy: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
@@ -55,6 +63,13 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     quotes: false,
     portfolio: false,
     lead_import: false,
+    inbox_compose: false,
+    daily_game_plan: false,
+    revenue_gap_closer: false,
+    ghost_recovery: false,
+    post_job_lifecycle: false,
+    meeting_briefing: false,
+    ai_strategy: false,
   },
   professional: {
     leads_per_month: 250,
@@ -80,6 +95,13 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     quotes: true,
     portfolio: true,
     lead_import: true,
+    inbox_compose: true,
+    daily_game_plan: true,
+    revenue_gap_closer: true,
+    ghost_recovery: true,
+    post_job_lifecycle: true,
+    meeting_briefing: true,
+    ai_strategy: true,
   },
   enterprise: {
     leads_per_month: -1,
@@ -105,6 +127,13 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     quotes: true,
     portfolio: true,
     lead_import: true,
+    inbox_compose: true,
+    daily_game_plan: true,
+    revenue_gap_closer: true,
+    ghost_recovery: true,
+    post_job_lifecycle: true,
+    meeting_briefing: true,
+    ai_strategy: true,
   },
 };
 
@@ -133,6 +162,13 @@ export const FREE_LIMITS: PlanLimits = {
   quotes: false,
   portfolio: false,
   lead_import: false,
+  inbox_compose: false,
+  daily_game_plan: false,
+  revenue_gap_closer: false,
+  ghost_recovery: false,
+  post_job_lifecycle: false,
+  meeting_briefing: false,
+  ai_strategy: false,
 };
 
 export function getPlanLimits(plan: string | null | undefined): PlanLimits {

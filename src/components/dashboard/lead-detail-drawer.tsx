@@ -96,10 +96,10 @@ export function LeadDetailDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-[var(--le-bg-primary)] border-l border-[var(--le-border-subtle)] z-50 flex flex-col overflow-hidden"
+            className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-[var(--od-bg-primary)] border-l border-[var(--od-border-subtle)] z-50 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--od-border-subtle)]">
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
@@ -111,10 +111,10 @@ export function LeadDetailDrawer({
                   {lead.first_name[0]}{lead.last_name[0]}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-base font-semibold text-[var(--le-text-primary)] truncate tracking-tight">
+                  <h2 className="text-base font-semibold text-[var(--od-text-primary)] truncate tracking-tight">
                     {lead.first_name} {lead.last_name}
                   </h2>
-                  <p className="text-xs text-[var(--le-text-tertiary)]">
+                  <p className="text-xs text-[var(--od-text-tertiary)]">
                     Added {formatRelativeTime(lead.created_at)}
                   </p>
                 </div>
@@ -125,7 +125,7 @@ export function LeadDetailDrawer({
             </div>
 
             {/* Status & Priority quick actions */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--le-border-subtle)]">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--od-border-subtle)]">
               <div className="relative">
                 <button
                   onClick={() => setShowStatusMenu(!showStatusMenu)}
@@ -148,7 +148,7 @@ export function LeadDetailDrawer({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 mt-1 py-1 bg-[var(--le-bg-tertiary)] border border-[var(--le-border-default)] rounded-[var(--le-radius-md)] shadow-[var(--le-shadow-lg)] z-10 min-w-[160px]"
+                      className="absolute top-full left-0 mt-1 py-1 bg-[var(--od-bg-tertiary)] border border-[var(--od-border-default)] rounded-[var(--od-radius-md)] shadow-[var(--od-shadow-lg)] z-10 min-w-[160px]"
                     >
                       {pipelineStages.map((s) => (
                         <button
@@ -163,17 +163,17 @@ export function LeadDetailDrawer({
                             setShowStatusMenu(false);
                           }}
                           className={cn(
-                            'flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-[var(--le-bg-elevated)] transition-colors',
-                            lead.status === s.id && 'bg-[var(--le-bg-elevated)]'
+                            'flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-[var(--od-bg-elevated)] transition-colors',
+                            lead.status === s.id && 'bg-[var(--od-bg-elevated)]'
                           )}
                         >
                           <span
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: s.color }}
                           />
-                          <span className="text-[var(--le-text-secondary)]">{s.label}</span>
+                          <span className="text-[var(--od-text-secondary)]">{s.label}</span>
                           {lead.status === s.id && (
-                            <CheckCircle2 className="w-3 h-3 ml-auto text-[var(--le-accent)]" />
+                            <CheckCircle2 className="w-3 h-3 ml-auto text-[var(--od-accent)]" />
                           )}
                         </button>
                       ))}
@@ -183,9 +183,9 @@ export function LeadDetailDrawer({
               </div>
 
               {lead.ai_score !== null && lead.ai_score !== undefined && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--le-bg-tertiary)] border border-[var(--le-border-subtle)]">
-                  <Sparkles className="w-3 h-3 text-[var(--le-accent)]" />
-                  <span className="text-xs font-medium text-[var(--le-text-secondary)]">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--od-bg-tertiary)] border border-[var(--od-border-subtle)]">
+                  <Sparkles className="w-3 h-3 text-[var(--od-accent)]" />
+                  <span className="text-xs font-medium text-[var(--od-text-secondary)]">
                     Score: {lead.ai_score}
                   </span>
                 </div>
@@ -194,18 +194,18 @@ export function LeadDetailDrawer({
 
             {/* AI Summary */}
             {lead.ai_summary && (
-              <div className="mx-4 mt-4 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-accent-muted)] border border-[rgba(79,209,229,0.2)]">
+              <div className="mx-4 mt-4 p-3 rounded-[var(--od-radius-md)] bg-[var(--od-accent-muted)] border border-[rgba(79,209,229,0.2)]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[var(--le-accent)]" />
-                  <span className="text-xs font-semibold text-[var(--le-accent)]">AI Insight</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)]" />
+                  <span className="text-xs font-semibold text-[var(--od-accent)]">AI Insight</span>
                 </div>
-                <p className="text-xs text-[var(--le-text-secondary)] leading-relaxed">
+                <p className="text-xs text-[var(--od-text-secondary)] leading-relaxed">
                   {lead.ai_summary}
                 </p>
                 {lead.ai_recommended_action && (
                   <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[rgba(79,209,229,0.15)]">
-                    <AlertCircle className="w-3 h-3 text-[var(--le-accent)]" />
-                    <span className="text-[11px] text-[var(--le-accent)] font-medium">
+                    <AlertCircle className="w-3 h-3 text-[var(--od-accent)]" />
+                    <span className="text-[11px] text-[var(--od-accent)] font-medium">
                       {lead.ai_recommended_action}
                     </span>
                   </div>
@@ -214,7 +214,7 @@ export function LeadDetailDrawer({
             )}
 
             {/* Tabs */}
-            <div className="flex border-b border-[var(--le-border-subtle)] px-4 mt-4">
+            <div className="flex border-b border-[var(--od-border-subtle)] px-4 mt-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -222,8 +222,8 @@ export function LeadDetailDrawer({
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors',
                     activeTab === tab.id
-                      ? 'text-[var(--le-accent)] border-[var(--le-accent)]'
-                      : 'text-[var(--le-text-muted)] border-transparent hover:text-[var(--le-text-secondary)]'
+                      ? 'text-[var(--od-accent)] border-[var(--od-accent)]'
+                      : 'text-[var(--od-text-muted)] border-transparent hover:text-[var(--od-text-secondary)]'
                   )}
                 >
                   <tab.icon className="w-3.5 h-3.5" />
@@ -238,7 +238,7 @@ export function LeadDetailDrawer({
                 <div className="p-4 space-y-4">
                   {/* Contact info */}
                   <div>
-                    <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-3">
+                    <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-3">
                       Contact
                     </h4>
                     <div className="space-y-2.5">
@@ -251,7 +251,7 @@ export function LeadDetailDrawer({
 
                   {/* Project info */}
                   <div>
-                    <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-3">
+                    <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-3">
                       Project
                     </h4>
                     <div className="space-y-2.5">
@@ -266,10 +266,10 @@ export function LeadDetailDrawer({
                   {/* Message */}
                   {lead.message && (
                     <div>
-                      <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-3">
+                      <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-3">
                         Message
                       </h4>
-                      <p className="text-sm text-[var(--le-text-secondary)] leading-relaxed bg-[var(--le-bg-secondary)] rounded-[var(--le-radius-md)] p-3 border border-[var(--le-border-subtle)]">
+                      <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed bg-[var(--od-bg-secondary)] rounded-[var(--od-radius-md)] p-3 border border-[var(--od-border-subtle)]">
                         {lead.message}
                       </p>
                     </div>
@@ -278,17 +278,17 @@ export function LeadDetailDrawer({
                   {/* Won value display */}
                   {lead.status === 'won' && lead.won_value && (
                     <div>
-                      <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-3">
+                      <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-3">
                         Revenue
                       </h4>
-                      <div className="flex items-center gap-3 p-3 rounded-[var(--le-radius-md)] bg-[#4ADE80]/10 border border-[#4ADE80]/20">
+                      <div className="flex items-center gap-3 p-3 rounded-[var(--od-radius-md)] bg-[#4ADE80]/10 border border-[#4ADE80]/20">
                         <Trophy className="w-5 h-5 text-[#4ADE80]" />
                         <div>
                           <p className="text-lg font-bold text-[#4ADE80]">
                             ${Number(lead.won_value).toLocaleString()}
                           </p>
                           {lead.won_date && (
-                            <p className="text-[10px] text-[var(--le-text-muted)]">
+                            <p className="text-[10px] text-[var(--od-text-muted)]">
                               Won {formatRelativeTime(lead.won_date)}
                             </p>
                           )}
@@ -300,21 +300,21 @@ export function LeadDetailDrawer({
                   {/* Follow-up reminders */}
                   {lead.reminders && lead.reminders.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-3">
+                      <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-3">
                         Upcoming Reminders
                       </h4>
                       <div className="space-y-2">
                         {lead.reminders.map((reminder: FollowUpReminder) => (
                           <div
                             key={reminder.id}
-                            className="flex items-center gap-3 p-2.5 rounded-[var(--le-radius-md)] bg-[var(--le-bg-secondary)] border border-[var(--le-border-subtle)]"
+                            className="flex items-center gap-3 p-2.5 rounded-[var(--od-radius-md)] bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)]"
                           >
-                            <BellRing className="w-3.5 h-3.5 text-[var(--le-accent)] shrink-0" />
+                            <BellRing className="w-3.5 h-3.5 text-[var(--od-accent)] shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs text-[var(--le-text-secondary)] font-medium capitalize">
+                              <p className="text-xs text-[var(--od-text-secondary)] font-medium capitalize">
                                 {reminder.reminder_type.replace(/_/g, ' ')}
                               </p>
-                              <p className="text-[10px] text-[var(--le-text-muted)]">
+                              <p className="text-[10px] text-[var(--od-text-muted)]">
                                 {new Date(reminder.scheduled_for) > new Date()
                                   ? `Due ${formatRelativeTime(reminder.scheduled_for)}`
                                   : `Overdue — was ${formatRelativeTime(reminder.scheduled_for)}`
@@ -381,7 +381,7 @@ export function LeadDetailDrawer({
                   {/* Notes list */}
                   <div className="space-y-3">
                     {(!lead.notes || lead.notes.length === 0) ? (
-                      <p className="text-xs text-[var(--le-text-muted)] text-center py-8">
+                      <p className="text-xs text-[var(--od-text-muted)] text-center py-8">
                         No notes yet. Add the first one above.
                       </p>
                     ) : (
@@ -389,16 +389,16 @@ export function LeadDetailDrawer({
                         <div
                           key={note.id}
                           className={cn(
-                            'p-3 rounded-[var(--le-radius-md)] border',
+                            'p-3 rounded-[var(--od-radius-md)] border',
                             note.is_system
-                              ? 'bg-[var(--le-bg-tertiary)]/50 border-[var(--le-border-subtle)]'
-                              : 'bg-[var(--le-bg-secondary)] border-[var(--le-border-subtle)]'
+                              ? 'bg-[var(--od-bg-tertiary)]/50 border-[var(--od-border-subtle)]'
+                              : 'bg-[var(--od-bg-secondary)] border-[var(--od-border-subtle)]'
                           )}
                         >
-                          <p className="text-sm text-[var(--le-text-secondary)] leading-relaxed">
+                          <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed">
                             {note.content}
                           </p>
-                          <p className="text-[10px] text-[var(--le-text-muted)] mt-2">
+                          <p className="text-[10px] text-[var(--od-text-muted)] mt-2">
                             {formatRelativeTime(note.created_at)}
                             {note.is_system && ' (system)'}
                           </p>
@@ -419,7 +419,7 @@ export function LeadDetailDrawer({
                 <div className="p-4">
                   <div className="space-y-3">
                     {(!lead.status_changes || lead.status_changes.length === 0) ? (
-                      <p className="text-xs text-[var(--le-text-muted)] text-center py-8">
+                      <p className="text-xs text-[var(--od-text-muted)] text-center py-8">
                         No activity recorded yet.
                       </p>
                     ) : (
@@ -432,11 +432,11 @@ export function LeadDetailDrawer({
                             key={change.id}
                             className="flex items-center gap-3 py-2"
                           >
-                            <div className="w-6 h-6 rounded-full bg-[var(--le-bg-tertiary)] flex items-center justify-center shrink-0">
-                              <History className="w-3 h-3 text-[var(--le-text-muted)]" />
+                            <div className="w-6 h-6 rounded-full bg-[var(--od-bg-tertiary)] flex items-center justify-center shrink-0">
+                              <History className="w-3 h-3 text-[var(--od-text-muted)]" />
                             </div>
                             <div className="text-xs">
-                              <span className="text-[var(--le-text-secondary)]">
+                              <span className="text-[var(--od-text-secondary)]">
                                 Status changed
                                 {change.from_status && (
                                   <>
@@ -447,7 +447,7 @@ export function LeadDetailDrawer({
                                 {' to '}
                                 <span style={{ color: toStage?.color }}>{toStage?.label}</span>
                               </span>
-                              <p className="text-[var(--le-text-muted)] mt-0.5">
+                              <p className="text-[var(--od-text-muted)] mt-0.5">
                                 {formatRelativeTime(change.created_at)}
                               </p>
                             </div>
@@ -473,15 +473,15 @@ export function LeadDetailDrawer({
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-[var(--le-bg-secondary)] border border-[var(--le-border-default)] rounded-xl p-5 w-full max-w-xs shadow-xl"
+                    className="bg-[var(--od-bg-secondary)] border border-[var(--od-border-default)] rounded-xl p-5 w-full max-w-xs shadow-xl"
                   >
                     <div className="flex items-center gap-2 mb-4">
                       <Trophy className="w-5 h-5 text-[#4ADE80]" />
-                      <h3 className="text-base font-semibold text-[var(--le-text-primary)]">
+                      <h3 className="text-base font-semibold text-[var(--od-text-primary)]">
                         Mark as Won
                       </h3>
                     </div>
-                    <p className="text-xs text-[var(--le-text-tertiary)] mb-4">
+                    <p className="text-xs text-[var(--od-text-tertiary)] mb-4">
                       What&apos;s the value of this job? This helps track your revenue.
                     </p>
                     <Input
@@ -542,12 +542,12 @@ function DetailRow({
 }) {
   const content = (
     <div className="flex items-center gap-3 py-1.5">
-      <Icon className="w-3.5 h-3.5 text-[var(--le-text-muted)] shrink-0" />
+      <Icon className="w-3.5 h-3.5 text-[var(--od-text-muted)] shrink-0" />
       <div className="min-w-0">
-        <p className="text-[10px] text-[var(--le-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] text-[var(--od-text-muted)] uppercase tracking-wider">{label}</p>
         <p className={cn(
           'text-sm truncate',
-          isLink ? 'text-[var(--le-accent)] hover:underline' : 'text-[var(--le-text-secondary)]'
+          isLink ? 'text-[var(--od-accent)] hover:underline' : 'text-[var(--od-text-secondary)]'
         )}>
           {value}
         </p>

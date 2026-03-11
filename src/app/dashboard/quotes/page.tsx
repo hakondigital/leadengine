@@ -71,7 +71,7 @@ export default function QuotesPage() {
   const [quoteForm, setQuoteForm] = useState({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
 
   if (planLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   if (!canUseQuotes) {
@@ -181,13 +181,13 @@ export default function QuotesPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+            <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
               Quotes &amp; Estimates
             </h1>
-            <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+            <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
               Auto-generated from leads &middot; review and send
             </p>
           </div>
@@ -206,8 +206,8 @@ export default function QuotesPage() {
 
       <div className="px-4 lg:px-6 py-6 space-y-6">
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--le-text-muted)]">
-            <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)]">
+            <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
             Loading quotes...
           </div>
         )}
@@ -224,10 +224,10 @@ export default function QuotesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">
+                      <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">
                         {stat.label}
                       </p>
-                      <p className="text-2xl font-bold text-[var(--le-text-primary)] mt-1">
+                      <p className="text-2xl font-bold text-[var(--od-text-primary)] mt-1">
                         {stat.value}
                       </p>
                     </div>
@@ -261,13 +261,13 @@ export default function QuotesPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-[var(--le-border-subtle)]">
-                      <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Quote #</th>
-                      <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Lead</th>
-                      <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Total</th>
-                      <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Status</th>
-                      <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Created</th>
-                      <th className="text-right text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3">Actions</th>
+                    <tr className="border-b border-[var(--od-border-subtle)]">
+                      <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Quote #</th>
+                      <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Lead</th>
+                      <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Total</th>
+                      <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Status</th>
+                      <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Created</th>
+                      <th className="text-right text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -279,13 +279,13 @@ export default function QuotesPage() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: i * 0.03 }}
-                          className="border-b border-[var(--le-border-subtle)] last:border-0 hover:bg-[var(--le-bg-tertiary)]/50 transition-colors"
+                          className="border-b border-[var(--od-border-subtle)] last:border-0 hover:bg-[var(--od-bg-tertiary)]/50 transition-colors"
                         >
                           <td className="py-3 pr-4">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-semibold text-[var(--le-accent)]">{quote.number}</span>
+                              <span className="text-sm font-semibold text-[var(--od-accent)]">{quote.number}</span>
                               {quote.isAiGenerated && (
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1 py-0.5 rounded bg-[var(--le-accent)]/10 text-[var(--le-accent)]">
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1 py-0.5 rounded bg-[var(--od-accent)]/10 text-[var(--od-accent)]">
                                   <Sparkles className="w-2.5 h-2.5" />
                                   AI
                                 </span>
@@ -293,14 +293,14 @@ export default function QuotesPage() {
                             </div>
                           </td>
                           <td className="py-3 pr-4">
-                            <p className="text-sm font-medium text-[var(--le-text-primary)]">{quote.leadName}</p>
-                            <p className="text-xs text-[var(--le-text-muted)]">{quote.email}</p>
+                            <p className="text-sm font-medium text-[var(--od-text-primary)]">{quote.leadName}</p>
+                            <p className="text-xs text-[var(--od-text-muted)]">{quote.email}</p>
                           </td>
                           <td className="py-3 pr-4">
-                            <span className="text-sm font-semibold text-[var(--le-text-primary)]">
+                            <span className="text-sm font-semibold text-[var(--od-text-primary)]">
                               ${quote.total.toLocaleString()}
                             </span>
-                            <p className="text-[10px] text-[var(--le-text-muted)]">{quote.items} items</p>
+                            <p className="text-[10px] text-[var(--od-text-muted)]">{quote.items} items</p>
                           </td>
                           <td className="py-3 pr-4">
                             <span
@@ -311,7 +311,7 @@ export default function QuotesPage() {
                             </span>
                           </td>
                           <td className="py-3 pr-4">
-                            <span className="text-xs text-[var(--le-text-tertiary)]">{quote.createdAt}</span>
+                            <span className="text-xs text-[var(--od-text-tertiary)]">{quote.createdAt}</span>
                           </td>
                           <td className="py-3 text-right">
                             <div className="flex items-center justify-end gap-1 relative">
@@ -346,67 +346,67 @@ export default function QuotesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">New Quote</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--od-text-primary)]">New Quote</h2>
               <Button variant="ghost" size="icon-sm" onClick={() => setShowNewQuoteModal(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Quote Title</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Quote Title</label>
                 <input
                   value={quoteForm.title}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                   placeholder="e.g. Kitchen Renovation Quote"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Client Name</label>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Client Name</label>
                   <input
                     value={quoteForm.leadName}
                     onChange={(e) => setQuoteForm((f) => ({ ...f, leadName: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                     placeholder="Client name"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Client Email</label>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Client Email</label>
                   <input
                     type="email"
                     value={quoteForm.leadEmail}
                     onChange={(e) => setQuoteForm((f) => ({ ...f, leadEmail: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                    className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                     placeholder="client@email.com"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Amount ($)</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Amount ($)</label>
                 <input
                   type="number"
                   value={quoteForm.amount}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, amount: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                   placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Notes</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Notes</label>
                 <textarea
                   value={quoteForm.notes}
                   onChange={(e) => setQuoteForm((f) => ({ ...f, notes: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)] resize-none"
                   placeholder="Additional notes..."
                 />
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--od-border-subtle)]">
               <Button variant="ghost" size="sm" onClick={() => setShowNewQuoteModal(false)}>Cancel</Button>
               <Button size="sm" disabled={!quoteForm.title || !quoteForm.leadName || quoteSaving} onClick={handleCreateQuote}>
                 {quoteSaving ? 'Creating...' : 'Create Quote'}
@@ -423,10 +423,10 @@ export default function QuotesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">{viewingQuote.number}</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--od-text-primary)]">{viewingQuote.number}</h2>
               <Button variant="ghost" size="icon-sm" onClick={() => setViewingQuote(null)}>
                 <X className="w-4 h-4" />
               </Button>
@@ -434,12 +434,12 @@ export default function QuotesPage() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Client</p>
-                  <p className="text-sm font-medium text-[var(--le-text-primary)] mt-1">{viewingQuote.leadName}</p>
-                  <p className="text-xs text-[var(--le-text-muted)]">{viewingQuote.email}</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Client</p>
+                  <p className="text-sm font-medium text-[var(--od-text-primary)] mt-1">{viewingQuote.leadName}</p>
+                  <p className="text-xs text-[var(--od-text-muted)]">{viewingQuote.email}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Status</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Status</p>
                   <span
                     className="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-[4px] border mt-1"
                     style={{
@@ -454,26 +454,26 @@ export default function QuotesPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Total</p>
-                  <p className="text-xl font-bold text-[var(--le-text-primary)] mt-1">${viewingQuote.total.toLocaleString()}</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Total</p>
+                  <p className="text-xl font-bold text-[var(--od-text-primary)] mt-1">${viewingQuote.total.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Items</p>
-                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.items} line items</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Items</p>
+                  <p className="text-sm text-[var(--od-text-primary)] mt-1">{viewingQuote.items} line items</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Created</p>
-                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.createdAt}</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Created</p>
+                  <p className="text-sm text-[var(--od-text-primary)] mt-1">{viewingQuote.createdAt}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">Expires</p>
-                  <p className="text-sm text-[var(--le-text-primary)] mt-1">{viewingQuote.expiresAt}</p>
+                  <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">Expires</p>
+                  <p className="text-sm text-[var(--od-text-primary)] mt-1">{viewingQuote.expiresAt}</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--od-border-subtle)]">
               {viewingQuote.status === 'draft' && (
                 <Button size="sm" onClick={() => { handleSendQuote(viewingQuote.id); setViewingQuote(null); }}>
                   <Send className="w-3.5 h-3.5" />

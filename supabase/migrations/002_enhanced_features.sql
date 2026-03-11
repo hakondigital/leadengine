@@ -1,4 +1,4 @@
--- LeadEngine Enhanced Features Migration
+-- Odyssey Enhanced Features Migration
 -- Adds: Appointments, Quotes, Follow-up Sequences, Call Tracking, Inbox,
 -- Reviews, Photos, Portfolios, Service Areas, Territories, Weather Campaigns,
 -- Team Routing, Duplicate Detection, and more.

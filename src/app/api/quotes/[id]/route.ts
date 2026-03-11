@@ -35,9 +35,12 @@ export async function PUT(
     const body = await request.json();
     const supabase = await createServiceRoleClient();
 
-    // Recalculate totals if items changed
-    if (body.items) {
-      const subtotal = body.items.reduce(
+    // Recalculate totals if line_items changed (accept both 'items' and 'line_items')
+    const updateItems = body.line_items || body.items;
+    if (updateItems) {
+      body.line_items = updateItems;
+      delete body.items;
+      const subtotal = updateItems.reduce(
         (sum: number, item: { quantity: number; unit_price: number }) =>
           sum + (item.quantity || 1) * (item.unit_price || 0),
         0
@@ -65,6 +68,13 @@ export async function PUT(
     console.error('Quote update error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return PUT(request, { params });
 }
 
 // POST to send a quote — updates status to 'sent' and sets sent_at
@@ -107,6 +117,20 @@ export async function POST(
       const { sendFollowUpEmail } = await import('@/lib/email');
       const message = `Hi ${quote.lead.first_name},\n\nPlease find your quote (${quote.quote_number}) for $${quote.total?.toLocaleString()}. This quote is valid until ${quote.valid_until ? new Date(quote.valid_until).toLocaleDateString() : 'further notice'}.\n\nIf you have any questions, feel free to reach out.\n\nBest regards,\n${quote.organization?.name || 'Our Team'}`;
       sendFollowUpEmail(quote.lead, quote.organization, message).catch(console.error);
+    }
+
+    // Trigger quote_sent sequences (fire and forget)
+    if (quote.lead_id && quote.organization_id) {
+      import('@/lib/sequence-triggers').then(({ triggerSequenceEvent }) =>
+        triggerSequenceEvent('quote_sent', quote.lead_id, quote.organization_id, supabase)
+      ).catch(console.error);
+    }
+
+    // Auto-progress pipeline stage (fire and forget)
+    if (quote.lead_id) {
+      import('@/lib/pipeline-automation').then(({ autoPipelineProgress }) =>
+        autoPipelineProgress('quote_sent', quote.lead_id, supabase)
+      ).catch(console.error);
     }
 
     return NextResponse.json(updated);

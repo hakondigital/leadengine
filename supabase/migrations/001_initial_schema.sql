@@ -1,4 +1,4 @@
--- LeadEngine Database Schema
+-- Odyssey Database Schema
 -- Multi-tenant lead capture and qualification platform
 
 -- Enable UUID generation

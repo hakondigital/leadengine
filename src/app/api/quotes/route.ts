@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,9 @@ export async function GET(request: NextRequest) {
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
     }
+
+    const { unauthorized } = await requireCallerOwnsOrg(orgId);
+    if (unauthorized) return unauthorized;
 
     let query = supabase
       .from('quotes')
@@ -50,11 +54,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { organization_id, lead_id, items, notes, valid_until, ...rest } = body;
+    // Accept both 'items' (legacy) and 'line_items' (DB column name)
+    const { organization_id, lead_id, items, line_items, notes, valid_until, title, ...rest } = body;
 
-    if (!organization_id || !lead_id) {
+    if (!organization_id) {
       return NextResponse.json(
-        { error: 'organization_id and lead_id required' },
+        { error: 'organization_id required' },
         { status: 400 }
       );
     }
@@ -72,29 +77,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const prefix = org.quote_prefix || 'QT';
-    const nextNumber = org.quote_next_number || 1;
+    const prefix = (org as Record<string, unknown>).quote_prefix as string || 'QT';
+    const nextNumber = (org as Record<string, unknown>).quote_next_number as number || 1;
     const quoteNumber = `${prefix}-${String(nextNumber).padStart(5, '0')}`;
 
-    // Calculate totals from items
-    const quoteItems = items || [];
+    // Accept either items or line_items from request body
+    const quoteItems = line_items || items || [];
     const subtotal = quoteItems.reduce(
       (sum: number, item: { quantity: number; unit_price: number }) =>
         sum + (item.quantity || 1) * (item.unit_price || 0),
       0
     );
-    const taxRate = rest.tax_rate || 0;
+    const taxRate = (rest.tax_rate as number) || 0;
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount;
 
-    // Insert quote
+    // Insert quote — use line_items (actual DB column name)
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .insert({
         organization_id,
-        lead_id,
+        lead_id: lead_id || null,
         quote_number: quoteNumber,
-        items: quoteItems,
+        title: title || quoteNumber,
+        line_items: quoteItems,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,
@@ -102,7 +108,6 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         valid_until: valid_until || null,
         status: 'draft',
-        ...rest,
       })
       .select()
       .single();

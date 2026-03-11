@@ -28,6 +28,8 @@ import {
   Copy,
   Check,
   Smartphone,
+  Link2,
+  ExternalLink,
 } from 'lucide-react';
 
 interface Appointment {
@@ -87,11 +89,13 @@ export default function AppointmentsPage() {
   const [bookingSaving, setBookingSaving] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCopied, setSyncCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState<'url' | 'embed' | null>(null);
   const { success: showSuccess } = useToast();
   const { canUseAppointments, planName, loading: planLoading } = usePlan();
 
   if (planLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   if (!canUseAppointments) {
@@ -173,17 +177,21 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+            <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
               Appointments
             </h1>
-            <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+            <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
               Manage your schedule and upcoming bookings
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowShareModal(true)}>
+              <Link2 className="w-3.5 h-3.5" />
+              Share Booking Page
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => setShowSyncModal(true)}>
               <RefreshCw className="w-3.5 h-3.5" />
               Sync Calendar
@@ -198,8 +206,8 @@ export default function AppointmentsPage() {
 
       <div className="px-4 lg:px-6 py-6 space-y-6">
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--le-text-muted)]">
-            <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)]">
+            <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
             Loading appointments...
           </div>
         )}
@@ -208,14 +216,14 @@ export default function AppointmentsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[var(--le-accent)]" />
+                <Calendar className="w-4 h-4 text-[var(--od-accent)]" />
                 <CardTitle>Week View</CardTitle>
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon-sm" onClick={() => setWeekOffset((w) => w - 1)}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <span className="text-xs font-medium text-[var(--le-text-secondary)] px-2">
+                <span className="text-xs font-medium text-[var(--od-text-secondary)] px-2">
                   {weekLabel}
                 </span>
                 <Button variant="ghost" size="icon-sm" onClick={() => setWeekOffset((w) => w + 1)}>
@@ -228,20 +236,20 @@ export default function AppointmentsPage() {
             <div className="overflow-x-auto">
               <div className="min-w-[640px]">
                 {/* Day headers */}
-                <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-[var(--le-border-subtle)] pb-2 mb-2">
+                <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-[var(--od-border-subtle)] pb-2 mb-2">
                   <div />
                   {week.map((d) => (
                     <div key={d.full} className="text-center">
-                      <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">{d.day}</p>
-                      <p className="text-xs font-medium text-[var(--le-text-secondary)]">{d.date}</p>
+                      <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">{d.day}</p>
+                      <p className="text-xs font-medium text-[var(--od-text-secondary)]">{d.date}</p>
                     </div>
                   ))}
                 </div>
                 {/* Time grid */}
                 <div className="space-y-0">
                   {hours.map((hour) => (
-                    <div key={hour} className="grid grid-cols-[60px_repeat(5,1fr)] h-12 border-b border-[var(--le-border-subtle)]/50">
-                      <div className="text-[10px] text-[var(--le-text-muted)] pr-2 text-right pt-0.5">
+                    <div key={hour} className="grid grid-cols-[60px_repeat(5,1fr)] h-12 border-b border-[var(--od-border-subtle)]/50">
+                      <div className="text-[10px] text-[var(--od-text-muted)] pr-2 text-right pt-0.5">
                         {formatHour(hour)}
                       </div>
                       {week.map((d, dayIdx) => {
@@ -249,7 +257,7 @@ export default function AppointmentsPage() {
                           (a) => a.date === d.full && a.hour === hour && a.status !== 'cancelled'
                         );
                         return (
-                          <div key={dayIdx} className="border-l border-[var(--le-border-subtle)]/50 px-1 relative">
+                          <div key={dayIdx} className="border-l border-[var(--od-border-subtle)]/50 px-1 relative">
                             {apt && (
                               <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -261,10 +269,10 @@ export default function AppointmentsPage() {
                                   height: `${(apt.duration / 60) * 48 - 4}px`,
                                 }}
                               >
-                                <p className="text-[10px] font-semibold text-[var(--le-text-primary)] truncate">
+                                <p className="text-[10px] font-semibold text-[var(--od-text-primary)] truncate">
                                   {apt.leadName}
                                 </p>
-                                <p className="text-[9px] text-[var(--le-text-muted)] truncate">
+                                <p className="text-[9px] text-[var(--od-text-muted)] truncate">
                                   {apt.time}
                                 </p>
                               </motion.div>
@@ -284,7 +292,7 @@ export default function AppointmentsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[var(--le-accent)]" />
+              <Clock className="w-4 h-4 text-[var(--od-accent)]" />
               <CardTitle>Today&apos;s Appointments</CardTitle>
               <Badge variant="accent" size="sm">{todayAppointments.length}</Badge>
             </div>
@@ -305,15 +313,15 @@ export default function AppointmentsPage() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/30 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--le-bg-tertiary)]">
-                        <Clock className="w-4 h-4 text-[var(--le-text-muted)]" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--od-bg-tertiary)]">
+                        <Clock className="w-4 h-4 text-[var(--od-text-muted)]" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-[var(--le-text-primary)]">{apt.leadName}</p>
+                          <p className="text-sm font-semibold text-[var(--od-text-primary)]">{apt.leadName}</p>
                           <span
                             className="text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]"
                             style={{
@@ -324,13 +332,13 @@ export default function AppointmentsPage() {
                             {statusConfig[apt.status].label}
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--le-text-tertiary)]">{apt.service}</p>
+                        <p className="text-xs text-[var(--od-text-tertiary)]">{apt.service}</p>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="flex items-center gap-1 text-[10px] text-[var(--le-text-muted)]">
+                          <span className="flex items-center gap-1 text-[10px] text-[var(--od-text-muted)]">
                             <Clock className="w-3 h-3" />
                             {apt.time} ({apt.duration}min)
                           </span>
-                          <span className="flex items-center gap-1 text-[10px] text-[var(--le-text-muted)]">
+                          <span className="flex items-center gap-1 text-[10px] text-[var(--od-text-muted)]">
                             <MapPin className="w-3 h-3" />
                             {apt.location}
                           </span>
@@ -371,10 +379,10 @@ export default function AppointmentsPage() {
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              className="relative bg-[var(--le-bg-secondary)] rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+              className="relative bg-[var(--od-bg-secondary)] rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-                <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Book New Appointment</h2>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+                <h2 className="text-base font-semibold text-[var(--od-text-primary)]">Book New Appointment</h2>
                 <Button variant="ghost" size="icon-sm" onClick={() => setShowBookModal(false)}>
                   <X className="w-4 h-4" />
                 </Button>
@@ -408,11 +416,11 @@ export default function AppointmentsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-[var(--le-text-secondary)] mb-1.5">Duration</label>
+                    <label className="block text-sm font-medium text-[var(--od-text-secondary)] mb-1.5">Duration</label>
                     <select
                       value={bookingForm.duration}
                       onChange={(e) => setBookingForm((f) => ({ ...f, duration: e.target.value }))}
-                      className="w-full h-9 px-3 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-[var(--le-bg-primary)] text-[var(--le-text-primary)]"
+                      className="w-full h-9 px-3 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-primary)]"
                     >
                       <option value="30">30 min</option>
                       <option value="45">45 min</option>
@@ -452,30 +460,30 @@ export default function AppointmentsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-[var(--le-bg-secondary)] rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-[var(--od-bg-secondary)] rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
               <div className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-[var(--le-accent)]" />
-                <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Sync to Your Calendar</h2>
+                <RefreshCw className="w-4 h-4 text-[var(--od-accent)]" />
+                <h2 className="text-base font-semibold text-[var(--od-text-primary)]">Sync to Your Calendar</h2>
               </div>
               <Button variant="ghost" size="icon-sm" onClick={() => setShowSyncModal(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
             <div className="p-5 space-y-4">
-              <p className="text-sm text-[var(--le-text-tertiary)]">
+              <p className="text-sm text-[var(--od-text-tertiary)]">
                 Subscribe to this calendar feed and all appointments will automatically appear on your phone, tablet, and computer.
               </p>
 
               {/* Subscription URL */}
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Calendar Feed URL</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Calendar Feed URL</label>
                 <div className="flex gap-2">
                   <input
                     readOnly
                     value={organization?.id ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/calendar/${organization.id}` : 'Sign up to get your calendar feed URL'}
-                    className="flex-1 px-3 py-2 text-xs rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-[var(--le-bg-primary)] text-[var(--le-text-secondary)] font-mono truncate"
+                    className="flex-1 px-3 py-2 text-xs rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-secondary)] font-mono truncate"
                   />
                   <Button
                     variant="secondary"
@@ -495,40 +503,40 @@ export default function AppointmentsPage() {
 
               {/* Instructions */}
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-[var(--le-text-primary)] uppercase tracking-wider">How to Subscribe</h3>
+                <h3 className="text-xs font-semibold text-[var(--od-text-primary)] uppercase tracking-wider">How to Subscribe</h3>
 
                 <div className="space-y-2">
-                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--od-radius-md)] bg-[var(--od-bg-primary)] border border-[var(--od-border-subtle)]">
                     <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(66,133,244,0.1)' }}>
                       <Calendar className="w-3.5 h-3.5" style={{ color: '#4285F4' }} />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Google Calendar</p>
-                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                      <p className="text-xs font-medium text-[var(--od-text-primary)]">Google Calendar</p>
+                      <p className="text-[10px] text-[var(--od-text-muted)] mt-0.5">
                         Settings &rarr; Add calendar &rarr; From URL &rarr; Paste the feed URL
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--od-radius-md)] bg-[var(--od-bg-primary)] border border-[var(--od-border-subtle)]">
                     <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
-                      <Smartphone className="w-3.5 h-3.5 text-[var(--le-text-secondary)]" />
+                      <Smartphone className="w-3.5 h-3.5 text-[var(--od-text-secondary)]" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Apple Calendar (iPhone/Mac)</p>
-                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                      <p className="text-xs font-medium text-[var(--od-text-primary)]">Apple Calendar (iPhone/Mac)</p>
+                      <p className="text-[10px] text-[var(--od-text-muted)] mt-0.5">
                         Settings &rarr; Calendar &rarr; Accounts &rarr; Add &rarr; Other &rarr; Add Subscribed Calendar
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-primary)] border border-[var(--le-border-subtle)]">
+                  <div className="flex items-start gap-3 p-3 rounded-[var(--od-radius-md)] bg-[var(--od-bg-primary)] border border-[var(--od-border-subtle)]">
                     <div className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: 'rgba(0,120,212,0.1)' }}>
                       <Calendar className="w-3.5 h-3.5" style={{ color: '#0078D4' }} />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-[var(--le-text-primary)]">Outlook</p>
-                      <p className="text-[10px] text-[var(--le-text-muted)] mt-0.5">
+                      <p className="text-xs font-medium text-[var(--od-text-primary)]">Outlook</p>
+                      <p className="text-[10px] text-[var(--od-text-muted)] mt-0.5">
                         Add calendar &rarr; Subscribe from web &rarr; Paste the feed URL
                       </p>
                     </div>
@@ -536,13 +544,109 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <p className="text-[10px] text-[var(--le-text-muted)] pt-1">
+              <p className="text-[10px] text-[var(--od-text-muted)] pt-1">
                 Once subscribed, new appointments will sync automatically. Most calendar apps refresh every 15-30 minutes.
               </p>
             </div>
           </motion.div>
         </div>
       )}
+
+      {/* Share Booking Page Modal */}
+      <AnimatePresence>
+        {showShareModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowShareModal(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              className="relative bg-[var(--od-bg-secondary)] rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+                <div className="flex items-center gap-2">
+                  <Link2 className="w-4 h-4 text-[var(--od-accent)]" />
+                  <h2 className="text-base font-semibold text-[var(--od-text-primary)]">Share Booking Page</h2>
+                </div>
+                <Button variant="ghost" size="icon-sm" onClick={() => setShowShareModal(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="p-5 space-y-5">
+                <p className="text-sm text-[var(--od-text-tertiary)]">
+                  Share this link with your customers so they can book appointments directly. You can also embed it on your website.
+                </p>
+
+                {/* Booking page URL */}
+                <div>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Booking Page URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      readOnly
+                      value={organization?.slug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/book/${organization.slug}` : 'Set up your org slug in Settings first'}
+                      className="flex-1 px-3 py-2 text-xs rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-secondary)] font-mono truncate"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={!organization?.slug}
+                      onClick={() => {
+                        const url = `${window.location.origin}/book/${organization?.slug}`;
+                        navigator.clipboard.writeText(url);
+                        setShareCopied('url');
+                        setTimeout(() => setShareCopied(null), 2000);
+                      }}
+                    >
+                      {shareCopied === 'url' ? <Check className="w-3.5 h-3.5 text-[#4ADE80]" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
+                  {organization?.slug && (
+                    <a
+                      href={`/book/${organization.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[10px] text-[var(--od-accent)] mt-1.5 hover:underline"
+                    >
+                      Preview booking page <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+
+                {/* Embed code */}
+                <div>
+                  <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Embed on Your Website</label>
+                  <div className="flex gap-2">
+                    <input
+                      readOnly
+                      value={organization?.slug ? `<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/book/${organization.slug}" width="100%" height="700" frameborder="0"></iframe>` : ''}
+                      className="flex-1 px-3 py-2 text-xs rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-secondary)] font-mono truncate"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={!organization?.slug}
+                      onClick={() => {
+                        const embed = `<iframe src="${window.location.origin}/book/${organization?.slug}" width="100%" height="700" frameborder="0"></iframe>`;
+                        navigator.clipboard.writeText(embed);
+                        setShareCopied('embed');
+                        setTimeout(() => setShareCopied(null), 2000);
+                      }}
+                    >
+                      {shareCopied === 'embed' ? <Check className="w-3.5 h-3.5 text-[#4ADE80]" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-[rgba(91,141,239,0.06)] border border-[rgba(91,141,239,0.12)]">
+                  <p className="text-[10px] text-[var(--od-accent)] leading-relaxed">
+                    <strong>Tip:</strong> Set up your availability in Settings first so customers can see your open time slots. Without availability configured, the booking page will show no available dates.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

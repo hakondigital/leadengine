@@ -5,9 +5,7 @@ import { checkFeature } from '@/lib/check-plan';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServiceRoleClient();
-    const { searchParams } = new URL(request.url);
-
-    const orgId = searchParams.get('organization_id');
+    const orgId = request.nextUrl.searchParams.get('organization_id');
 
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
@@ -15,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { data: campaigns, error } = await supabase
       .from('weather_campaigns')
-      .select('*')
+      .select('id, name, weather_trigger, target_postcodes, email_body, sms_body, is_active, last_triggered_at, created_at')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: false });
 
@@ -24,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch weather campaigns' }, { status: 500 });
     }
 
-    return NextResponse.json({ campaigns });
+    return NextResponse.json({ campaigns: campaigns ?? [] });
   } catch (error) {
     console.error('Weather campaigns fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -37,43 +35,40 @@ export async function POST(request: NextRequest) {
     const {
       organization_id,
       name,
-      trigger_conditions,
-      message_template,
-      sms_template,
+      weather_trigger,
       target_postcodes,
+      email_body,
+      sms_body,
       is_active,
     } = body;
 
-    if (!organization_id || !name || !trigger_conditions) {
+    if (!organization_id || !name || !weather_trigger) {
       return NextResponse.json(
-        { error: 'organization_id, name, and trigger_conditions required' },
+        { error: 'organization_id, name, and weather_trigger required' },
         { status: 400 }
       );
     }
 
     const weatherCheck = await checkFeature(organization_id, 'weather_campaigns');
     if (!weatherCheck.allowed) {
-      return NextResponse.json({ error: 'Weather campaigns are not available on your plan. Upgrade to Professional or Enterprise.' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Weather campaigns are not available on your plan. Upgrade to Professional or Enterprise.' },
+        { status: 403 }
+      );
     }
 
     const supabase = await createServiceRoleClient();
-
-    // trigger_conditions example:
-    // { weather_type: "rain", min_temp: null, max_temp: null, wind_speed_min: null }
-    // { weather_type: "heat", min_temp: 35 }
-    // { weather_type: "storm" }
 
     const { data: campaign, error } = await supabase
       .from('weather_campaigns')
       .insert({
         organization_id,
         name,
-        trigger_conditions,
-        message_template: message_template || null,
-        sms_template: sms_template || null,
+        weather_trigger,
         target_postcodes: target_postcodes || [],
+        email_body: email_body || null,
+        sms_body: sms_body || null,
         is_active: is_active ?? true,
-        last_triggered_at: null,
       })
       .select()
       .single();

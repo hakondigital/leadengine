@@ -76,14 +76,14 @@ export default function AccountPage() {
     setLoggingOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
-    document.cookie = 'le_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'od_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.push('/login');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen">
-        <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+        <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
           <div className="px-4 lg:px-6 py-4">
             <Skeleton className="h-7 w-32" />
             <Skeleton className="h-4 w-64 mt-1" />
@@ -100,12 +100,12 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
-          <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+          <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
             My Account
           </h1>
-          <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+          <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
             Manage your profile, security, and preferences
           </p>
         </div>
@@ -117,21 +117,21 @@ export default function AccountPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-[var(--le-accent)]" />
+                <User className="w-4 h-4 text-[var(--od-accent)]" />
                 <CardTitle>Profile</CardTitle>
               </div>
               <CardDescription>Your account details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4 p-3 rounded-lg bg-[var(--le-bg-tertiary)]">
-                <div className="w-12 h-12 rounded-full bg-[var(--le-accent-muted)] flex items-center justify-center text-lg font-bold text-[var(--le-accent)]">
+              <div className="flex items-center gap-4 p-3 rounded-lg bg-[var(--od-bg-tertiary)]">
+                <div className="w-12 h-12 rounded-full bg-[var(--od-accent-muted)] flex items-center justify-center text-lg font-bold text-[var(--od-accent)]">
                   {(user?.full_name || authEmail || 'U').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[var(--le-text-primary)]">
+                  <p className="font-medium text-[var(--od-text-primary)]">
                     {user?.full_name || 'User'}
                   </p>
-                  <p className="text-sm text-[var(--le-text-muted)] truncate">
+                  <p className="text-sm text-[var(--od-text-muted)] truncate">
                     {authEmail}
                   </p>
                 </div>
@@ -150,20 +150,20 @@ export default function AccountPage() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-[var(--le-text-muted)]">Organization</p>
-                  <p className="text-[var(--le-text-secondary)] font-medium">{organization?.name || '-'}</p>
+                  <p className="text-[var(--od-text-muted)]">Organization</p>
+                  <p className="text-[var(--od-text-secondary)] font-medium">{organization?.name || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-[var(--le-text-muted)]">Plan</p>
-                  <p className="text-[var(--le-text-secondary)] font-medium">{planName}</p>
+                  <p className="text-[var(--od-text-muted)]">Plan</p>
+                  <p className="text-[var(--od-text-secondary)] font-medium">{planName}</p>
                 </div>
                 <div>
-                  <p className="text-[var(--le-text-muted)]">Email</p>
-                  <p className="text-[var(--le-text-secondary)] font-medium truncate">{authEmail}</p>
+                  <p className="text-[var(--od-text-muted)]">Email</p>
+                  <p className="text-[var(--od-text-secondary)] font-medium truncate">{authEmail}</p>
                 </div>
                 <div>
-                  <p className="text-[var(--le-text-muted)]">Member since</p>
-                  <p className="text-[var(--le-text-secondary)] font-medium">
+                  <p className="text-[var(--od-text-muted)]">Member since</p>
+                  <p className="text-[var(--od-text-secondary)] font-medium">
                     {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                   </p>
                 </div>
@@ -234,16 +234,16 @@ export default function AccountPage() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--le-bg-tertiary)] transition-colors group"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--od-bg-tertiary)] transition-colors group"
                 >
-                  <link.icon className="w-5 h-5 text-[var(--le-text-muted)]" />
+                  <link.icon className="w-5 h-5 text-[var(--od-text-muted)]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--le-text-secondary)] group-hover:text-[var(--le-text-primary)] transition-colors">
+                    <p className="text-sm font-medium text-[var(--od-text-secondary)] group-hover:text-[var(--od-text-primary)] transition-colors">
                       {link.label}
                     </p>
-                    <p className="text-xs text-[var(--le-text-muted)]">{link.desc}</p>
+                    <p className="text-xs text-[var(--od-text-muted)]">{link.desc}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[var(--le-text-muted)] group-hover:text-[var(--le-text-secondary)] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[var(--od-text-muted)] group-hover:text-[var(--od-text-secondary)] transition-colors" />
                 </Link>
               ))}
             </CardContent>
@@ -256,8 +256,8 @@ export default function AccountPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[var(--le-text-secondary)]">Sign out of your account</p>
-                  <p className="text-xs text-[var(--le-text-muted)]">You will need to log in again to access the dashboard</p>
+                  <p className="text-sm font-medium text-[var(--od-text-secondary)]">Sign out of your account</p>
+                  <p className="text-xs text-[var(--od-text-muted)]">You will need to log in again to access the dashboard</p>
                 </div>
                 <Button
                   variant="destructive"

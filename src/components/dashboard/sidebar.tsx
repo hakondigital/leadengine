@@ -23,6 +23,7 @@ import {
   RefreshCw,
   MessageSquare,
   Phone,
+  Briefcase,
   Star,
   Image as ImageIcon,
   Wrench,
@@ -46,6 +47,7 @@ function getNavSections(showAdmin: boolean): NavSection[] {
         { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Leads', href: '/dashboard/leads', icon: Users },
         { name: 'Pipeline', href: '/dashboard/pipeline', icon: Inbox },
+        { name: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
       ],
     },
     {
@@ -147,10 +149,10 @@ export function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 64 : 240 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex flex-col h-screen bg-[var(--le-bg-secondary)] border-r border-[var(--le-border-subtle)] sticky top-0 z-30 shrink-0"
+        className="hidden lg:flex flex-col h-screen bg-[#1C2A3A] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
       >
         {/* Brand */}
-        <div className="flex items-center justify-between h-[84px] px-4 border-b border-[var(--le-border-subtle)]">
+        <div className="flex items-center justify-between h-[84px] px-4 border-b border-white/[0.08]">
           <AnimatePresence mode="wait">
             {!collapsed && (
               <motion.div
@@ -161,8 +163,8 @@ export function Sidebar() {
                 className="flex items-center"
               >
                 <Image
-                  src="/logo.png" unoptimized
-                  alt="LeadEngine"
+                  src="/odyssey-logo.png" unoptimized
+                  alt="Odyssey"
                   width={170}
                   height={48}
                   className="h-16 w-auto object-contain"
@@ -174,8 +176,8 @@ export function Sidebar() {
 
           {collapsed && (
             <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
+              src="/odyssey-logo.png" unoptimized
+              alt="Odyssey"
               width={36}
               height={36}
               className="w-12 h-12 object-contain mx-auto"
@@ -185,7 +187,7 @@ export function Sidebar() {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-md text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)] transition-colors"
+            className="p-1.5 rounded-md text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-colors"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
@@ -201,12 +203,12 @@ export function Sidebar() {
           {getNavSections(isSuperAdmin).map((section, sIdx) => (
             <div key={sIdx}>
               {section.label && !collapsed && (
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--le-text-muted)]">
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
                   {section.label}
                 </p>
               )}
               {section.label && collapsed && (
-                <div className="mx-auto w-5 border-t border-[var(--le-border-subtle)] mb-2" />
+                <div className="mx-auto w-5 border-t border-white/[0.08] mb-2" />
               )}
               <div className="space-y-0.5">
                 {section.items.map((item) => {
@@ -220,16 +222,16 @@ export function Sidebar() {
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-1.5 rounded-[var(--le-radius-md)] text-sm font-medium transition-all duration-200 group relative',
+                        'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
                         isActive
-                          ? 'text-[var(--le-accent)] bg-[var(--le-accent-muted)]'
-                          : 'text-[var(--le-text-tertiary)] hover:text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)]'
+                          ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                          : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
                       )}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="sidebar-active"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--le-accent)]"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
                           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                         />
                       )}
@@ -268,7 +270,7 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom section — user menu */}
-        <div className="relative p-3 border-t border-[var(--le-border-subtle)]">
+        <div className="relative p-3 border-t border-white/[0.08]">
           {/* Popup menu */}
           <AnimatePresence>
             {showUserMenu && !collapsed && (
@@ -277,12 +279,12 @@ export function Sidebar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.15 }}
-                className="absolute bottom-full left-2 right-2 mb-1 bg-[var(--le-bg-elevated)] border border-[var(--le-border-subtle)] rounded-lg shadow-xl overflow-hidden z-50"
+                className="absolute bottom-full left-2 right-2 mb-1 bg-[#243447] border border-white/[0.08] rounded-lg shadow-xl overflow-hidden z-50"
               >
                 <Link
                   href="/dashboard/account"
                   onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] transition-colors"
                 >
                   <User className="w-4 h-4" />
                   My Account
@@ -290,7 +292,7 @@ export function Sidebar() {
                 <Link
                   href="/dashboard/settings"
                   onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] transition-colors"
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -298,18 +300,18 @@ export function Sidebar() {
                 <Link
                   href="/dashboard/billing"
                   onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)] transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] transition-colors"
                 >
                   <CreditCard className="w-4 h-4" />
                   Billing
                 </Link>
-                <div className="border-t border-[var(--le-border-subtle)]" />
+                <div className="border-t border-white/[0.08]" />
                 <button
                   onClick={async () => {
                     setLoggingOut(true);
                     const supabase = createClient();
                     await supabase.auth.signOut();
-                    document.cookie = 'le_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                    document.cookie = 'od_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
                     router.push('/login');
                   }}
                   disabled={loggingOut}
@@ -325,20 +327,20 @@ export function Sidebar() {
           {!collapsed ? (
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-[var(--le-bg-tertiary)] transition-colors"
+              className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-[var(--le-bg-elevated)] border border-[var(--le-border-subtle)] flex items-center justify-center text-xs font-semibold text-[var(--le-text-secondary)]">
-                {(organization?.name || 'LE').slice(0, 2).toUpperCase()}
+              <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-xs font-semibold text-white/70">
+                {(organization?.name || 'OD').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1 text-left">
-                <p className="text-xs font-medium text-[var(--le-text-primary)] truncate">
-                  {organization?.name || 'LeadEngine'}
+                <p className="text-xs font-medium text-white/90 truncate">
+                  {organization?.name || 'Odyssey'}
                 </p>
-                <p className="text-[10px] text-[var(--le-text-muted)] truncate capitalize">
+                <p className="text-[10px] text-white/40 truncate capitalize">
                   {user?.role || 'Member'}
                 </p>
               </div>
-              <ChevronUp className={cn('w-3.5 h-3.5 text-[var(--le-text-muted)] transition-transform', showUserMenu ? '' : 'rotate-180')} />
+              <ChevronUp className={cn('w-3.5 h-3.5 text-white/40 transition-transform', showUserMenu ? '' : 'rotate-180')} />
             </button>
           ) : (
             <button
@@ -346,11 +348,11 @@ export function Sidebar() {
                 setLoggingOut(true);
                 const supabase = createClient();
                 await supabase.auth.signOut();
-                document.cookie = 'le_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                document.cookie = 'od_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
                 router.push('/login');
               }}
               disabled={loggingOut}
-              className="w-full flex items-center justify-center p-2 rounded-lg text-[var(--le-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className="w-full flex items-center justify-center p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
               title="Log out"
             >
               <LogOut className="w-4 h-4" />
@@ -360,7 +362,7 @@ export function Sidebar() {
       </motion.aside>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--le-bg-secondary)]/95 backdrop-blur-lg border-t border-[var(--le-border-subtle)] px-2 py-1.5 safe-area-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--od-bg-secondary)]/95 backdrop-blur-lg border-t border-[var(--od-border-subtle)] px-2 py-1.5 safe-area-bottom">
         <div className="flex items-center justify-around">
           {mobileNav.map((item) => {
             const isActive =
@@ -375,8 +377,8 @@ export function Sidebar() {
                 className={cn(
                   'flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg transition-colors',
                   isActive
-                    ? 'text-[var(--le-accent)]'
-                    : 'text-[var(--le-text-muted)]'
+                    ? 'text-[var(--od-accent)]'
+                    : 'text-[var(--od-text-muted)]'
                 )}
               >
                 <item.icon className="w-5 h-5" />

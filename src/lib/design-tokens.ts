@@ -1,23 +1,23 @@
-// Design Token System — LeadEngine
+// Design Token System — Odyssey
 // Premium enterprise aesthetic — cool slate/blue, Palantir/Linear/Vercel inspired
 
 export const tokens = {
   colors: {
     // Core neutrals — cool light surfaces
     bg: {
-      primary: '#F7F9FB',         // Main background
-      secondary: '#FFFFFF',        // Card / elevated surface
-      tertiary: '#EEF1F5',        // Muted panels
-      elevated: '#E4E9EF',        // Hover / raised
-      hover: '#DDE3EA',           // Interactive hover
-      muted: '#CBD3DC',           // Muted backgrounds
+      primary: '#D5DAE1',         // Main background — darker for contrast
+      secondary: '#E2E6EC',        // Card surface
+      tertiary: '#C8CED7',        // Muted panels
+      elevated: '#BEC5CF',        // Hover / raised
+      hover: '#B4BCC7',           // Interactive hover
+      muted: '#A8B1BC',           // Muted backgrounds
     },
     // Text hierarchy
     text: {
-      primary: '#1A2332',         // Primary text — deep slate
-      secondary: '#4A5568',       // Secondary text
-      tertiary: '#7B8794',        // Tertiary / placeholders
-      muted: '#A0ADB8',          // Very muted
+      primary: '#0F1419',         // Primary text — near black
+      secondary: '#2D3748',       // Secondary text — dark slate
+      tertiary: '#4A5568',        // Tertiary / labels
+      muted: '#6B7B8D',          // Muted — still readable
       inverse: '#F7F9FB',        // On dark surfaces
     },
     // Accent — cyan/electric blue from logo

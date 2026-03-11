@@ -67,14 +67,14 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                 Billing & Plans
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
                 {currentPlan
                   ? `Current plan: ${PLANS[currentPlan as PlanId]?.name || currentPlan} (${billingStatus})`
                   : 'Choose a plan to get started'}
@@ -117,12 +117,12 @@ export default function BillingPage() {
                     className={cn(
                       'relative overflow-hidden transition-all duration-200',
                       isPopular &&
-                        'border-[var(--le-accent)] shadow-[0_0_24px_rgba(79,209,229,0.12)]',
-                      isCurrentPlan && 'ring-2 ring-[var(--le-accent)]'
+                        'border-[var(--od-accent)] shadow-[0_0_24px_rgba(79,209,229,0.12)]',
+                      isCurrentPlan && 'ring-2 ring-[var(--od-accent)]'
                     )}
                   >
                     {isPopular && (
-                      <div className="absolute top-0 right-0 px-3 py-1 bg-[var(--le-accent)] text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-lg">
+                      <div className="absolute top-0 right-0 px-3 py-1 bg-[var(--od-accent)] text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-lg">
                         Most Popular
                       </div>
                     )}
@@ -137,12 +137,24 @@ export default function BillingPage() {
                         )}
                       </CardTitle>
                       <div className="mt-3">
-                        <span className="text-3xl font-bold text-[var(--le-text-primary)]">
+                        {plan.originalPrice && (
+                          <span className="text-lg text-[var(--od-text-muted)] line-through mr-2">
+                            ${plan.originalPrice}
+                          </span>
+                        )}
+                        <span className="text-3xl font-bold text-[var(--od-text-primary)]">
                           ${plan.price}
                         </span>
-                        <span className="text-sm text-[var(--le-text-muted)]">
+                        <span className="text-sm text-[var(--od-text-muted)]">
                           /month
                         </span>
+                        {plan.originalPrice && (
+                          <div className="mt-1">
+                            <span className="text-xs font-semibold text-[var(--od-success)] bg-[var(--od-success)]/10 px-2 py-0.5 rounded-full">
+                              Save ${plan.originalPrice - plan.price}/mo
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </CardHeader>
 
@@ -151,9 +163,9 @@ export default function BillingPage() {
                         {plan.features.map((feature) => (
                           <li
                             key={feature}
-                            className="flex items-start gap-2.5 text-sm text-[var(--le-text-secondary)]"
+                            className="flex items-start gap-2.5 text-sm text-[var(--od-text-secondary)]"
                           >
-                            <Check className="w-4 h-4 text-[var(--le-accent)] shrink-0 mt-0.5" />
+                            <Check className="w-4 h-4 text-[var(--od-accent)] shrink-0 mt-0.5" />
                             {feature}
                           </li>
                         ))}
@@ -173,7 +185,7 @@ export default function BillingPage() {
                           className={cn(
                             'w-full',
                             isPopular &&
-                              'bg-[var(--le-accent)] text-white hover:bg-[#38BCD0]'
+                              'bg-[var(--od-accent)] text-white hover:bg-[#38BCD0]'
                           )}
                           onClick={() => handleSubscribe(planId)}
                           disabled={!!loadingPlan}
@@ -206,9 +218,9 @@ export default function BillingPage() {
             <CardHeader>
               <CardTitle className="text-base">Billing FAQ</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm text-[var(--le-text-tertiary)]">
+            <CardContent className="space-y-4 text-sm text-[var(--od-text-tertiary)]">
               <div>
-                <p className="font-medium text-[var(--le-text-secondary)] mb-1">
+                <p className="font-medium text-[var(--od-text-secondary)] mb-1">
                   Can I change plans anytime?
                 </p>
                 <p>
@@ -217,7 +229,7 @@ export default function BillingPage() {
                 </p>
               </div>
               <div>
-                <p className="font-medium text-[var(--le-text-secondary)] mb-1">
+                <p className="font-medium text-[var(--od-text-secondary)] mb-1">
                   What payment methods do you accept?
                 </p>
                 <p>
@@ -226,7 +238,7 @@ export default function BillingPage() {
                 </p>
               </div>
               <div>
-                <p className="font-medium text-[var(--le-text-secondary)] mb-1">
+                <p className="font-medium text-[var(--od-text-secondary)] mb-1">
                   Is there a free trial?
                 </p>
                 <p>

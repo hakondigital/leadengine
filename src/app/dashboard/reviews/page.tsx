@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useReviews } from '@/hooks/use-reviews';
@@ -63,11 +63,6 @@ const mockReviews: Review[] = [
   { id: '6', reviewerName: 'Michael Chen', rating: 4, text: 'Great HVAC installation. The new system is working perfectly and our energy bills have already dropped. Thank you!', date: '2026-02-20', platform: 'website', replied: false },
 ];
 
-const mockWonLeads: WonLead[] = [
-  { id: '1', name: 'Sarah Mitchell', email: 'sarah@email.com', service: 'Kitchen Renovation' },
-  { id: '2', name: 'Emma Taylor', email: 'emma@email.com', service: 'Plumbing Repair' },
-  { id: '3', name: 'Michael Chen', email: 'michael@email.com', service: 'HVAC Installation' },
-];
 
 function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
@@ -75,7 +70,7 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={star <= rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-[var(--le-border-subtle)]'}
+          className={star <= rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-[var(--od-border-subtle)]'}
           style={{ width: size, height: size }}
         />
       ))}
@@ -87,9 +82,27 @@ export default function ReviewsPage() {
   const { organization } = useOrganization();
   const { reviews: fetchedReviews, averageRating, loading, requestReview } = useReviews(organization?.id);
   const { canUseReviewRequests, planName, loading: planLoading } = usePlan();
+  const [wonLeads, setWonLeads] = useState<WonLead[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestSending, setRequestSending] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<WonLead | null>(null);
+
+  useEffect(() => {
+    if (!organization?.id) return;
+    fetch(`/api/leads?organization_id=${organization.id}&status=won&limit=50`)
+      .then((r) => r.json())
+      .then((data) => {
+        setWonLeads(
+          (data.leads || []).map((l: Record<string, string>) => ({
+            id: l.id,
+            name: `${l.first_name || ''} ${l.last_name || ''}`.trim(),
+            email: l.email || '',
+            service: l.service_type || 'General Service',
+          }))
+        );
+      })
+      .catch(() => setWonLeads([]));
+  }, [organization?.id]);
   const [reviewChannels, setReviewChannels] = useState<string[]>(['email']);
   const [reviewSubject, setReviewSubject] = useState('');
   const [reviewEmailBody, setReviewEmailBody] = useState('');
@@ -104,7 +117,7 @@ export default function ReviewsPage() {
   const { success: showSuccess } = useToast();
 
   if (planLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   if (!canUseReviewRequests) {
@@ -154,13 +167,13 @@ export default function ReviewsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+            <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
               Reviews &amp; Reputation
             </h1>
-            <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+            <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
               Monitor and manage your online reputation
             </p>
           </div>
@@ -179,8 +192,8 @@ export default function ReviewsPage() {
 
       <div className="px-4 lg:px-6 py-6 space-y-6">
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--le-text-muted)]">
-            <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)]">
+            <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
             Loading reviews...
           </div>
         )}
@@ -197,11 +210,11 @@ export default function ReviewsPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider">
+                      <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">
                         {stat.label}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-2xl font-bold text-[var(--le-text-primary)]">
+                        <p className="text-2xl font-bold text-[var(--od-text-primary)]">
                           {stat.value}
                         </p>
                         {stat.isStar && <StarRating rating={Math.round(Number(stat.value))} size={12} />}
@@ -223,29 +236,29 @@ export default function ReviewsPage() {
         {/* Filters */}
         {reviews.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+            <Filter className="w-3.5 h-3.5 text-[var(--od-text-muted)]" />
             {['all', 'google', 'facebook', 'yelp', 'website'].map((p) => (
               <button
                 key={p}
                 onClick={() => setPlatformFilter(p)}
                 className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
                   platformFilter === p
-                    ? 'bg-[var(--le-accent)] text-white'
-                    : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                    ? 'bg-[var(--od-accent)] text-white'
+                    : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
                 }`}
               >
                 {p === 'all' ? 'All' : platformConfig[p]?.label || p}
               </button>
             ))}
-            <span className="w-px h-4 bg-[var(--le-border-subtle)]" />
+            <span className="w-px h-4 bg-[var(--od-border-subtle)]" />
             {[0, 5, 4, 3, 2, 1].map((r) => (
               <button
                 key={r}
                 onClick={() => setRatingFilter(r)}
                 className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors flex items-center gap-1 ${
                   ratingFilter === r
-                    ? 'bg-[var(--le-accent)] text-white'
-                    : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                    ? 'bg-[var(--od-accent)] text-white'
+                    : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
                 }`}
               >
                 {r === 0 ? 'All Stars' : <><Star className="w-2.5 h-2.5" /> {r}</>}
@@ -273,7 +286,7 @@ export default function ReviewsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card className="h-full hover:border-[var(--le-accent)]/30 transition-colors">
+                  <Card className="h-full hover:border-[var(--od-accent)]/30 transition-colors">
                     <CardContent className="p-5 flex flex-col h-full">
                       <div className="flex items-start justify-between mb-3">
                         <StarRating rating={review.rating} />
@@ -284,17 +297,17 @@ export default function ReviewsPage() {
                           {platform.label}
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--le-text-secondary)] leading-relaxed flex-1 mb-4">
+                      <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed flex-1 mb-4">
                         &quot;{review.text}&quot;
                       </p>
-                      <div className="flex items-center justify-between pt-3 border-t border-[var(--le-border-subtle)]">
+                      <div className="flex items-center justify-between pt-3 border-t border-[var(--od-border-subtle)]">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--le-bg-tertiary)]">
-                            <User className="w-3 h-3 text-[var(--le-text-muted)]" />
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--od-bg-tertiary)]">
+                            <User className="w-3 h-3 text-[var(--od-text-muted)]" />
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-[var(--le-text-primary)]">{review.reviewerName}</p>
-                            <p className="text-[10px] text-[var(--le-text-muted)]">{review.date}</p>
+                            <p className="text-xs font-medium text-[var(--od-text-primary)]">{review.reviewerName}</p>
+                            <p className="text-[10px] text-[var(--od-text-muted)]">{review.date}</p>
                           </div>
                         </div>
                         {review.replied ? (
@@ -312,13 +325,13 @@ export default function ReviewsPage() {
                         )}
                       </div>
                       {replyingTo === review.id && (
-                        <div className="mt-3 pt-3 border-t border-[var(--le-border-subtle)]">
+                        <div className="mt-3 pt-3 border-t border-[var(--od-border-subtle)]">
                           <textarea
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Write your reply..."
                             rows={2}
-                            className="w-full px-3 py-2 text-xs rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] focus:border-transparent resize-none"
+                            className="w-full px-3 py-2 text-xs rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)] focus:border-transparent resize-none"
                           />
                           <div className="flex items-center justify-end gap-2 mt-2">
                             <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>Cancel</Button>
@@ -355,10 +368,10 @@ export default function ReviewsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-lg mx-4 overflow-hidden max-h-[85vh] overflow-y-auto"
+            className="relative bg-white rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-lg mx-4 overflow-hidden max-h-[85vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--od-text-primary)]">
                 {selectedLead ? 'Customise Review Request' : 'Request Review'}
               </h2>
               <Button variant="ghost" size="icon-sm" onClick={() => { setShowRequestModal(false); setSelectedLead(null); }}>
@@ -369,14 +382,14 @@ export default function ReviewsPage() {
             {!selectedLead ? (
               /* Step 1: Select a lead */
               <div className="p-5">
-                <p className="text-sm text-[var(--le-text-tertiary)] mb-4">
+                <p className="text-sm text-[var(--od-text-tertiary)] mb-4">
                   Select a completed client to send a review request:
                 </p>
                 <div className="space-y-2">
-                  {mockWonLeads.map((lead) => (
+                  {wonLeads.map((lead) => (
                     <button
                       key={lead.id}
-                      className="w-full flex items-center justify-between p-3 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 hover:bg-[var(--le-bg-tertiary)] transition-colors text-left"
+                      className="w-full flex items-center justify-between p-3 rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/30 hover:bg-[var(--od-bg-tertiary)] transition-colors text-left"
                       onClick={async () => {
                         setSelectedLead(lead);
                         setReviewChannels(['email']);
@@ -403,15 +416,15 @@ export default function ReviewsPage() {
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--le-bg-tertiary)]">
-                          <User className="w-4 h-4 text-[var(--le-text-muted)]" />
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--od-bg-tertiary)]">
+                          <User className="w-4 h-4 text-[var(--od-text-muted)]" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-[var(--le-text-primary)]">{lead.name}</p>
-                          <p className="text-xs text-[var(--le-text-muted)]">{lead.service}</p>
+                          <p className="text-sm font-medium text-[var(--od-text-primary)]">{lead.name}</p>
+                          <p className="text-xs text-[var(--od-text-muted)]">{lead.service}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[var(--od-text-muted)]" />
                     </button>
                   ))}
                 </div>
@@ -420,12 +433,12 @@ export default function ReviewsPage() {
               /* Step 2: Customise message */
               <div className="p-5 space-y-4">
                 {/* Selected lead info */}
-                <div className="flex items-center justify-between p-3 rounded-[var(--le-radius-md)] bg-[var(--le-bg-tertiary)]">
+                <div className="flex items-center justify-between p-3 rounded-[var(--od-radius-md)] bg-[var(--od-bg-tertiary)]">
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-[var(--le-text-muted)]" />
+                    <User className="w-4 h-4 text-[var(--od-text-muted)]" />
                     <div>
-                      <p className="text-sm font-medium text-[var(--le-text-primary)]">{selectedLead.name}</p>
-                      <p className="text-[10px] text-[var(--le-text-muted)]">{selectedLead.service}</p>
+                      <p className="text-sm font-medium text-[var(--od-text-primary)]">{selectedLead.name}</p>
+                      <p className="text-[10px] text-[var(--od-text-muted)]">{selectedLead.service}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => setSelectedLead(null)}>Change</Button>
@@ -433,7 +446,7 @@ export default function ReviewsPage() {
 
                 {/* Channel selection */}
                 <div>
-                  <p className="text-xs font-medium text-[var(--le-text-secondary)] mb-2">Send via</p>
+                  <p className="text-xs font-medium text-[var(--od-text-secondary)] mb-2">Send via</p>
                   <div className="flex gap-2">
                     {[
                       { id: 'email', label: 'Email', icon: Mail },
@@ -448,8 +461,8 @@ export default function ReviewsPage() {
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                           reviewChannels.includes(ch.id)
-                            ? 'bg-[var(--le-accent)] text-white border-[var(--le-accent)]'
-                            : 'bg-white text-[var(--le-text-secondary)] border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30'
+                            ? 'bg-[var(--od-accent)] text-white border-[var(--od-accent)]'
+                            : 'bg-white text-[var(--od-text-secondary)] border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/30'
                         }`}
                       >
                         <ch.icon className="w-3 h-3" />
@@ -462,11 +475,11 @@ export default function ReviewsPage() {
                 {/* Tone + regenerate */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium text-[var(--le-text-secondary)]">Tone:</p>
+                    <p className="text-xs font-medium text-[var(--od-text-secondary)]">Tone:</p>
                     <select
                       value={aiTone}
                       onChange={(e) => setAiTone(e.target.value as any)}
-                      className="text-xs px-2 py-1 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)]"
+                      className="text-xs px-2 py-1 rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)]"
                     >
                       <option value="friendly">Friendly</option>
                       <option value="professional">Professional</option>
@@ -501,7 +514,7 @@ export default function ReviewsPage() {
                     }}
                   >
                     {aiGenerating ? (
-                      <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <RefreshCw className="w-3 h-3" />
                     )}
@@ -510,8 +523,8 @@ export default function ReviewsPage() {
                 </div>
 
                 {aiGenerating ? (
-                  <div className="flex items-center justify-center py-8 gap-2 text-xs text-[var(--le-text-muted)]">
-                    <Sparkles className="w-4 h-4 text-[var(--le-accent)] animate-pulse" />
+                  <div className="flex items-center justify-center py-8 gap-2 text-xs text-[var(--od-text-muted)]">
+                    <Sparkles className="w-4 h-4 text-[var(--od-accent)] animate-pulse" />
                     AI is writing your message...
                   </div>
                 ) : (
@@ -519,18 +532,18 @@ export default function ReviewsPage() {
                     {/* Email preview */}
                     {reviewChannels.includes('email') && (
                       <div>
-                        <p className="text-xs font-medium text-[var(--le-text-secondary)] mb-1">Email subject</p>
+                        <p className="text-xs font-medium text-[var(--od-text-secondary)] mb-1">Email subject</p>
                         <input
                           value={reviewSubject}
                           onChange={(e) => setReviewSubject(e.target.value)}
-                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                          className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                         />
-                        <p className="text-xs font-medium text-[var(--le-text-secondary)] mt-3 mb-1">Email body</p>
+                        <p className="text-xs font-medium text-[var(--od-text-secondary)] mt-3 mb-1">Email body</p>
                         <textarea
                           value={reviewEmailBody}
                           onChange={(e) => setReviewEmailBody(e.target.value)}
                           rows={5}
-                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                          className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)] resize-none"
                         />
                       </div>
                     )}
@@ -539,8 +552,8 @@ export default function ReviewsPage() {
                     {reviewChannels.includes('sms') && (
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-medium text-[var(--le-text-secondary)]">SMS message</p>
-                          <span className={`text-[10px] ${reviewSmsBody.length > 160 ? 'text-red-500' : 'text-[var(--le-text-muted)]'}`}>
+                          <p className="text-xs font-medium text-[var(--od-text-secondary)]">SMS message</p>
+                          <span className={`text-[10px] ${reviewSmsBody.length > 160 ? 'text-red-500' : 'text-[var(--od-text-muted)]'}`}>
                             {reviewSmsBody.length}/160
                           </span>
                         </div>
@@ -548,7 +561,7 @@ export default function ReviewsPage() {
                           value={reviewSmsBody}
                           onChange={(e) => setReviewSmsBody(e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)] resize-none"
+                          className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)] resize-none"
                         />
                       </div>
                     )}
@@ -559,7 +572,7 @@ export default function ReviewsPage() {
 
             {/* Footer actions */}
             {selectedLead && !aiGenerating && (
-              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+              <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--od-border-subtle)]">
                 <Button variant="ghost" size="sm" onClick={() => { setShowRequestModal(false); setSelectedLead(null); }}>Cancel</Button>
                 <Button
                   size="sm"

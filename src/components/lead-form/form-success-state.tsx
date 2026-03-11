@@ -31,7 +31,7 @@ export function FormSuccessState({ title, message, className }: FormSuccessState
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
-        className="text-2xl font-semibold text-[var(--le-text-primary)] tracking-tight mb-2"
+        className="text-2xl font-semibold text-[var(--od-text-primary)] tracking-tight mb-2"
       >
         {title}
       </motion.h2>
@@ -40,7 +40,7 @@ export function FormSuccessState({ title, message, className }: FormSuccessState
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.3 }}
-        className="text-sm text-[var(--le-text-tertiary)] max-w-md leading-relaxed"
+        className="text-sm text-[var(--od-text-tertiary)] max-w-md leading-relaxed"
       >
         {message}
       </motion.p>
@@ -49,7 +49,7 @@ export function FormSuccessState({ title, message, className }: FormSuccessState
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.3 }}
-        className="mt-8 flex items-center gap-2 text-xs text-[var(--le-text-muted)]"
+        className="mt-8 flex items-center gap-2 text-xs text-[var(--od-text-muted)]"
       >
         <div className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse" />
         Confirmation email sent

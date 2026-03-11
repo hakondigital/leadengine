@@ -26,6 +26,13 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return PUT(request, { params });
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,6 +41,13 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const supabase = await createServiceRoleClient();
+
+    // Get current state to detect status changes
+    const { data: current } = await supabase
+      .from('appointments')
+      .select('status, lead_id, organization_id')
+      .eq('id', id)
+      .single();
 
     const { data: appointment, error } = await supabase
       .from('appointments')
@@ -45,6 +59,18 @@ export async function PUT(
     if (error) {
       console.error('Appointment update error:', error);
       return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 });
+    }
+
+    // Trigger appointment_completed sequence when status changes to completed
+    if (body.status === 'completed' && current?.status !== 'completed' && current?.lead_id) {
+      import('@/lib/sequence-triggers').then(({ triggerSequenceEvent }) =>
+        triggerSequenceEvent('appointment_completed', current.lead_id, current.organization_id, supabase)
+      ).catch(console.error);
+
+      // Auto-progress pipeline stage (fire and forget)
+      import('@/lib/pipeline-automation').then(({ autoPipelineProgress }) =>
+        autoPipelineProgress('appointment_completed', current.lead_id, supabase)
+      ).catch(console.error);
     }
 
     return NextResponse.json(appointment);

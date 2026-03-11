@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 import { sendBusinessNotification, sendProspectConfirmation, sendSmartAutoReply } from '@/lib/email';
 import { qualifyLead } from '@/lib/ai-qualification';
 import { sendNewLeadSMS } from '@/lib/sms';
@@ -189,7 +190,7 @@ export async function POST(request: NextRequest) {
         postcode: postcode || null,
         is_duplicate: isDuplicate,
         assigned_to: assignedTo,
-        custom_fields: custom_fields ? JSON.parse(custom_fields) : {},
+        custom_fields: (() => { try { return custom_fields ? JSON.parse(custom_fields) : {}; } catch { return {}; } })(),
         status: 'new',
         priority: 'medium',
       })
@@ -346,6 +347,9 @@ export async function GET(request: NextRequest) {
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
     }
+
+    const { unauthorized } = await requireCallerOwnsOrg(orgId);
+    if (unauthorized) return unauthorized;
 
     let query = supabase
       .from('leads')

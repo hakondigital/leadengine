@@ -1,13 +1,14 @@
 import type { Lead, Organization } from './database.types';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'leads@leadengine.io';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'leads@odyssey.io';
 
 interface EmailPayload {
   from: string;
   to: string;
   subject: string;
   html: string;
+  reply_to?: string;
 }
 
 async function sendEmail(payload: EmailPayload): Promise<{ id: string } | null> {
@@ -140,6 +141,7 @@ export async function sendBusinessNotification(lead: Lead, org: Organization) {
   return sendEmail({
     from: `${org.name} Leads <${FROM_EMAIL}>`,
     to: org.notification_email,
+    reply_to: lead.email || undefined,
     subject,
     html,
   });
@@ -185,7 +187,7 @@ export async function sendProspectConfirmation(lead: Lead, org: Organization) {
     <!-- Footer -->
     <div style="margin-top:32px;text-align:center;">
       <p style="margin:0;color:#A0ABB5;font-size:11px;">
-        ${org.name} &mdash; Powered by LeadEngine
+        ${org.name} &mdash; Powered by Odyssey
       </p>
     </div>
   </div>
@@ -195,6 +197,7 @@ export async function sendProspectConfirmation(lead: Lead, org: Organization) {
   return sendEmail({
     from: `${org.name} <${FROM_EMAIL}>`,
     to: lead.email,
+    reply_to: org.notification_email,
     subject: `We've received your enquiry — ${org.name}`,
     html,
   });
@@ -257,6 +260,7 @@ export async function sendSmartAutoReply(
   return sendEmail({
     from: `${org.name} <${FROM_EMAIL}>`,
     to: lead.email,
+    reply_to: org.notification_email,
     subject: `${org.name} — We'll be in touch ${responseTime}`,
     html,
   });
@@ -292,6 +296,7 @@ export async function sendFollowUpEmail(
   return sendEmail({
     from: `${org.name} <${FROM_EMAIL}>`,
     to: lead.email,
+    reply_to: org.notification_email,
     subject: `Following up — ${org.name}`,
     html,
   });
@@ -340,6 +345,7 @@ export async function sendReviewRequestEmail(
   return sendEmail({
     from: `${org.name} <${FROM_EMAIL}>`,
     to: lead.email,
+    reply_to: org.notification_email,
     subject: customSubject || `How was your experience? — ${org.name}`,
     html,
   });

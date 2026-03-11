@@ -76,17 +76,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-[var(--le-radius-md)] border shadow-lg backdrop-blur-xl"
+                className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-[var(--od-radius-md)] border shadow-lg backdrop-blur-xl"
                 style={{
-                  backgroundColor: 'var(--le-bg-secondary)',
+                  backgroundColor: 'var(--od-bg-secondary)',
                   borderColor: color.border,
                 }}
               >
                 <Icon className="w-4 h-4 shrink-0" style={{ color: color.icon }} />
-                <p className="text-sm text-[var(--le-text-primary)] flex-1">{t.message}</p>
+                <p className="text-sm text-[var(--od-text-primary)] flex-1">{t.message}</p>
                 <button
                   onClick={() => removeToast(t.id)}
-                  className="text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] shrink-0"
+                  className="text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] shrink-0"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>

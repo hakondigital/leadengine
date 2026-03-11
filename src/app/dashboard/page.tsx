@@ -20,6 +20,8 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/dashboard/getting-started';
+import { DailyGamePlan } from '@/components/dashboard/daily-game-plan';
+import { RevenueGapCloser } from '@/components/dashboard/revenue-gap-closer';
 
 export default function DashboardPage() {
   const { organization, loading: orgLoading } = useOrganization();
@@ -70,23 +72,31 @@ export default function DashboardPage() {
     if (updated) setSelectedLead(updated);
   };
 
+  const handleLeadIdClick = async (leadId: string) => {
+    const fullLead = await fetchLeadDetail(leadId);
+    if (fullLead) {
+      setSelectedLead(fullLead);
+      setDrawerOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                 Dashboard
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
                 Your lead command centre
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--le-accent-muted)] border border-[rgba(79,209,229,0.2)]">
-                <Sparkles className="w-3.5 h-3.5 text-[var(--le-accent)]" />
-                <span className="text-xs font-medium text-[var(--le-accent-text)]">
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--od-accent-muted)] border border-[rgba(79,209,229,0.2)]">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)]" />
+                <span className="text-xs font-medium text-[var(--od-accent-text)]">
                   AI Active
                 </span>
               </div>
@@ -122,12 +132,20 @@ export default function DashboardPage() {
               />
             </div>
 
+            {/* AI Game Plan + Revenue Gap */}
+            {organization?.id && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <DailyGamePlan organizationId={organization.id} onLeadClick={handleLeadIdClick} />
+                <RevenueGapCloser organizationId={organization.id} onLeadClick={handleLeadIdClick} />
+              </div>
+            )}
+
             {/* Pipeline summary */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 }}
-              className="flex gap-1 h-2 rounded-full overflow-hidden bg-[var(--le-bg-tertiary)]"
+              className="flex gap-1 h-2 rounded-full overflow-hidden bg-[var(--od-bg-tertiary)]"
             >
               {pipelineStages.map((stage) => {
                 const count = leads.filter((l) => l.status === stage.id).length;
@@ -150,12 +168,12 @@ export default function DashboardPage() {
             {/* Recent leads */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-[var(--le-text-primary)] tracking-tight">
+                <h2 className="text-base font-semibold text-[var(--od-text-primary)] tracking-tight">
                   Recent Leads
                 </h2>
                 <a
                   href="/dashboard/leads"
-                  className="text-xs font-medium text-[var(--le-accent)] hover:underline"
+                  className="text-xs font-medium text-[var(--od-accent)] hover:underline"
                 >
                   View all
                 </a>

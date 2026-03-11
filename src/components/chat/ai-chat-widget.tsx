@@ -65,7 +65,11 @@ export function AIChatWidget({
 
       if (res.ok) {
         const data = await res.json();
-        setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+        const replyMsgs: ChatMessage[] = [{ role: 'assistant', content: data.reply }];
+        if (data.lead_created) {
+          replyMsgs.push({ role: 'assistant', content: "Great — I've saved your details. Someone from our team will be in touch shortly!" });
+        }
+        setMessages([...newMessages, ...replyMsgs]);
       } else {
         setMessages([
           ...newMessages,

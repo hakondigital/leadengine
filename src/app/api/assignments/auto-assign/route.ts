@@ -4,10 +4,10 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lead_id } = body;
+    const { lead_id, organization_id } = body;
 
-    if (!lead_id) {
-      return NextResponse.json({ error: 'lead_id required' }, { status: 400 });
+    if (!lead_id || !organization_id) {
+      return NextResponse.json({ error: 'lead_id and organization_id required' }, { status: 400 });
     }
 
     const supabase = await createServiceRoleClient();
@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
 
     if (leadError || !lead) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    }
+
+    // Verify lead belongs to the requested org
+    if (lead.organization_id !== organization_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get active assignment rules for this org, ordered by priority

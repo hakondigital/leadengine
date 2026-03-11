@@ -3,114 +3,96 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useTour } from '@/components/tour/tour-provider';
 import {
-  LayoutDashboard,
-  Users,
-  Inbox as InboxIcon,
-  FileText,
-  BarChart3,
-  Phone,
-  MessageSquare,
-  Star,
   Settings,
+  FileText,
+  Send,
+  Palette,
+  Bell,
   ArrowRight,
   ArrowLeft,
   X,
   Sparkles,
-  CheckCircle,
   Rocket,
+  Zap,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface TourStep {
+type OnboardingMode = 'welcome' | 'guided' | null;
+
+interface SetupStep {
+  id: string;
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
-  tip?: string;
-  navigateTo?: string;
+  navigateTo: string;
+  buttonLabel: string;
+  tip: string;
 }
 
-const TOUR_STEPS: TourStep[] = [
+const SETUP_STEPS: SetupStep[] = [
   {
-    title: 'Welcome to LeadEngine',
-    description: 'Your all-in-one lead capture and management platform. Let us give you a quick tour of the tools that will help you capture more leads and close more deals.',
-    icon: Rocket,
-    color: '#4FD1E5',
-  },
-  {
-    title: 'Dashboard Overview',
-    description: 'Your command centre. See total leads, pipeline status, AI scores, and revenue at a glance. The overview updates in real-time as new leads come in.',
-    icon: LayoutDashboard,
+    id: 'settings',
+    title: 'Set up your business details',
+    description: 'First things first — tell us about your business. Add your company name, contact email, and phone number so leads and notifications go to the right place.',
+    icon: Settings,
     color: '#5B8DEF',
-    tip: 'Click any stat card to drill deeper into your data.',
-    navigateTo: '/dashboard',
+    navigateTo: '/dashboard/settings',
+    buttonLabel: 'Go to Settings',
+    tip: 'Fill in your business name, notification email, and phone number in the General section.',
   },
   {
-    title: 'Lead Management',
-    description: 'Every enquiry lands here with AI qualification scores. Filter, search, and manage all your leads. Click any lead to see the full detail including notes, timeline, and AI insights.',
-    icon: Users,
-    color: '#34C77B',
-    tip: 'Leads are automatically scored by AI so you know who to call first.',
-    navigateTo: '/dashboard/leads',
-  },
-  {
-    title: 'Visual Pipeline',
-    description: 'Drag and drop leads through your sales stages — from New to Won. See your entire pipeline at a glance and identify bottlenecks instantly.',
-    icon: InboxIcon,
-    color: '#F0A030',
-    tip: 'Drag a lead to "Won" and enter the job value to track revenue.',
-    navigateTo: '/dashboard/pipeline',
-  },
-  {
-    title: 'Unified Inbox',
-    description: 'All your conversations in one place — emails, SMS, form submissions, and call logs. Never lose track of a conversation with a prospect.',
-    icon: MessageSquare,
-    color: '#9B59B6',
-    navigateTo: '/dashboard/inbox',
-  },
-  {
-    title: 'Lead Capture Forms',
-    description: 'Create beautiful, multi-step lead capture forms tailored to your industry. Embed them on your website with a single line of code. Forms are pre-built for trades, consultants, and more.',
+    id: 'form',
+    title: 'Create your first lead capture form',
+    description: 'Choose from industry-specific templates (trades, consulting, real estate, and more) and customise the fields to match your business. You\'ll get an embed code to drop on your website.',
     icon: FileText,
     color: '#E8636C',
-    tip: 'Go to Forms to create your first form and get the embed code.',
     navigateTo: '/dashboard/forms',
+    buttonLabel: 'Go to Forms',
+    tip: 'Pick a template, tweak the fields, then copy the embed code to add it to your site.',
   },
   {
-    title: 'Call Tracking',
-    description: 'Get unique phone numbers for each marketing channel (Google Ads, website, flyers). Every call is logged, recorded, and can be transcribed by AI. Know exactly which campaigns drive calls.',
-    icon: Phone,
-    color: '#4FD1E5',
-    tip: 'Available on Professional and Enterprise plans.',
-    navigateTo: '/dashboard/calls',
-  },
-  {
-    title: 'Reviews & Reputation',
-    description: 'Automatically request Google reviews from happy customers after a job is won. Build your online reputation on autopilot.',
-    icon: Star,
-    color: '#F0A030',
-    navigateTo: '/dashboard/reviews',
-  },
-  {
-    title: 'Analytics & ROI',
-    description: 'See where your leads come from, conversion rates by source, response times, and revenue tracking. Know your true ROI on every marketing dollar.',
-    icon: BarChart3,
-    color: '#5B8DEF',
-    navigateTo: '/dashboard/analytics',
-  },
-  {
-    title: 'Settings & Customisation',
-    description: 'Configure your notifications, branding, team members, AI settings, and integrations. Tailor LeadEngine to work exactly how your business needs.',
-    icon: Settings,
-    color: '#8B9DB5',
-    navigateTo: '/dashboard/settings',
-  },
-  {
-    title: "You're All Set!",
-    description: "That's the quick tour. Start by creating your first lead capture form, then embed it on your website. Leads will start flowing in with AI scores, notifications, and everything you need to close more work.",
-    icon: CheckCircle,
+    id: 'lead',
+    title: 'Submit a test lead',
+    description: 'Try your form yourself — submit a test enquiry to see exactly what your customers will experience, and how leads appear in your dashboard with AI scoring.',
+    icon: Send,
     color: '#34C77B',
+    navigateTo: '/dashboard/forms',
+    buttonLabel: 'Go to Forms',
+    tip: 'Open your form preview and fill it in as if you were a customer. The lead will show up instantly.',
+  },
+  {
+    id: 'branding',
+    title: 'Customise your branding',
+    description: 'Make it yours — upload your logo and pick your brand colours. These will be applied across your forms, emails, and client-facing pages.',
+    icon: Palette,
+    color: '#F0A030',
+    navigateTo: '/dashboard/settings',
+    buttonLabel: 'Go to Branding',
+    tip: 'Scroll to the Branding section in Settings to upload your logo and set your colours.',
+  },
+  {
+    id: 'notifications',
+    title: 'Configure notifications',
+    description: 'Never miss a lead — set up email alerts and SMS notifications so you get pinged the moment a new enquiry comes in. You can also enable auto-reply to respond instantly.',
+    icon: Bell,
+    color: '#4FD1E5',
+    navigateTo: '/dashboard/settings',
+    buttonLabel: 'Go to Notifications',
+    tip: 'Enable SMS notifications and auto-reply in the Notifications section of Settings.',
+  },
+  {
+    id: 'team',
+    title: 'Set up team assignment',
+    description: 'Choose how new leads are distributed to your team. You can assign manually, use round-robin to spread the load, or match leads by service type.',
+    icon: Users,
+    color: '#8B5CF6',
+    navigateTo: '/dashboard/settings',
+    buttonLabel: 'Go to Team Settings',
+    tip: 'Scroll to Team & Lead Assignment in Settings. You can change this any time.',
   },
 ];
 
@@ -119,53 +101,142 @@ interface OnboardingTourProps {
 }
 
 export function OnboardingTour({ onComplete }: OnboardingTourProps) {
+  const [mode, setMode] = useState<OnboardingMode>('welcome');
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
-  const step = TOUR_STEPS[currentStep];
-  const StepIcon = step.icon;
-  const isFirst = currentStep === 0;
-  const isLast = currentStep === TOUR_STEPS.length - 1;
-  const progress = ((currentStep + 1) / TOUR_STEPS.length) * 100;
 
-  const handleNext = useCallback(() => {
-    if (isLast) {
-      onComplete();
-      return;
-    }
-    const nextStep = TOUR_STEPS[currentStep + 1];
-    if (nextStep.navigateTo) {
-      router.push(nextStep.navigateTo);
-    }
-    setCurrentStep((s) => s + 1);
-  }, [currentStep, isLast, onComplete, router]);
+  const step = SETUP_STEPS[currentStep];
+  const isLast = currentStep === SETUP_STEPS.length - 1;
+  const progress = ((currentStep + 1) / SETUP_STEPS.length) * 100;
 
-  const handleBack = useCallback(() => {
-    if (isFirst) return;
-    const prevStep = TOUR_STEPS[currentStep - 1];
-    if (prevStep.navigateTo) {
-      router.push(prevStep.navigateTo);
-    }
-    setCurrentStep((s) => s - 1);
-  }, [currentStep, isFirst, router]);
-
-  const handleSkip = useCallback(() => {
+  const handleSkipAll = useCallback(() => {
     onComplete();
     router.push('/dashboard');
   }, [onComplete, router]);
 
+  const { startTour } = useTour();
+
+  const handleStartGuided = useCallback(() => {
+    onComplete();
+    startTour();
+  }, [onComplete, startTour]);
+
+  const handleNext = useCallback(() => {
+    if (isLast) {
+      onComplete();
+      router.push('/dashboard');
+      return;
+    }
+    setCurrentStep((s) => s + 1);
+  }, [isLast, onComplete, router]);
+
+  const handleBack = useCallback(() => {
+    if (currentStep === 0) {
+      setMode('welcome');
+      return;
+    }
+    setCurrentStep((s) => s - 1);
+  }, [currentStep]);
+
+  const handleGoToStep = useCallback(() => {
+    if (step.navigateTo) {
+      onComplete();
+      router.push(step.navigateTo);
+    }
+  }, [step, onComplete, router]);
+
+  // ─── Welcome screen: Choose your path ───
+  if (mode === 'welcome') {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="welcome-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center"
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-md mx-4"
+          >
+            <div className="bg-[var(--od-bg-secondary)] rounded-2xl border border-[var(--od-border-subtle)] shadow-2xl overflow-hidden">
+              <div className="p-8 text-center">
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-[rgba(79,209,229,0.1)]">
+                  <Rocket className="w-8 h-8 text-[#4FD1E5]" />
+                </div>
+
+                <h2 className="text-2xl font-bold text-[var(--od-text-primary)] tracking-tight mb-2">
+                  Welcome to Odyssey
+                </h2>
+                <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed mb-8">
+                  Let&apos;s get your account set up. You can follow our guided setup or jump straight in and configure things yourself.
+                </p>
+
+                {/* Option A: Guided */}
+                <button
+                  onClick={handleStartGuided}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-[var(--od-accent)]/30 bg-[var(--od-accent-muted)] hover:bg-[var(--od-accent)]/15 transition-colors text-left mb-3 group"
+                >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--od-accent)]/15 shrink-0">
+                    <Sparkles className="w-5 h-5 text-[var(--od-accent)]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[var(--od-text-primary)]">
+                      Walk me through setup
+                    </p>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">
+                      5 quick steps — takes about 3 minutes
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[var(--od-accent)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+
+                {/* Option B: Self-serve */}
+                <button
+                  onClick={handleSkipAll}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-[var(--od-border-subtle)] hover:bg-[var(--od-bg-tertiary)] transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--od-bg-tertiary)] shrink-0">
+                    <Zap className="w-5 h-5 text-[var(--od-text-muted)]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[var(--od-text-primary)]">
+                      I&apos;ll figure it out myself
+                    </p>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">
+                      Skip to the dashboard — the setup checklist will guide you
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[var(--od-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // ─── Guided setup steps ───
+  const StepIcon = step.icon;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key="tour-overlay"
+        key="guided-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center"
       >
-        {/* Backdrop */}
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-        {/* Card */}
         <motion.div
           key={currentStep}
           initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -174,11 +245,11 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 w-full max-w-lg mx-4"
         >
-          <div className="bg-[var(--le-bg-secondary)] rounded-2xl border border-[var(--le-border-subtle)] shadow-2xl overflow-hidden">
+          <div className="bg-[var(--od-bg-secondary)] rounded-2xl border border-[var(--od-border-subtle)] shadow-2xl overflow-hidden">
             {/* Progress bar */}
-            <div className="h-1 bg-[var(--le-bg-tertiary)]">
+            <div className="h-1 bg-[var(--od-bg-tertiary)]">
               <motion.div
-                className="h-full bg-[var(--le-accent)]"
+                className="h-full bg-[var(--od-accent)]"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.4 }}
@@ -186,17 +257,14 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
             </div>
 
             {/* Skip button */}
-            {!isLast && (
-              <button
-                onClick={handleSkip}
-                className="absolute top-4 right-4 p-1.5 rounded-md text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-tertiary)] transition-colors z-10"
-                aria-label="Skip tour"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={handleSkipAll}
+              className="absolute top-4 right-4 p-1.5 rounded-md text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-tertiary)] transition-colors z-10"
+              aria-label="Skip setup"
+            >
+              <X className="w-4 h-4" />
+            </button>
 
-            {/* Content */}
             <div className="p-8">
               {/* Icon */}
               <div
@@ -207,61 +275,53 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
               </div>
 
               {/* Step counter */}
-              <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-2">
-                Step {currentStep + 1} of {TOUR_STEPS.length}
+              <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-2">
+                Step {currentStep + 1} of {SETUP_STEPS.length}
               </p>
 
               {/* Title */}
-              <h2 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight mb-3">
+              <h2 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight mb-3">
                 {step.title}
               </h2>
 
               {/* Description */}
-              <p className="text-sm text-[var(--le-text-secondary)] leading-relaxed mb-4">
+              <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed mb-4">
                 {step.description}
               </p>
 
               {/* Tip */}
-              {step.tip && (
-                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[rgba(91,141,239,0.06)] border border-[rgba(91,141,239,0.12)] mb-4">
-                  <Sparkles className="w-3.5 h-3.5 text-[var(--le-accent)] shrink-0 mt-0.5" />
-                  <p className="text-xs text-[var(--le-accent)] leading-relaxed">
-                    {step.tip}
-                  </p>
-                </div>
-              )}
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[rgba(91,141,239,0.06)] border border-[rgba(91,141,239,0.12)] mb-5">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)] shrink-0 mt-0.5" />
+                <p className="text-xs text-[var(--od-accent)] leading-relaxed">
+                  {step.tip}
+                </p>
+              </div>
+
+              {/* Action: Go do this step */}
+              <Button
+                className="w-full mb-4"
+                onClick={handleGoToStep}
+              >
+                {step.buttonLabel}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
 
               {/* Navigation */}
-              <div className="flex items-center justify-between pt-2">
-                <div>
-                  {!isFirst && (
-                    <Button variant="ghost" size="sm" onClick={handleBack}>
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      Back
-                    </Button>
-                  )}
-                </div>
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" onClick={handleBack}>
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back
+                </Button>
+
                 <div className="flex items-center gap-2">
-                  {!isLast && (
-                    <button
-                      onClick={handleSkip}
-                      className="text-xs text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] transition-colors px-3 py-1.5"
-                    >
-                      Skip tour
-                    </button>
-                  )}
-                  <Button size="sm" onClick={handleNext}>
-                    {isLast ? (
-                      <>
-                        Get Started
-                        <Rocket className="w-3.5 h-3.5" />
-                      </>
-                    ) : (
-                      <>
-                        Next
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
+                  <button
+                    onClick={handleSkipAll}
+                    className="text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] transition-colors px-3 py-1.5"
+                  >
+                    Skip setup
+                  </button>
+                  <Button variant="secondary" size="sm" onClick={handleNext}>
+                    {isLast ? 'Finish' : 'Skip this step'}
                   </Button>
                 </div>
               </div>
@@ -269,20 +329,15 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
             {/* Step dots */}
             <div className="flex items-center justify-center gap-1.5 pb-5">
-              {TOUR_STEPS.map((_, i) => (
-                <button
+              {SETUP_STEPS.map((_, i) => (
+                <div
                   key={i}
-                  onClick={() => {
-                    const target = TOUR_STEPS[i];
-                    if (target.navigateTo) router.push(target.navigateTo);
-                    setCurrentStep(i);
-                  }}
-                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'bg-[var(--le-accent)] w-4'
+                      ? 'bg-[var(--od-accent)] w-4'
                       : i < currentStep
-                        ? 'bg-[var(--le-accent)]/40'
-                        : 'bg-[var(--le-border-subtle)]'
+                        ? 'bg-[var(--od-accent)]/40 w-1.5'
+                        : 'bg-[var(--od-border-subtle)] w-1.5'
                   }`}
                 />
               ))}

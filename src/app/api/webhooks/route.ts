@@ -67,11 +67,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'url and events[] are required' }, { status: 400 });
     }
 
-    // Validate URL
+    // Validate URL — must be a public HTTPS endpoint
+    let parsedUrl: URL;
     try {
-      new URL(url);
+      parsedUrl = new URL(url);
     } catch {
       return NextResponse.json({ error: 'Invalid webhook URL' }, { status: 400 });
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      return NextResponse.json({ error: 'Webhook URL must be a public HTTPS endpoint' }, { status: 400 });
+    }
+
+    const privatePatterns = [
+      /^localhost$/i,
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2\d|3[01])\./,
+      /^192\.168\./,
+      /^169\.254\./,
+      /^::1$/,
+      /^fd[0-9a-f]{2}:/i,
+    ];
+    if (privatePatterns.some((p) => p.test(parsedUrl.hostname))) {
+      return NextResponse.json({ error: 'Webhook URL must be a public HTTPS endpoint' }, { status: 400 });
     }
 
     const validEvents = ['lead.created', 'lead.status_changed', 'lead.won', 'lead.lost'];

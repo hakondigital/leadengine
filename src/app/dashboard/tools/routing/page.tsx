@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
+import { useRoutingRules } from '@/hooks/use-routing-rules';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,28 +18,8 @@ import {
   Wrench,
   Clock,
   X,
-  User,
   Trash2,
-  BarChart3,
 } from 'lucide-react';
-
-interface RoutingRule {
-  id: string;
-  name: string;
-  type: 'round_robin' | 'service_type' | 'location' | 'availability';
-  conditions: string;
-  assignedMembers: string[];
-  active: boolean;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  assignedLeads: number;
-  capacity: number;
-  activeJobs: number;
-}
 
 const typeConfig: Record<string, { icon: typeof Shuffle; color: string; label: string; bg: string }> = {
   round_robin: { icon: Shuffle, color: '#4070D0', label: 'Round Robin', bg: 'rgba(64,112,208,0.08)' },
@@ -47,42 +28,39 @@ const typeConfig: Record<string, { icon: typeof Shuffle; color: string; label: s
   availability: { icon: Clock, color: '#8B7CF6', label: 'Availability', bg: 'rgba(139,124,246,0.08)' },
 };
 
-const mockRules: RoutingRule[] = [
-  { id: '1', name: 'Default Round Robin', type: 'round_robin', conditions: 'All new leads', assignedMembers: ['David K.', 'Sarah M.', 'James C.'], active: true },
-  { id: '2', name: 'Electrical Jobs', type: 'service_type', conditions: 'Service type = Electrical', assignedMembers: ['James C.'], active: true },
-  { id: '3', name: 'North Shore Leads', type: 'location', conditions: 'Postcode in 2060-2069', assignedMembers: ['David K.'], active: true },
-  { id: '4', name: 'After Hours', type: 'availability', conditions: 'Submitted outside 9am-5pm', assignedMembers: ['Sarah M.'], active: false },
-];
-
-const mockTeamMembers: TeamMember[] = [
-  { id: '1', name: 'David K.', role: 'Senior Tradesperson', assignedLeads: 45, capacity: 60, activeJobs: 8 },
-  { id: '2', name: 'Sarah M.', role: 'Project Manager', assignedLeads: 38, capacity: 50, activeJobs: 5 },
-  { id: '3', name: 'James C.', role: 'Electrician', assignedLeads: 22, capacity: 40, activeJobs: 4 },
-  { id: '4', name: 'Emma T.', role: 'Apprentice', assignedLeads: 12, capacity: 25, activeJobs: 2 },
-];
-
 export default function RoutingPage() {
   const { organization } = useOrganization();
-  const [rules, setRules] = useState(mockRules);
+  const { rules, loading, createRule, toggleRule, deleteRule } = useRoutingRules(organization?.id);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newRule, setNewRule] = useState({
+    name: '',
+    conditions: '',
+    type: 'round_robin' as keyof typeof typeConfig,
+    assignedTo: '',
+  });
 
-  const toggleRule = (id: string) => {
-    setRules((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, active: !r.active } : r))
-    );
-  };
-
-  const removeRule = (id: string) => {
-    setRules((prev) => prev.filter((r) => r.id !== id));
+  const handleCreate = async () => {
+    if (!newRule.name.trim()) return;
+    setSaving(true);
+    await createRule({
+      name: newRule.name,
+      type: newRule.type,
+      conditions_text: newRule.conditions,
+      assigned_names: newRule.assignedTo.split(',').map((s) => s.trim()).filter(Boolean),
+    });
+    setNewRule({ name: '', conditions: '', type: 'round_robin', assignedTo: '' });
+    setShowForm(false);
+    setSaving(false);
   };
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
           <a
             href="/dashboard/tools"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] mb-2 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2 transition-colors"
           >
             <ArrowLeft className="w-3 h-3" />
             Back to Tools
@@ -90,12 +68,12 @@ export default function RoutingPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-[var(--le-accent)]" />
-                <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+                <Users className="w-5 h-5 text-[var(--od-accent)]" />
+                <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                   Team Routing
                 </h1>
               </div>
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
                 Auto-assign leads to team members based on rules
               </p>
             </div>
@@ -123,22 +101,35 @@ export default function RoutingPage() {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Rule Name</label>
-                    <Input placeholder="e.g., Plumbing Jobs" />
+                    <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Rule Name</label>
+                    <Input
+                      placeholder="e.g., Plumbing Jobs"
+                      value={newRule.name}
+                      onChange={(e) => setNewRule((p) => ({ ...p, name: e.target.value }))}
+                    />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Conditions</label>
-                    <Input placeholder="e.g., Service type = Plumbing" />
+                    <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Conditions</label>
+                    <Input
+                      placeholder="e.g., Service type = Plumbing"
+                      value={newRule.conditions}
+                      onChange={(e) => setNewRule((p) => ({ ...p, conditions: e.target.value }))}
+                    />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Rule Type</label>
+                    <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Rule Type</label>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(typeConfig).map(([key, config]) => {
                         const TypeIcon = config.icon;
                         return (
                           <button
                             key={key}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--le-radius-sm)] border border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/30 text-xs font-medium text-[var(--le-text-secondary)] transition-colors"
+                            onClick={() => setNewRule((p) => ({ ...p, type: key as keyof typeof typeConfig }))}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--od-radius-sm)] border text-xs font-medium transition-colors ${
+                              newRule.type === key
+                                ? 'border-[var(--od-accent)] bg-[var(--od-accent-muted)] text-[var(--od-accent)]'
+                                : 'border-[var(--od-border-subtle)] text-[var(--od-text-secondary)] hover:border-[var(--od-accent)]/30'
+                            }`}
                           >
                             <TypeIcon className="w-3 h-3" style={{ color: config.color }} />
                             {config.label}
@@ -148,14 +139,18 @@ export default function RoutingPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1.5 block">Assign To</label>
-                    <Input placeholder="e.g., David K., Sarah M." />
+                    <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1.5 block">Assign To (comma-separated)</label>
+                    <Input
+                      placeholder="e.g., David K., Sarah M."
+                      value={newRule.assignedTo}
+                      onChange={(e) => setNewRule((p) => ({ ...p, assignedTo: e.target.value }))}
+                    />
                   </div>
                 </div>
                 <div className="flex justify-end mt-4">
-                  <Button size="sm">
+                  <Button size="sm" onClick={handleCreate} disabled={saving}>
                     <Plus className="w-3.5 h-3.5" />
-                    Add Rule
+                    {saving ? 'Saving...' : 'Add Rule'}
                   </Button>
                 </div>
               </CardContent>
@@ -169,7 +164,12 @@ export default function RoutingPage() {
             <CardTitle>Assignment Rules</CardTitle>
           </CardHeader>
           <CardContent>
-            {rules.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)] py-4">
+                <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
+                Loading rules...
+              </div>
+            ) : rules.length === 0 ? (
               <EmptyState
                 icon={Shuffle}
                 title="No routing rules"
@@ -179,7 +179,7 @@ export default function RoutingPage() {
             ) : (
               <div className="space-y-3">
                 {rules.map((rule, i) => {
-                  const tc = typeConfig[rule.type];
+                  const tc = typeConfig[rule.type] || typeConfig.round_robin;
                   const TypeIcon = tc.icon;
                   return (
                     <motion.div
@@ -187,7 +187,7 @@ export default function RoutingPage() {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      className="flex items-center justify-between p-4 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)]"
+                      className="flex items-center justify-between p-4 rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)]"
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -198,7 +198,7 @@ export default function RoutingPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-[var(--le-text-primary)]">{rule.name}</p>
+                            <p className="text-sm font-semibold text-[var(--od-text-primary)]">{rule.name}</p>
                             <span
                               className="text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]"
                               style={{ color: tc.color, backgroundColor: tc.bg }}
@@ -206,19 +206,23 @@ export default function RoutingPage() {
                               {tc.label}
                             </span>
                           </div>
-                          <p className="text-xs text-[var(--le-text-muted)] mt-0.5">{rule.conditions}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            {rule.assignedMembers.map((member) => (
-                              <Badge key={member} variant="default" size="sm">{member}</Badge>
-                            ))}
-                          </div>
+                          {rule.conditions && (
+                            <p className="text-xs text-[var(--od-text-muted)] mt-0.5">{rule.conditions}</p>
+                          )}
+                          {rule.assignedMembers.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1">
+                              {rule.assignedMembers.map((member) => (
+                                <Badge key={member} variant="default" size="sm">{member}</Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => toggleRule(rule.id)}
+                          onClick={() => toggleRule(rule.id, !rule.active)}
                           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                            rule.active ? 'bg-[var(--le-accent)]' : 'bg-[var(--le-bg-tertiary)]'
+                            rule.active ? 'bg-[var(--od-accent)]' : 'bg-[var(--od-bg-tertiary)]'
                           }`}
                         >
                           <span
@@ -227,7 +231,7 @@ export default function RoutingPage() {
                             }`}
                           />
                         </button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => removeRule(rule.id)}>
+                        <Button variant="ghost" size="icon-sm" onClick={() => deleteRule(rule.id)}>
                           <Trash2 className="w-3.5 h-3.5 text-[#C44E56]" />
                         </Button>
                       </div>
@@ -236,67 +240,6 @@ export default function RoutingPage() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Team Member Stats */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-[var(--le-accent)]" />
-              <CardTitle>Assignment Stats</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2">
-              {mockTeamMembers.map((member, i) => {
-                const utilization = Math.round((member.assignedLeads / member.capacity) * 100);
-                return (
-                  <motion.div
-                    key={member.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="p-4 rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)]"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--le-bg-tertiary)]">
-                        <User className="w-4 h-4 text-[var(--le-text-muted)]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--le-text-primary)]">{member.name}</p>
-                        <p className="text-xs text-[var(--le-text-muted)]">{member.role}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[var(--le-text-tertiary)]">Capacity</span>
-                        <span className="font-medium text-[var(--le-text-secondary)]">{member.assignedLeads}/{member.capacity} leads</span>
-                      </div>
-                      <div className="h-1.5 bg-[var(--le-bg-tertiary)] rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${utilization}%` }}
-                          transition={{ duration: 0.6, delay: 0.1 + i * 0.1 }}
-                          className="h-full rounded-full"
-                          style={{
-                            backgroundColor: utilization > 80 ? '#E8636C' : utilization > 60 ? '#F0A030' : '#4FD1E5',
-                          }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[var(--le-text-muted)]">{member.activeJobs} active jobs</span>
-                        <span className="font-medium" style={{
-                          color: utilization > 80 ? '#C44E56' : utilization > 60 ? '#C48020' : '#2DA8BC',
-                        }}>
-                          {utilization}%
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
           </CardContent>
         </Card>
       </div>

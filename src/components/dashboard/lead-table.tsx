@@ -56,7 +56,7 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton h-20 rounded-[var(--le-radius-lg)]" />
+          <div key={i} className="skeleton h-20 rounded-[var(--od-radius-lg)]" />
         ))}
       </div>
     );
@@ -67,18 +67,18 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
       {/* Controls bar */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--le-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--od-text-muted)]" />
           <input
             type="text"
             placeholder="Search leads..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-[var(--le-radius-md)] border border-[var(--le-border-default)] bg-[var(--le-bg-tertiary)] text-sm text-[var(--le-text-primary)] placeholder:text-[var(--le-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]/30 transition-all"
+            className="w-full h-9 pl-9 pr-4 rounded-[var(--od-radius-md)] border border-[var(--od-border-default)] bg-[var(--od-bg-tertiary)] text-sm text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]/30 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -111,8 +111,8 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                 className={cn(
                   'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
                   statusFilter === 'all'
-                    ? 'bg-[var(--le-text-primary)] text-[var(--le-bg-primary)]'
-                    : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                    ? 'bg-[var(--od-text-primary)] text-[var(--od-bg-primary)]'
+                    : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
                 )}
               >
                 All
@@ -124,8 +124,8 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                   className={cn(
                     'px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
                     statusFilter === stage.id
-                      ? 'text-[var(--le-bg-primary)]'
-                      : 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] hover:bg-[var(--le-bg-elevated)]'
+                      ? 'text-[var(--od-bg-primary)]'
+                      : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
                   )}
                   style={
                     statusFilter === stage.id
@@ -178,7 +178,7 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
 
       {/* Results count */}
       {filteredLeads.length > 0 && (
-        <p className="text-xs text-[var(--le-text-muted)] mt-4 text-center">
+        <p className="text-xs text-[var(--od-text-muted)] mt-4 text-center">
           Showing {filteredLeads.length} of {leads.length} leads
         </p>
       )}
@@ -205,7 +205,7 @@ function LeadRow({
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.2, delay: index * 0.03 }}
       onClick={onClick}
-      className="w-full text-left rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] bg-[var(--le-bg-secondary)] p-4 hover:border-[var(--le-border-default)] hover:bg-[var(--le-bg-secondary)]/80 transition-all duration-200 group cursor-pointer"
+      className="w-full text-left rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-secondary)] p-4 hover:border-[var(--od-border-default)] hover:bg-[var(--od-bg-secondary)]/80 transition-all duration-200 group cursor-pointer"
     >
       <div className="flex items-center gap-4">
         {/* Status indicator */}
@@ -217,7 +217,7 @@ function LeadRow({
         {/* Lead info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-[var(--le-text-primary)] truncate">
+            <h3 className="text-sm font-semibold text-[var(--od-text-primary)] truncate">
               {lead.first_name} {lead.last_name}
             </h3>
             <Badge variant={lead.status as LeadStatus} size="sm">
@@ -228,7 +228,7 @@ function LeadRow({
             </Badge>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-[var(--le-text-tertiary)]">
+          <div className="flex items-center gap-4 text-xs text-[var(--od-text-tertiary)]">
             <span className="flex items-center gap-1">
               <Mail className="w-3 h-3" />
               <span className="truncate max-w-[140px]">{lead.email}</span>
@@ -250,8 +250,8 @@ function LeadRow({
           {/* AI summary preview */}
           {lead.ai_summary && (
             <div className="flex items-start gap-1.5 mt-2">
-              <Sparkles className="w-3 h-3 text-[var(--le-accent)] mt-0.5 shrink-0" />
-              <p className="text-xs text-[var(--le-text-tertiary)] line-clamp-1">
+              <Sparkles className="w-3 h-3 text-[var(--od-accent)] mt-0.5 shrink-0" />
+              <p className="text-xs text-[var(--od-text-tertiary)] line-clamp-1">
                 {lead.ai_summary}
               </p>
             </div>
@@ -260,12 +260,12 @@ function LeadRow({
 
         {/* Right side */}
         <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-          <span className="text-xs text-[var(--le-text-muted)]">
+          <span className="text-xs text-[var(--od-text-muted)]">
             {formatRelativeTime(lead.created_at)}
           </span>
           {lead.ai_score !== null && lead.ai_score !== undefined && (
             <div className="flex items-center gap-1.5">
-              <div className="w-12 h-1.5 rounded-full bg-[var(--le-bg-elevated)] overflow-hidden">
+              <div className="w-12 h-1.5 rounded-full bg-[var(--od-bg-elevated)] overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
@@ -275,14 +275,14 @@ function LeadRow({
                   }}
                 />
               </div>
-              <span className="text-[10px] text-[var(--le-text-muted)] w-5 text-right">
+              <span className="text-[10px] text-[var(--od-text-muted)] w-5 text-right">
                 {lead.ai_score}
               </span>
             </div>
           )}
         </div>
 
-        <ChevronRight className="w-4 h-4 text-[var(--le-text-muted)] group-hover:text-[var(--le-text-tertiary)] transition-colors shrink-0" />
+        <ChevronRight className="w-4 h-4 text-[var(--od-text-muted)] group-hover:text-[var(--od-text-tertiary)] transition-colors shrink-0" />
       </div>
     </motion.button>
   );

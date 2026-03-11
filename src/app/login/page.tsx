@@ -41,7 +41,7 @@ export default function LoginPage() {
 
     // Restore saved email
     try {
-      const savedEmail = localStorage.getItem('le_saved_email');
+      const savedEmail = localStorage.getItem('od_saved_email');
       if (savedEmail) {
         setEmail(savedEmail);
         setRememberMe(true);
@@ -56,14 +56,14 @@ export default function LoginPage() {
     const supabase = createClient();
     await supabase.auth.signOut();
     // Clear session confirmation cookie
-    document.cookie = 'le_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'od_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setExistingUser(null);
     setSigningOut(false);
   };
 
   const setSessionConfirmed = () => {
     // Set a session cookie (no expiry = cleared when browser closes)
-    document.cookie = 'le_session_confirmed=1; path=/; SameSite=Lax';
+    document.cookie = 'od_session_confirmed=1; path=/; SameSite=Lax';
   };
 
   const handleContinue = () => {
@@ -122,9 +122,9 @@ export default function LoginPage() {
       // Save or clear email based on "Remember me"
       try {
         if (rememberMe) {
-          localStorage.setItem('le_saved_email', email);
+          localStorage.setItem('od_saved_email', email);
         } else {
-          localStorage.removeItem('le_saved_email');
+          localStorage.removeItem('od_saved_email');
         }
       } catch {
         // localStorage not available
@@ -139,7 +139,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--le-bg-primary)] flex">
+    <div className="min-h-screen bg-[var(--od-bg-primary)] flex">
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-1 items-center justify-center bg-[#1C2A3A] relative overflow-hidden">
         {/* Subtle gradient background */}
@@ -154,8 +154,8 @@ export default function LoginPage() {
         >
           <div className="mb-8">
             <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
+              src="/odyssey-logo.png" unoptimized
+              alt="Odyssey"
               width={200}
               height={56}
               className="h-12 w-auto object-contain"
@@ -205,39 +205,41 @@ export default function LoginPage() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center mb-10">
-            <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
-              width={180}
-              height={48}
-              className="h-10 w-auto object-contain"
-              priority
-            />
+            <div className="bg-[#1C2A3A] rounded-2xl px-6 py-4">
+              <Image
+                src="/odyssey-logo.png" unoptimized
+                alt="Odyssey"
+                width={180}
+                height={48}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </div>
           </div>
 
           {checkingSession ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-[var(--le-text-muted)]" />
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--od-text-muted)]" />
             </div>
           ) : existingUser ? (
             <>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight mb-1">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight mb-1">
                 Welcome back
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-8">
+              <p className="text-sm text-[var(--od-text-tertiary)] mb-8">
                 You have an active session
               </p>
 
-              <div className="p-4 rounded-xl bg-[var(--le-bg-tertiary)] border border-[var(--le-border-subtle)] mb-6">
+              <div className="p-4 rounded-xl bg-[var(--od-bg-tertiary)] border border-[var(--od-border-subtle)] mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[var(--le-accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--le-accent)]">
+                  <div className="w-10 h-10 rounded-full bg-[var(--od-accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--od-accent)]">
                     {existingUser.email.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--le-text-primary)] truncate">
+                    <p className="text-sm font-medium text-[var(--od-text-primary)] truncate">
                       {existingUser.email}
                     </p>
-                    <p className="text-xs text-[var(--le-text-muted)]">Signed in</p>
+                    <p className="text-xs text-[var(--od-text-muted)]">Signed in</p>
                   </div>
                 </div>
               </div>
@@ -261,7 +263,7 @@ export default function LoginPage() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="w-full text-[var(--le-text-muted)] hover:text-[#E8636C]"
+                  className="w-full text-[var(--od-text-muted)] hover:text-[#E8636C]"
                   onClick={handleSignOut}
                   disabled={signingOut}
                 >
@@ -281,10 +283,10 @@ export default function LoginPage() {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight mb-1">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight mb-1">
                 Welcome back
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-8">
+              <p className="text-sm text-[var(--od-text-tertiary)] mb-8">
                 Sign in to your dashboard
               </p>
 
@@ -317,7 +319,7 @@ export default function LoginPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-4 h-4 rounded border border-[var(--le-border-subtle)] bg-[var(--le-bg-tertiary)] peer-checked:bg-[var(--le-accent)] peer-checked:border-[var(--le-accent)] transition-all flex items-center justify-center">
+                    <div className="w-4 h-4 rounded border border-[var(--od-border-subtle)] bg-[var(--od-bg-tertiary)] peer-checked:bg-[var(--od-accent)] peer-checked:border-[var(--od-accent)] transition-all flex items-center justify-center">
                       {rememberMe && (
                         <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -325,7 +327,7 @@ export default function LoginPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-[var(--le-text-secondary)] group-hover:text-[var(--le-text-primary)] transition-colors">
+                  <span className="text-xs text-[var(--od-text-secondary)] group-hover:text-[var(--od-text-primary)] transition-colors">
                     Remember my email
                   </span>
                 </label>
@@ -352,9 +354,9 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <p className="text-xs text-[var(--le-text-muted)] text-center mt-6">
+              <p className="text-xs text-[var(--od-text-muted)] text-center mt-6">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="text-[var(--le-accent-text)] hover:underline">
+                <Link href="/signup" className="text-[var(--od-accent-text)] hover:underline">
                   Sign up free
                 </Link>
               </p>

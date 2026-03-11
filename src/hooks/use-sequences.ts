@@ -17,7 +17,7 @@ export interface Sequence {
   name: string;
   description?: string;
   steps: SequenceStep[];
-  trigger: 'new_lead' | 'status_change' | 'manual';
+  trigger: 'new_lead' | 'quote_sent' | 'no_response' | 'appointment_completed' | 'status_change' | 'job_completed' | 'manual';
   trigger_conditions?: Record<string, unknown>;
   is_active: boolean;
   enrolled_count: number;
@@ -64,7 +64,7 @@ export function useSequences(organizationId: string | undefined) {
     name: string;
     description?: string;
     steps: SequenceStep[];
-    trigger: 'new_lead' | 'status_change' | 'manual';
+    trigger: 'new_lead' | 'quote_sent' | 'no_response' | 'appointment_completed' | 'status_change' | 'job_completed' | 'manual';
     trigger_conditions?: Record<string, unknown>;
   }) => {
     if (!organizationId) return null;
@@ -107,10 +107,10 @@ export function useSequences(organizationId: string | undefined) {
   }, []);
 
   const enrollLead = useCallback(async (sequenceId: string, leadId: string) => {
-    const res = await fetch(`/api/sequences/${sequenceId}/enroll`, {
+    const res = await fetch('/api/sequences/enroll', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lead_id: leadId }),
+      body: JSON.stringify({ sequence_id: sequenceId, lead_id: leadId }),
     });
 
     if (res.ok) {

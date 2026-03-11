@@ -57,19 +57,19 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--le-accent)]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--od-accent)]" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
-          <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+          <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
             Analytics
           </h1>
-          <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+          <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
             Lead performance and conversion insights
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[var(--le-accent)]" />
+                <Sparkles className="w-4 h-4 text-[var(--od-accent)]" />
                 <CardTitle>AI Win/Loss Analysis</CardTitle>
               </div>
               <Button
@@ -110,8 +110,8 @@ export default function AnalyticsPage() {
           <CardContent>
             {!insights && !insightsLoading && (
               <div className="text-center py-8">
-                <Sparkles className="w-8 h-8 text-[var(--le-accent)] mx-auto mb-3 opacity-40" />
-                <p className="text-sm text-[var(--le-text-muted)]">
+                <Sparkles className="w-8 h-8 text-[var(--od-accent)] mx-auto mb-3 opacity-40" />
+                <p className="text-sm text-[var(--od-text-muted)]">
                   Click &quot;Run AI Analysis&quot; to get AI-powered insights about your pipeline
                 </p>
               </div>
@@ -119,8 +119,8 @@ export default function AnalyticsPage() {
 
             {insightsLoading && (
               <div className="text-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-[var(--le-accent)] mx-auto mb-3" />
-                <p className="text-sm text-[var(--le-text-muted)]">Analyzing your pipeline data...</p>
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--od-accent)] mx-auto mb-3" />
+                <p className="text-sm text-[var(--od-text-muted)]">Analyzing your pipeline data...</p>
               </div>
             )}
 
@@ -131,13 +131,13 @@ export default function AnalyticsPage() {
                 className="space-y-4"
               >
                 {/* Summary */}
-                <div className="bg-[var(--le-accent-muted)] rounded-lg p-4 border border-[rgba(79,209,229,0.2)]">
-                  <p className="text-sm text-[var(--le-text-secondary)] leading-relaxed">{insights.summary}</p>
+                <div className="bg-[var(--od-accent-muted)] rounded-lg p-4 border border-[rgba(79,209,229,0.2)]">
+                  <p className="text-sm text-[var(--od-text-secondary)] leading-relaxed">{insights.summary}</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Win Patterns */}
-                  <div className="bg-[var(--le-bg-secondary)] rounded-lg p-4 border border-[var(--le-border-subtle)]">
+                  <div className="bg-[var(--od-bg-secondary)] rounded-lg p-4 border border-[var(--od-border-subtle)]">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
                       <span className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">Win Patterns</span>
@@ -146,14 +146,14 @@ export default function AnalyticsPage() {
                       {insights.win_patterns.map((pattern, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Trophy className="w-3 h-3 text-[#4ADE80] mt-0.5 shrink-0" />
-                          <span className="text-xs text-[var(--le-text-secondary)]">{pattern}</span>
+                          <span className="text-xs text-[var(--od-text-secondary)]">{pattern}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   {/* Loss Patterns */}
-                  <div className="bg-[var(--le-bg-secondary)] rounded-lg p-4 border border-[var(--le-border-subtle)]">
+                  <div className="bg-[var(--od-bg-secondary)] rounded-lg p-4 border border-[var(--od-border-subtle)]">
                     <div className="flex items-center gap-2 mb-3">
                       <AlertTriangle className="w-4 h-4 text-[#F87171]" />
                       <span className="text-xs font-semibold text-[#F87171] uppercase tracking-wider">Loss Patterns</span>
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
                       {insights.loss_patterns.map((pattern, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <AlertTriangle className="w-3 h-3 text-[#F87171] mt-0.5 shrink-0" />
-                          <span className="text-xs text-[var(--le-text-secondary)]">{pattern}</span>
+                          <span className="text-xs text-[var(--od-text-secondary)]">{pattern}</span>
                         </li>
                       ))}
                     </ul>
@@ -170,16 +170,16 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Recommendations */}
-                <div className="bg-[var(--le-bg-secondary)] rounded-lg p-4 border border-[var(--le-border-subtle)]">
+                <div className="bg-[var(--od-bg-secondary)] rounded-lg p-4 border border-[var(--od-border-subtle)]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Lightbulb className="w-4 h-4 text-[var(--le-accent)]" />
-                    <span className="text-xs font-semibold text-[var(--le-accent)] uppercase tracking-wider">Top Recommendations</span>
+                    <Lightbulb className="w-4 h-4 text-[var(--od-accent)]" />
+                    <span className="text-xs font-semibold text-[var(--od-accent)] uppercase tracking-wider">Top Recommendations</span>
                   </div>
                   <ul className="space-y-2">
                     {insights.top_recommendations.map((rec, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="text-xs font-bold text-[var(--le-accent)] mt-0.5">{i + 1}.</span>
-                        <span className="text-xs text-[var(--le-text-secondary)]">{rec}</span>
+                        <span className="text-xs font-bold text-[var(--od-accent)] mt-0.5">{i + 1}.</span>
+                        <span className="text-xs text-[var(--od-text-secondary)]">{rec}</span>
                       </li>
                     ))}
                   </ul>
@@ -187,18 +187,18 @@ export default function AnalyticsPage() {
 
                 {/* Best Sources & Revenue */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-[var(--le-bg-secondary)] rounded-lg p-4 border border-[var(--le-border-subtle)]">
-                    <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-2">Best Lead Sources</p>
+                  <div className="bg-[var(--od-bg-secondary)] rounded-lg p-4 border border-[var(--od-border-subtle)]">
+                    <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-2">Best Lead Sources</p>
                     <div className="space-y-1.5">
                       {insights.best_sources.map((src, i) => (
-                        <p key={i} className="text-xs text-[var(--le-text-secondary)]">{src}</p>
+                        <p key={i} className="text-xs text-[var(--od-text-secondary)]">{src}</p>
                       ))}
                     </div>
                   </div>
-                  <div className="bg-[var(--le-bg-secondary)] rounded-lg p-4 border border-[var(--le-border-subtle)]">
-                    <p className="text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider mb-2">Revenue Insights</p>
-                    <p className="text-xs text-[var(--le-text-secondary)]">{insights.revenue_insights}</p>
-                    <p className="text-xs text-[var(--le-text-muted)] mt-2">{insights.avg_response_time_impact}</p>
+                  <div className="bg-[var(--od-bg-secondary)] rounded-lg p-4 border border-[var(--od-border-subtle)]">
+                    <p className="text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider mb-2">Revenue Insights</p>
+                    <p className="text-xs text-[var(--od-text-secondary)]">{insights.revenue_insights}</p>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-2">{insights.avg_response_time_impact}</p>
                   </div>
                 </div>
               </motion.div>
@@ -219,15 +219,15 @@ export default function AnalyticsPage() {
 
                 return (
                   <div key={stage.id} className="flex items-center gap-3">
-                    <div className="w-20 text-xs text-[var(--le-text-secondary)] font-medium">
+                    <div className="w-20 text-xs text-[var(--od-text-secondary)] font-medium">
                       {stage.label}
                     </div>
-                    <div className="flex-1 h-6 bg-[var(--le-bg-tertiary)] rounded-[var(--le-radius-sm)] overflow-hidden relative">
+                    <div className="flex-1 h-6 bg-[var(--od-bg-tertiary)] rounded-[var(--od-radius-sm)] overflow-hidden relative">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                        className="h-full rounded-[var(--le-radius-sm)] flex items-center px-2"
+                        className="h-full rounded-[var(--od-radius-sm)] flex items-center px-2"
                         style={{ backgroundColor: `${stage.color}30` }}
                       >
                         {pct > 15 && (
@@ -237,12 +237,12 @@ export default function AnalyticsPage() {
                         )}
                       </motion.div>
                       {pct <= 15 && count > 0 && (
-                        <span className="absolute left-[calc(var(--w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--le-text-muted)]" style={{ '--w': `${pct}%` } as React.CSSProperties}>
+                        <span className="absolute left-[calc(var(--w)+8px)] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[var(--od-text-muted)]" style={{ '--w': `${pct}%` } as React.CSSProperties}>
                           {count}
                         </span>
                       )}
                     </div>
-                    <div className="w-10 text-right text-xs text-[var(--le-text-muted)]">
+                    <div className="w-10 text-right text-xs text-[var(--od-text-muted)]">
                       {Math.round(pct)}%
                     </div>
                   </div>
@@ -268,11 +268,11 @@ export default function AnalyticsPage() {
               )
                 .sort(([, a], [, b]) => b - a)
                 .map(([source, count]) => (
-                  <div key={source} className="flex items-center justify-between py-2 border-b border-[var(--le-border-subtle)] last:border-0">
-                    <span className="text-sm text-[var(--le-text-secondary)] capitalize">{source}</span>
+                  <div key={source} className="flex items-center justify-between py-2 border-b border-[var(--od-border-subtle)] last:border-0">
+                    <span className="text-sm text-[var(--od-text-secondary)] capitalize">{source}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-[var(--le-text-primary)]">{count}</span>
-                      <span className="text-xs text-[var(--le-text-muted)]">
+                      <span className="text-sm font-semibold text-[var(--od-text-primary)]">{count}</span>
+                      <span className="text-xs text-[var(--od-text-muted)]">
                         ({Math.round((count / total) * 100)}%)
                       </span>
                     </div>

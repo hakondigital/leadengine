@@ -8,8 +8,8 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[var(--le-bg-tertiary)] text-[var(--le-text-secondary)] border border-[var(--le-border-subtle)]',
-        accent: 'bg-[var(--le-accent-muted)] text-[var(--le-accent-text)] border border-[rgba(79,209,229,0.2)]',
+        default: 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] border border-[var(--od-border-subtle)]',
+        accent: 'bg-[var(--od-accent-muted)] text-[var(--od-accent-text)] border border-[rgba(79,209,229,0.2)]',
         success: 'bg-[#34C77B]/8 text-[#1F9B5A] border border-[#34C77B]/15',
         warning: 'bg-[#E8963C]/8 text-[#C47A2C] border border-[#E8963C]/15',
         error: 'bg-[#E8636C]/8 text-[#C44E56] border border-[#E8636C]/15',
@@ -23,8 +23,8 @@ const badgeVariants = cva(
       },
       size: {
         sm: 'text-[10px] px-1.5 py-0.5 rounded-[4px]',
-        md: 'text-xs px-2 py-0.5 rounded-[var(--le-radius-sm)]',
-        lg: 'text-xs px-2.5 py-1 rounded-[var(--le-radius-sm)]',
+        md: 'text-xs px-2 py-0.5 rounded-[var(--od-radius-sm)]',
+        lg: 'text-xs px-2.5 py-1 rounded-[var(--od-radius-sm)]',
       },
     },
     defaultVariants: {

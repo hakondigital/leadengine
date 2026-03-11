@@ -3,9 +3,14 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { checkFeature, checkLimit, countTrackingNumbers } from '@/lib/check-plan';
 import { checkSuperAdmin } from '@/lib/super-admin';
 
-const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 
-// Order a phone number from Telnyx and save it as a tracking number
+function twilioAuth(): string {
+  return 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+}
+
+// Purchase a phone number from Twilio and save it as a tracking number
 export async function POST(request: NextRequest) {
   try {
     const { organization_id, phone_number, label, source, forwarding_number } =
@@ -22,7 +27,6 @@ export async function POST(request: NextRequest) {
     const { isSuperAdmin } = await checkSuperAdmin(request);
 
     if (!isSuperAdmin) {
-      // Check call tracking feature access
       const featureCheck = await checkFeature(organization_id, 'call_tracking');
       if (!featureCheck.allowed) {
         return NextResponse.json(
@@ -31,7 +35,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check tracking number limit
       const numCount = await countTrackingNumbers(organization_id);
       const limitCheck = await checkLimit(organization_id, 'tracking_numbers', numCount);
       if (!limitCheck.allowed) {
@@ -42,34 +45,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!TELNYX_API_KEY) {
-      return NextResponse.json({ error: 'Telnyx not configured' }, { status: 500 });
+    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+      return NextResponse.json({ error: 'Twilio not configured' }, { status: 500 });
     }
 
-    // Step 1: Order the number from Telnyx
-    const orderRes = await fetch('https://api.telnyx.com/v2/number_orders', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${TELNYX_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phone_numbers: [{ phone_number }],
-      }),
-    });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000';
 
-    if (!orderRes.ok) {
-      const err = await orderRes.text();
-      console.error('Telnyx order error:', err);
+    // Step 1: Purchase the number from Twilio and configure webhooks
+    const purchaseRes = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/IncomingPhoneNumbers.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: twilioAuth(),
+        },
+        body: new URLSearchParams({
+          PhoneNumber: phone_number,
+          VoiceUrl: `${appUrl}/api/call-tracking/voice`,
+          VoiceMethod: 'POST',
+          StatusCallback: `${appUrl}/api/call-tracking/status-callback`,
+          StatusCallbackMethod: 'POST',
+        }).toString(),
+      }
+    );
+
+    if (!purchaseRes.ok) {
+      const err = await purchaseRes.text();
+      console.error('Twilio purchase error:', err);
       return NextResponse.json(
-        { error: 'Failed to order phone number from Telnyx. It may no longer be available.' },
+        { error: 'Failed to purchase phone number from Twilio. It may no longer be available.' },
         { status: 502 }
       );
     }
 
-    const orderData = await orderRes.json();
-    const orderId = orderData.data?.id;
-    const orderStatus = orderData.data?.status;
+    const purchaseData = await purchaseRes.json();
+    const twilioSid = purchaseData.sid;
 
     // Step 2: Save the tracking number to our database
     const supabase = await createServiceRoleClient();
@@ -79,7 +90,7 @@ export async function POST(request: NextRequest) {
       .insert({
         organization_id,
         phone_number,
-        forward_to: forwarding_number,
+        forwarding_number,
         label: label || 'New Number',
         source: source || 'provisioned',
         is_active: true,
@@ -89,13 +100,12 @@ export async function POST(request: NextRequest) {
 
     if (dbError) {
       console.error('DB insert error:', dbError);
-      return NextResponse.json({ error: 'Number ordered but failed to save. Contact support.' }, { status: 500 });
+      return NextResponse.json({ error: 'Number purchased but failed to save. Contact support.' }, { status: 500 });
     }
 
     return NextResponse.json({
       tracking_number: trackingNumber,
-      telnyx_order_id: orderId,
-      telnyx_order_status: orderStatus,
+      twilio_sid: twilioSid,
     }, { status: 201 });
   } catch (error) {
     console.error('Provision error:', error);

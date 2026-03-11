@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 import { sendFollowUpEmail } from '@/lib/email';
 import { sendFollowUpSMS } from '@/lib/sms';
 
@@ -19,6 +20,9 @@ export async function GET(request: NextRequest) {
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
     }
+
+    const { unauthorized } = await requireCallerOwnsOrg(orgId);
+    if (unauthorized) return unauthorized;
 
     let query = supabase
       .from('inbox_messages')
@@ -53,8 +57,22 @@ export async function GET(request: NextRequest) {
       .eq('is_read', false)
       .eq('is_archived', false);
 
+    // Flatten the nested lead object so the hook can access lead_name / lead_email directly
+    const flatMessages = (messages || []).map((m: Record<string, unknown>) => {
+      const lead = m.lead as Record<string, string> | null;
+      return {
+        ...m,
+        lead: undefined,
+        lead_name: lead
+          ? [lead.first_name, lead.last_name].filter(Boolean).join(' ')
+          : null,
+        lead_email: lead?.email || null,
+        lead_phone: lead?.phone || null,
+      };
+    });
+
     return NextResponse.json({
-      messages,
+      messages: flatMessages,
       total: count,
       unread: unreadCount || 0,
       page,

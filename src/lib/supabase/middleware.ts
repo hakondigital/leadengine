@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Require session confirmation — user must go through login gate each browser session
-    const confirmed = request.cookies.get('le_session_confirmed')?.value;
+    const confirmed = request.cookies.get('od_session_confirmed')?.value;
     if (!confirmed) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';

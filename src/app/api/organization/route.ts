@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest) {
 
       const currentSettings = (currentOrg?.settings as Record<string, unknown>) || {};
       // Only allow safe keys in settings_update
-      const safeSettingsKeys = ['onboarding_completed', 'ai_model', 'ai_temperature', 'ai_custom_prompt'];
+      const safeSettingsKeys = ['onboarding_completed', 'ai_model', 'ai_temperature', 'ai_custom_prompt', 'form_template'];
       const settingsUpdate: Record<string, unknown> = {};
       for (const key of safeSettingsKeys) {
         if (key in body.settings_update) {

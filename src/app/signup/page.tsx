@@ -135,7 +135,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--le-bg-primary)] flex">
+    <div className="min-h-screen bg-[var(--od-bg-primary)] flex">
       {/* Left panel */}
       <div className="hidden lg:flex flex-1 items-center justify-center bg-[#1C2A3A] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#4FD1E5]/8 to-transparent" />
@@ -149,8 +149,8 @@ export default function SignupPage() {
         >
           <div className="mb-8">
             <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
+              src="/odyssey-logo.png" unoptimized
+              alt="Odyssey"
               width={200}
               height={56}
               className="h-12 w-auto object-contain"
@@ -203,22 +203,24 @@ export default function SignupPage() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center mb-10">
-            <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
-              width={180}
-              height={48}
-              className="h-10 w-auto object-contain"
-              priority
-            />
+            <div className="bg-[#1C2A3A] rounded-2xl px-6 py-4">
+              <Image
+                src="/odyssey-logo.png" unoptimized
+                alt="Odyssey"
+                width={180}
+                height={48}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </div>
           </div>
 
           {step === 1 ? (
             <>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight mb-1">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight mb-1">
                 Create your account
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-8">
+              <p className="text-sm text-[var(--od-text-tertiary)] mb-8">
                 Step 1 of 2 — your login details
               </p>
 
@@ -259,10 +261,10 @@ export default function SignupPage() {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight mb-1">
+              <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight mb-1">
                 Your business
               </h1>
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-8">
+              <p className="text-sm text-[var(--od-text-tertiary)] mb-8">
                 Step 2 of 2 — we&apos;ll tailor your lead system
               </p>
 
@@ -326,9 +328,9 @@ export default function SignupPage() {
             </>
           )}
 
-          <p className="text-xs text-[var(--le-text-muted)] text-center mt-4">
+          <p className="text-xs text-[var(--od-text-muted)] text-center mt-4">
             Already have an account?{' '}
-            <Link href="/login" className="text-[var(--le-accent-text)] hover:underline">
+            <Link href="/login" className="text-[var(--od-accent-text)] hover:underline">
               Sign in
             </Link>
           </p>

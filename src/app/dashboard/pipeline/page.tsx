@@ -44,12 +44,12 @@ export default function PipelinePage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
-          <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+          <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
             Pipeline
           </h1>
-          <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+          <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
             Drag leads between stages to update their status
           </p>
         </div>

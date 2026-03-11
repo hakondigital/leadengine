@@ -1,76 +1,76 @@
 @import "tailwindcss";
 
-/* LeadEngine Design System — Enterprise Light */
+/* Odyssey Design System — Enterprise Light */
 
 :root {
-  /* Core surfaces */
-  --le-bg-primary: #F7F9FB;
-  --le-bg-secondary: #FFFFFF;
-  --le-bg-tertiary: #EEF1F5;
-  --le-bg-elevated: #E4E9EF;
-  --le-bg-hover: #DDE3EA;
-  --le-bg-muted: #CBD3DC;
-  --le-bg-dark: #1C2A3A;
+  /* Core surfaces — darker for contrast */
+  --od-bg-primary: #D5DAE1;
+  --od-bg-secondary: #E2E6EC;
+  --od-bg-tertiary: #C8CED7;
+  --od-bg-elevated: #BEC5CF;
+  --od-bg-hover: #B4BCC7;
+  --od-bg-muted: #A8B1BC;
+  --od-bg-dark: #1C2A3A;
 
-  /* Text */
-  --le-text-primary: #1A2332;
-  --le-text-secondary: #4A5568;
-  --le-text-tertiary: #7B8794;
-  --le-text-muted: #A0ADB8;
+  /* Text — darkened for readability */
+  --od-text-primary: #0F1419;
+  --od-text-secondary: #2D3748;
+  --od-text-tertiary: #4A5568;
+  --od-text-muted: #6B7B8D;
 
   /* Accent — cyan from logo */
-  --le-accent: #4FD1E5;
-  --le-accent-hover: #38BCD0;
-  --le-accent-muted: rgba(79, 209, 229, 0.10);
-  --le-accent-text: #2DA8BC;
+  --od-accent: #4FD1E5;
+  --od-accent-hover: #38BCD0;
+  --od-accent-muted: rgba(79, 209, 229, 0.10);
+  --od-accent-text: #2DA8BC;
 
   /* Status */
-  --le-status-new: #5B8DEF;
-  --le-status-reviewed: #8B7CF6;
-  --le-status-contacted: #4FD1E5;
-  --le-status-quoted: #F0A030;
-  --le-status-won: #34C77B;
-  --le-status-lost: #E8636C;
+  --od-status-new: #5B8DEF;
+  --od-status-reviewed: #8B7CF6;
+  --od-status-contacted: #4FD1E5;
+  --od-status-quoted: #F0A030;
+  --od-status-won: #34C77B;
+  --od-status-lost: #E8636C;
 
   /* Borders */
-  --le-border-subtle: #EEF1F5;
-  --le-border-default: #DDE3EA;
-  --le-border-strong: #CBD3DC;
+  --od-border-subtle: #EEF1F5;
+  --od-border-default: #DDE3EA;
+  --od-border-strong: #CBD3DC;
 
   /* Shadows */
-  --le-shadow-sm: 0 1px 2px rgba(28, 42, 58, 0.06);
-  --le-shadow-md: 0 4px 12px rgba(28, 42, 58, 0.08);
-  --le-shadow-lg: 0 8px 24px rgba(28, 42, 58, 0.10);
+  --od-shadow-sm: 0 1px 2px rgba(28, 42, 58, 0.06);
+  --od-shadow-md: 0 4px 12px rgba(28, 42, 58, 0.08);
+  --od-shadow-lg: 0 8px 24px rgba(28, 42, 58, 0.10);
 
   /* Radii */
-  --le-radius-sm: 6px;
-  --le-radius-md: 8px;
-  --le-radius-lg: 12px;
-  --le-radius-xl: 16px;
+  --od-radius-sm: 6px;
+  --od-radius-md: 8px;
+  --od-radius-lg: 12px;
+  --od-radius-xl: 16px;
 }
 
 @theme inline {
-  --color-background: var(--le-bg-primary);
-  --color-foreground: var(--le-text-primary);
-  --color-surface: var(--le-bg-secondary);
-  --color-surface-elevated: var(--le-bg-tertiary);
-  --color-surface-hover: var(--le-bg-hover);
-  --color-muted: var(--le-bg-muted);
-  --color-accent: var(--le-accent);
-  --color-accent-hover: var(--le-accent-hover);
-  --color-accent-muted: var(--le-accent-muted);
-  --color-border: var(--le-border-default);
-  --color-border-subtle: var(--le-border-subtle);
-  --color-text-primary: var(--le-text-primary);
-  --color-text-secondary: var(--le-text-secondary);
-  --color-text-tertiary: var(--le-text-tertiary);
-  --color-text-muted: var(--le-text-muted);
-  --color-status-new: var(--le-status-new);
-  --color-status-reviewed: var(--le-status-reviewed);
-  --color-status-contacted: var(--le-status-contacted);
-  --color-status-quoted: var(--le-status-quoted);
-  --color-status-won: var(--le-status-won);
-  --color-status-lost: var(--le-status-lost);
+  --color-background: var(--od-bg-primary);
+  --color-foreground: var(--od-text-primary);
+  --color-surface: var(--od-bg-secondary);
+  --color-surface-elevated: var(--od-bg-tertiary);
+  --color-surface-hover: var(--od-bg-hover);
+  --color-muted: var(--od-bg-muted);
+  --color-accent: var(--od-accent);
+  --color-accent-hover: var(--od-accent-hover);
+  --color-accent-muted: var(--od-accent-muted);
+  --color-border: var(--od-border-default);
+  --color-border-subtle: var(--od-border-subtle);
+  --color-text-primary: var(--od-text-primary);
+  --color-text-secondary: var(--od-text-secondary);
+  --color-text-tertiary: var(--od-text-tertiary);
+  --color-text-muted: var(--od-text-muted);
+  --color-status-new: var(--od-status-new);
+  --color-status-reviewed: var(--od-status-reviewed);
+  --color-status-contacted: var(--od-status-contacted);
+  --color-status-quoted: var(--od-status-quoted);
+  --color-status-won: var(--od-status-won);
+  --color-status-lost: var(--od-status-lost);
   --color-success: #34C77B;
   --color-warning: #E8963C;
   --color-error: #E8636C;
@@ -81,8 +81,8 @@
 
 /* Base styles */
 body {
-  background: var(--le-bg-primary);
-  color: var(--le-text-primary);
+  background: var(--od-bg-primary);
+  color: var(--od-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -110,25 +110,25 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--le-bg-muted);
+  background: var(--od-bg-muted);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--le-text-muted);
+  background: var(--od-text-muted);
 }
 
 /* Selection */
 ::selection {
   background: rgba(79, 209, 229, 0.20);
-  color: var(--le-text-primary);
+  color: var(--od-text-primary);
 }
 
 /* Focus ring */
 *:focus-visible {
-  outline: 2px solid var(--le-accent);
+  outline: 2px solid var(--od-accent);
   outline-offset: 2px;
-  border-radius: var(--le-radius-sm);
+  border-radius: var(--od-radius-sm);
 }
 
 /* Skeleton loading animation */
@@ -140,13 +140,13 @@ body::before {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--le-bg-tertiary) 25%,
-    var(--le-bg-elevated) 50%,
-    var(--le-bg-tertiary) 75%
+    var(--od-bg-tertiary) 25%,
+    var(--od-bg-elevated) 50%,
+    var(--od-bg-tertiary) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--le-radius-sm);
+  border-radius: var(--od-radius-sm);
 }
 
 /* Smooth page transitions */

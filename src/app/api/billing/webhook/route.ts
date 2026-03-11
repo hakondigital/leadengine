@@ -37,18 +37,18 @@ export async function POST(req: NextRequest) {
 
         if (userId && planId) {
           // Find the user's organization
-          const { data: member } = await supabase
-            .from('organization_members')
+          const { data: orgUser } = await supabase
+            .from('users')
             .select('organization_id')
-            .eq('user_id', userId)
-            .single();
+            .eq('id', userId)
+            .maybeSingle();
 
-          if (member) {
+          if (orgUser?.organization_id) {
             // Preserve existing settings and mark trial as used
             const { data: org } = await supabase
               .from('organizations')
               .select('settings')
-              .eq('id', member.organization_id)
+              .eq('id', orgUser.organization_id)
               .single();
 
             const existingSettings = (org?.settings as Record<string, unknown>) || {};
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
                   has_used_trial: true,
                 },
               })
-              .eq('id', member.organization_id);
+              .eq('id', orgUser.organization_id);
           }
         }
         break;

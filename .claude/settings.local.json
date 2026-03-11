@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Noah Campbell/OneDrive/Desktop/HAKON DIGITAL/AI TOOLS ALL/white-label-lead-capture-custom/$APPDATA/com.vercel.cli/**)",
+      "Read(//c/Users/Noah Campbell/OneDrive/Desktop/HAKON DIGITAL/AI TOOLS ALL/white-label-lead-capture-custom/$APPDATA/com.vercel.cli/Data/**)"
+    ]
+  }
+}

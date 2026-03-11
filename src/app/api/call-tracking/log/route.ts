@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-// Webhook endpoint to log incoming calls (Telnyx or internal)
+// Webhook endpoint to log incoming calls
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

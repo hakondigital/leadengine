@@ -239,8 +239,8 @@ export default function LandingPage() {
         {/* Nav */}
         <nav className="relative z-20 flex items-center justify-between px-6 lg:px-12 py-5">
           <Image
-            src="/logo.png" unoptimized
-            alt="LeadEngine"
+            src="/odyssey-logo.png" unoptimized
+            alt="Odyssey"
             width={200}
             height={56}
             className="h-20 lg:h-24 w-auto object-contain"
@@ -277,8 +277,8 @@ export default function LandingPage() {
               className="mb-10 text-center"
             >
               <Image
-                src="/logo.png" unoptimized
-                alt="LeadEngine"
+                src="/odyssey-logo.png" unoptimized
+                alt="Odyssey"
                 width={700}
                 height={190}
                 className="h-52 sm:h-64 lg:h-80 w-auto object-contain mx-auto"
@@ -479,6 +479,107 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══════ Pricing ══════ */}
+      <section className="relative z-10 px-6 lg:px-12 py-24 border-t border-white/[0.06]">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight mb-3">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-sm text-white/40 max-w-md mx-auto">
+              Choose the plan that fits your business. Upgrade or downgrade anytime.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                name: 'Starter',
+                price: 79,
+                originalPrice: null as number | null,
+                features: ['Up to 50 leads/month', 'AI lead qualification', 'Email notifications', '1 lead capture form', 'Basic analytics'],
+              },
+              {
+                name: 'Professional',
+                price: 149,
+                originalPrice: null as number | null,
+                popular: true,
+                features: ['Up to 250 leads/month', 'AI qualification + follow-ups', 'Email & SMS notifications', '3 forms, 3 users', 'Advanced analytics + AI tools', 'Full AI tools suite', 'Priority support'],
+              },
+              {
+                name: 'Enterprise',
+                price: 410,
+                originalPrice: 550 as number | null,
+                features: ['Unlimited leads', 'Full AI suite (all features)', 'White-label branding', 'Unlimited forms & users', 'Call recording & transcription', 'Dedicated account manager', 'SLA guarantee'],
+              },
+            ].map((plan, i) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className={`relative rounded-xl border p-6 ${
+                  plan.popular
+                    ? 'border-[#4FD1E5]/40 bg-white/[0.06] shadow-[0_0_30px_rgba(79,209,229,0.08)]'
+                    : 'border-white/[0.08] bg-white/[0.03]'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#4FD1E5] text-[#0F1923] text-[10px] font-bold uppercase tracking-wider rounded-full">
+                    Most Popular
+                  </div>
+                )}
+
+                <h3 className="text-base font-semibold text-white/90 mb-4">{plan.name}</h3>
+
+                <div className="mb-5">
+                  {plan.originalPrice && (
+                    <span className="text-base text-white/30 line-through mr-2">${plan.originalPrice}</span>
+                  )}
+                  <span className="text-3xl font-bold text-white">${plan.price}</span>
+                  <span className="text-sm text-white/40">/mo</span>
+                  {plan.originalPrice && (
+                    <div className="mt-1.5">
+                      <span className="text-[10px] font-semibold text-[#34C77B] bg-[#34C77B]/10 px-2 py-0.5 rounded-full">
+                        Save ${plan.originalPrice - plan.price}/mo
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <ul className="space-y-2 mb-6">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-xs text-white/50">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#34C77B] shrink-0 mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/dashboard/billing">
+                  <Button
+                    className={`w-full ${
+                      plan.popular
+                        ? 'bg-[#4FD1E5] text-[#0F1923] hover:bg-[#38BCD0] font-semibold'
+                        : 'bg-white/[0.06] text-white border border-white/[0.12] hover:bg-white/[0.1]'
+                    }`}
+                  >
+                    Get Started
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ══════ CTA ══════ */}
       <section className="relative z-10 px-6 lg:px-12 py-24 border-t border-white/[0.06]">
         <div className="max-w-3xl mx-auto text-center">
@@ -488,8 +589,8 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <Image
-              src="/logo.png" unoptimized
-              alt="LeadEngine"
+              src="/odyssey-logo.png" unoptimized
+              alt="Odyssey"
               width={240}
               height={66}
               className="h-36 w-auto object-contain mx-auto mb-8"
@@ -521,8 +622,8 @@ export default function LandingPage() {
       <footer className="relative z-10 px-6 lg:px-12 py-10 border-t border-white/[0.06]">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Image
-            src="/logo.png" unoptimized
-            alt="LeadEngine"
+            src="/odyssey-logo.png" unoptimized
+            alt="Odyssey"
             width={140}
             height={38}
             className="h-16 w-auto object-contain"

@@ -64,11 +64,11 @@ export default function ImportPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
           <a
             href="/dashboard/tools"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--le-text-muted)] hover:text-[var(--le-text-secondary)] mb-2 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2 transition-colors"
           >
             <ArrowLeft className="w-3 h-3" />
             Back to Tools
@@ -76,12 +76,12 @@ export default function ImportPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Upload className="w-5 h-5 text-[var(--le-accent)]" />
-                <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+                <Upload className="w-5 h-5 text-[var(--od-accent)]" />
+                <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                   CSV Import
                 </h1>
               </div>
-              <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
                 Import leads from spreadsheets with smart column mapping
               </p>
             </div>
@@ -97,23 +97,23 @@ export default function ImportPage() {
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); setShowMapping(true); }}
-              className={`border-2 border-dashed rounded-[var(--le-radius-lg)] p-12 text-center transition-colors cursor-pointer ${
+              className={`border-2 border-dashed rounded-[var(--od-radius-lg)] p-12 text-center transition-colors cursor-pointer ${
                 dragOver
-                  ? 'border-[var(--le-accent)] bg-[var(--le-accent-muted)]'
-                  : 'border-[var(--le-border-subtle)] hover:border-[var(--le-accent)]/50'
+                  ? 'border-[var(--od-accent)] bg-[var(--od-accent-muted)]'
+                  : 'border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/50'
               }`}
               onClick={() => setShowMapping(true)}
             >
-              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--le-bg-tertiary)] border border-[var(--le-border-subtle)] mx-auto mb-4">
-                <Upload className="w-6 h-6 text-[var(--le-text-muted)]" />
+              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--od-bg-tertiary)] border border-[var(--od-border-subtle)] mx-auto mb-4">
+                <Upload className="w-6 h-6 text-[var(--od-text-muted)]" />
               </div>
-              <h3 className="text-base font-semibold text-[var(--le-text-primary)] mb-1">
+              <h3 className="text-base font-semibold text-[var(--od-text-primary)] mb-1">
                 Drop your CSV file here
               </h3>
-              <p className="text-sm text-[var(--le-text-tertiary)] mb-4">
+              <p className="text-sm text-[var(--od-text-tertiary)] mb-4">
                 or click to browse your files
               </p>
-              <p className="text-xs text-[var(--le-text-muted)]">
+              <p className="text-xs text-[var(--od-text-muted)]">
                 Supports .csv and .xlsx files up to 10MB
               </p>
             </div>
@@ -134,7 +134,7 @@ export default function ImportPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="w-4 h-4 text-[var(--le-accent)]" />
+                    <FileSpreadsheet className="w-4 h-4 text-[var(--od-accent)]" />
                     <CardTitle>Column Mapping</CardTitle>
                     <Badge variant="accent" size="sm">leads_march_2026.csv</Badge>
                   </div>
@@ -147,11 +147,11 @@ export default function ImportPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-[var(--le-border-subtle)]">
-                        <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">CSV Column</th>
-                        <th className="text-center text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 px-4" />
-                        <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Lead Field</th>
-                        <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3">Preview</th>
+                      <tr className="border-b border-[var(--od-border-subtle)]">
+                        <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">CSV Column</th>
+                        <th className="text-center text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 px-4" />
+                        <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Lead Field</th>
+                        <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3">Preview</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -161,31 +161,31 @@ export default function ImportPage() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: i * 0.04 }}
-                          className="border-b border-[var(--le-border-subtle)] last:border-0"
+                          className="border-b border-[var(--od-border-subtle)] last:border-0"
                         >
                           <td className="py-3 pr-4">
-                            <span className="text-sm font-medium text-[var(--le-text-primary)] bg-[var(--le-bg-tertiary)] px-2 py-1 rounded-[var(--le-radius-sm)]">
+                            <span className="text-sm font-medium text-[var(--od-text-primary)] bg-[var(--od-bg-tertiary)] px-2 py-1 rounded-[var(--od-radius-sm)]">
                               {mapping.csvColumn}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <ArrowRight className="w-4 h-4 text-[var(--le-accent)] mx-auto" />
+                            <ArrowRight className="w-4 h-4 text-[var(--od-accent)] mx-auto" />
                           </td>
                           <td className="py-3 pr-4">
-                            <span className="text-sm font-medium text-[var(--le-accent)] bg-[var(--le-accent-muted)] px-2 py-1 rounded-[var(--le-radius-sm)]">
+                            <span className="text-sm font-medium text-[var(--od-accent)] bg-[var(--od-accent-muted)] px-2 py-1 rounded-[var(--od-radius-sm)]">
                               {mapping.leadField}
                             </span>
                           </td>
                           <td className="py-3">
-                            <span className="text-xs text-[var(--le-text-muted)] italic">{mapping.preview}</span>
+                            <span className="text-xs text-[var(--od-text-muted)] italic">{mapping.preview}</span>
                           </td>
                         </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--le-border-subtle)]">
-                  <p className="text-xs text-[var(--le-text-muted)]">150 rows detected</p>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--od-border-subtle)]">
+                  <p className="text-xs text-[var(--od-text-muted)]">150 rows detected</p>
                   <Button size="sm">
                     <Upload className="w-3.5 h-3.5" />
                     Import Leads
@@ -200,7 +200,7 @@ export default function ImportPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[var(--le-accent)]" />
+              <Clock className="w-4 h-4 text-[var(--od-accent)]" />
               <CardTitle>Import History</CardTitle>
             </div>
           </CardHeader>
@@ -208,13 +208,13 @@ export default function ImportPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[var(--le-border-subtle)]">
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">File</th>
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Date</th>
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Rows</th>
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Imported</th>
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3 pr-4">Skipped</th>
-                    <th className="text-left text-[10px] font-semibold text-[var(--le-text-muted)] uppercase tracking-wider pb-3">Status</th>
+                  <tr className="border-b border-[var(--od-border-subtle)]">
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">File</th>
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Date</th>
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Rows</th>
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Imported</th>
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3 pr-4">Skipped</th>
+                    <th className="text-left text-[10px] font-semibold text-[var(--od-text-muted)] uppercase tracking-wider pb-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -226,25 +226,25 @@ export default function ImportPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.03 }}
-                        className="border-b border-[var(--le-border-subtle)] last:border-0"
+                        className="border-b border-[var(--od-border-subtle)] last:border-0"
                       >
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
-                            <File className="w-3.5 h-3.5 text-[var(--le-text-muted)]" />
-                            <span className="text-sm font-medium text-[var(--le-text-primary)]">{row.fileName}</span>
+                            <File className="w-3.5 h-3.5 text-[var(--od-text-muted)]" />
+                            <span className="text-sm font-medium text-[var(--od-text-primary)]">{row.fileName}</span>
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="text-xs text-[var(--le-text-tertiary)]">{row.date}</span>
+                          <span className="text-xs text-[var(--od-text-tertiary)]">{row.date}</span>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="text-sm text-[var(--le-text-secondary)]">{row.totalRows}</span>
+                          <span className="text-sm text-[var(--od-text-secondary)]">{row.totalRows}</span>
                         </td>
                         <td className="py-3 pr-4">
                           <span className="text-sm font-medium text-[#1F9B5A]">{row.imported}</span>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="text-sm text-[var(--le-text-muted)]">{row.skipped}</span>
+                          <span className="text-sm text-[var(--od-text-muted)]">{row.skipped}</span>
                         </td>
                         <td className="py-3">
                           <span

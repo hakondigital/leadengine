@@ -1,18 +1,57 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-// Called internally when a Telnyx call recording is ready.
+// Called by Twilio when a call recording is ready, or internally.
 // Downloads the recording, transcribes via Whisper, summarizes via GPT,
 // and saves everything to the call_logs table.
 export async function POST(request: NextRequest) {
   try {
-    const { recording_url, call_log_id } = await request.json();
+    // Twilio sends form-encoded data; internal calls send JSON
+    let recordingUrl = '';
+    let callLogId = '';
+    let callSid = '';
 
-    if (!recording_url || !call_log_id) {
-      return NextResponse.json({ error: 'Missing recording_url or call_log_id' }, { status: 400 });
+    const contentType = request.headers.get('content-type') || '';
+    if (contentType.includes('form')) {
+      const formData = await request.formData();
+      const recordingSid = formData.get('RecordingSid') as string;
+      callSid = formData.get('CallSid') as string;
+      recordingUrl = formData.get('RecordingUrl') as string;
+      // Twilio RecordingUrl doesn't include format — append .wav
+      if (recordingUrl && !recordingUrl.endsWith('.wav')) {
+        recordingUrl += '.wav';
+      }
+    } else {
+      const body = await request.json();
+      recordingUrl = body.recording_url;
+      callLogId = body.call_log_id;
+    }
+
+    if (!recordingUrl) {
+      return NextResponse.json({ error: 'Missing recording URL' }, { status: 400 });
     }
 
     const supabase = await createServiceRoleClient();
+
+    // If we got a CallSid from Twilio (not a direct call_log_id), look up the call log
+    if (!callLogId && callSid) {
+      const { data: log } = await supabase
+        .from('call_logs')
+        .select('id')
+        .eq('provider_sid', callSid)
+        .single();
+      callLogId = log?.id || '';
+    }
+
+    if (!callLogId) {
+      return NextResponse.json({ error: 'Could not find call log' }, { status: 404 });
+    }
+
+    // Update the call log with the recording URL immediately
+    await supabase
+      .from('call_logs')
+      .update({ recording_url: recordingUrl })
+      .eq('id', callLogId);
 
     const openaiKey = process.env.OPENAI_API_KEY;
     if (!openaiKey) {
@@ -20,8 +59,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'skipped', reason: 'no_openai_key' });
     }
 
-    // Download the recording (Telnyx recordings use signed URLs — no extra auth needed)
-    const audioResponse = await fetch(recording_url);
+    // Download the recording (Twilio recordings need Basic Auth)
+    const twilioAuth = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+      ? 'Basic ' + Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')
+      : '';
+    const audioResponse = await fetch(recordingUrl, {
+      headers: twilioAuth ? { Authorization: twilioAuth } : {},
+    });
 
     if (!audioResponse.ok) {
       console.error('Failed to download recording:', audioResponse.status);
@@ -96,11 +140,11 @@ Keep it concise and actionable. If the call is very short or unclear, note that.
         ai_summary: summary,
         transcribed_at: new Date().toISOString(),
       })
-      .eq('id', call_log_id);
+      .eq('id', callLogId);
 
     return NextResponse.json({
       status: 'success',
-      call_log_id,
+      call_log_id: callLogId,
       transcript_length: transcript.length,
       has_summary: !!summary,
     });

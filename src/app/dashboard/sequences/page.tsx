@@ -131,7 +131,7 @@ export default function SequencesPage() {
   const { success: showSuccess } = useToast();
 
   if (planLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   if (!canUseSequences) {
@@ -142,18 +142,24 @@ export default function SequencesPage() {
         id: s.id,
         name: s.name,
         triggerType: s.trigger,
-        triggerLabel: s.trigger === 'new_lead' ? 'New Lead Created' : s.trigger === 'status_change' ? 'Status Change' : 'Manual',
+        triggerLabel: ({ new_lead: 'New Lead Created', quote_sent: 'Quote Sent', no_response: 'No Response (7 days)', status_change: 'Status Change', job_completed: 'Job Completed', appointment_completed: 'Appointment Completed', manual: 'Manual' } as Record<string, string>)[s.trigger] || s.trigger,
         stepsCount: s.steps?.length || 0,
-        activeEnrollments: s.enrolled_count,
-        totalCompleted: s.completed_count,
+        activeEnrollments: s.enrolled_count || 0,
+        totalCompleted: s.completed_count || 0,
         active: s.is_active,
-        steps: (s.steps || []).map((step) => ({
-          id: step.id,
-          type: step.type as 'email' | 'sms' | 'call' | 'wait',
-          label: step.subject || step.type.charAt(0).toUpperCase() + step.type.slice(1),
-          delay: step.delay_days === 0 ? 'Immediately' : `${step.delay_days} days`,
-          subject: step.subject,
-        })),
+        steps: (s.steps || []).map((step) => {
+          // Steps are normalized by API: type, delay_days, subject, body
+          const channel = step.type || 'email';
+          const delayDays = step.delay_days || 0;
+          const subj = step.subject;
+          return {
+            id: step.id,
+            type: channel as 'email' | 'sms' | 'call' | 'wait',
+            label: subj || channel.charAt(0).toUpperCase() + channel.slice(1),
+            delay: delayDays === 0 ? 'Immediately' : `${delayDays} day${delayDays !== 1 ? 's' : ''}`,
+            subject: subj,
+          };
+        }),
       }))
     : localSequences;
 
@@ -212,7 +218,7 @@ export default function SequencesPage() {
   if (selectedSequence) {
     return (
       <div className="min-h-screen">
-        <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+        <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
           <div className="px-4 lg:px-6 py-4">
             <Button variant="ghost" size="sm" onClick={() => setSelectedId(null)} className="mb-2">
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -220,10 +226,10 @@ export default function SequencesPage() {
             </Button>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+                <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
                   {selectedSequence.name}
                 </h1>
-                <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+                <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
                   Trigger: {selectedSequence.triggerLabel}
                 </p>
               </div>
@@ -267,25 +273,25 @@ export default function SequencesPage() {
                           <StepIcon className="w-3.5 h-3.5" style={{ color: config.color }} />
                         </div>
                         {i < selectedSequence.steps.length - 1 && (
-                          <div className="w-0.5 flex-1 bg-[var(--le-border-subtle)] mt-1" />
+                          <div className="w-0.5 flex-1 bg-[var(--od-border-subtle)] mt-1" />
                         )}
                       </div>
                       {/* Content */}
                       <div className="flex-1 pb-2">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-[var(--le-text-primary)]">
+                          <p className="text-sm font-semibold text-[var(--od-text-primary)]">
                             Step {i + 1}: {step.label}
                           </p>
-                          <span className="text-[10px] font-medium text-[var(--le-text-muted)] uppercase tracking-wider px-1.5 py-0.5 bg-[var(--le-bg-tertiary)] rounded-[4px]">
+                          <span className="text-[10px] font-medium text-[var(--od-text-muted)] uppercase tracking-wider px-1.5 py-0.5 bg-[var(--od-bg-tertiary)] rounded-[4px]">
                             {step.type}
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--le-text-tertiary)] mt-0.5">
+                        <p className="text-xs text-[var(--od-text-tertiary)] mt-0.5">
                           <Clock className="w-3 h-3 inline mr-1" />
                           {step.delay}
                         </p>
                         {step.subject && (
-                          <p className="text-xs text-[var(--le-text-secondary)] mt-1 italic">
+                          <p className="text-xs text-[var(--od-text-secondary)] mt-1 italic">
                             Subject: &quot;{step.subject}&quot;
                           </p>
                         )}
@@ -303,17 +309,17 @@ export default function SequencesPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--le-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--le-border-subtle)]">
+      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[var(--le-text-primary)] tracking-tight">
+            <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">
               Follow-Up Sequences
             </h1>
-            <p className="text-sm text-[var(--le-text-tertiary)] mt-0.5">
+            <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
               Automate your lead follow-up with multi-step sequences
             </p>
           </div>
-          <Button size="sm" onClick={openCreateSequence}>
+          <Button data-tour="new-sequence-btn" size="sm" onClick={openCreateSequence}>
             <Plus className="w-3.5 h-3.5" />
             Create Sequence
           </Button>
@@ -322,8 +328,8 @@ export default function SequencesPage() {
 
       <div className="px-4 lg:px-6 py-6">
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--le-text-muted)] mb-4">
-            <div className="w-3 h-3 border-2 border-[var(--le-accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--od-text-muted)] mb-4">
+            <div className="w-3 h-3 border-2 border-[var(--od-accent)] border-t-transparent rounded-full animate-spin" />
             Loading sequences...
           </div>
         )}
@@ -343,17 +349,17 @@ export default function SequencesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Card className="hover:border-[var(--le-accent)]/30 transition-colors cursor-pointer">
+                <Card className="hover:border-[var(--od-accent)]/30 transition-colors cursor-pointer">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1" onClick={() => setSelectedId(seq.id)}>
                         <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-[var(--le-accent)]" />
-                          <h3 className="text-sm font-semibold text-[var(--le-text-primary)]">
+                          <Zap className="w-4 h-4 text-[var(--od-accent)]" />
+                          <h3 className="text-sm font-semibold text-[var(--od-text-primary)]">
                             {seq.name}
                           </h3>
                         </div>
-                        <p className="text-xs text-[var(--le-text-tertiary)] mt-1">
+                        <p className="text-xs text-[var(--od-text-tertiary)] mt-1">
                           Trigger: {seq.triggerLabel}
                         </p>
                       </div>
@@ -363,7 +369,7 @@ export default function SequencesPage() {
                           toggleActive(seq.id);
                         }}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          seq.active ? 'bg-[var(--le-accent)]' : 'bg-[var(--le-bg-tertiary)]'
+                          seq.active ? 'bg-[var(--od-accent)]' : 'bg-[var(--od-bg-tertiary)]'
                         }`}
                       >
                         <span
@@ -374,19 +380,19 @@ export default function SequencesPage() {
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--le-border-subtle)]">
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--od-border-subtle)]">
                       <div className="flex items-center gap-1.5">
-                        <Zap className="w-3 h-3 text-[var(--le-text-muted)]" />
-                        <span className="text-xs text-[var(--le-text-tertiary)]">{seq.stepsCount} steps</span>
+                        <Zap className="w-3 h-3 text-[var(--od-text-muted)]" />
+                        <span className="text-xs text-[var(--od-text-tertiary)]">{seq.stepsCount} steps</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Users className="w-3 h-3 text-[var(--le-text-muted)]" />
-                        <span className="text-xs text-[var(--le-text-tertiary)]">{seq.activeEnrollments} active</span>
+                        <Users className="w-3 h-3 text-[var(--od-text-muted)]" />
+                        <span className="text-xs text-[var(--od-text-tertiary)]">{seq.activeEnrollments} active</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-[var(--le-text-muted)]">{seq.totalCompleted} completed</span>
+                        <span className="text-xs text-[var(--od-text-muted)]">{seq.totalCompleted} completed</span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-[var(--le-text-muted)] ml-auto" />
+                      <ChevronRight className="w-4 h-4 text-[var(--od-text-muted)] ml-auto" />
                     </div>
                   </CardContent>
                 </Card>
@@ -403,42 +409,44 @@ export default function SequencesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white rounded-[var(--le-radius-lg)] border border-[var(--le-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] shadow-xl w-full max-w-md mx-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--le-border-subtle)]">
-              <h2 className="text-base font-semibold text-[var(--le-text-primary)]">Create Sequence</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--od-border-subtle)]">
+              <h2 className="text-base font-semibold text-[var(--od-text-primary)]">Create Sequence</h2>
               <Button variant="ghost" size="icon-sm" onClick={() => setShowCreateModal(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Sequence Name</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Sequence Name</label>
                 <input
                   value={seqForm.name}
                   onChange={(e) => setSeqForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                   placeholder="e.g. New Lead Welcome"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[var(--le-text-secondary)] mb-1 block">Trigger</label>
+                <label className="text-xs font-medium text-[var(--od-text-secondary)] mb-1 block">Trigger</label>
                 <select
                   value={seqForm.trigger}
                   onChange={(e) => setSeqForm((f) => ({ ...f, trigger: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-[var(--le-radius-md)] border border-[var(--le-border-subtle)] bg-white text-[var(--le-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--le-accent)]"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-white text-[var(--od-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]"
                 >
                   <option value="new_lead">New Lead Created</option>
                   <option value="quote_sent">Quote Sent</option>
                   <option value="no_response">No Response (7 days)</option>
-                  <option value="job_completed">Job Completed</option>
+                  <option value="appointment_completed">Appointment Completed</option>
+                  <option value="status_change">Lead Status Change</option>
+                  <option value="job_completed">Job Completed (Won)</option>
                 </select>
               </div>
-              <p className="text-xs text-[var(--le-text-muted)]">
+              <p className="text-xs text-[var(--od-text-muted)]">
                 You can add steps to the sequence after creating it.
               </p>
             </div>
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--le-border-subtle)]">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--od-border-subtle)]">
               <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>Cancel</Button>
               <Button size="sm" disabled={!seqForm.name || seqSaving} onClick={handleCreateSequence}>
                 {seqSaving ? 'Creating...' : 'Create Sequence'}
