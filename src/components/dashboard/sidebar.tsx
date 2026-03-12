@@ -162,27 +162,31 @@ export function Sidebar() {
                 transition={{ duration: 0.15 }}
                 className="flex items-center"
               >
-                <Image
-                  src="/odyssey-logo.png" unoptimized
-                  alt="Odyssey"
-                  width={170}
-                  height={48}
-                  className="h-16 w-auto object-contain"
-                  priority
-                />
+                <Link href="/dashboard">
+                  <Image
+                    src="/odyssey-logo.png" unoptimized
+                    alt="Odyssey"
+                    width={170}
+                    height={48}
+                    className="h-16 w-auto object-contain"
+                    priority
+                  />
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
 
           {collapsed && (
-            <Image
-              src="/odyssey-logo.png" unoptimized
-              alt="Odyssey"
-              width={36}
-              height={36}
-              className="w-12 h-12 object-contain mx-auto"
-              priority
-            />
+            <Link href="/dashboard">
+              <Image
+                src="/odyssey-logo.png" unoptimized
+                alt="Odyssey"
+                width={36}
+                height={36}
+                className="w-12 h-12 object-contain mx-auto"
+                priority
+              />
+            </Link>
           )}
 
           <button
