@@ -36,12 +36,25 @@ export async function getOrgPlan(organizationId: string): Promise<OrgPlan> {
   const billingStatus = settings.billing_status as string | undefined;
 
   // Check if any user in this org is a super admin
+  // Join with auth.users via auth_id to get the reliable auth email
   const { data: orgUsers } = await supabase
     .from('users')
-    .select('email')
+    .select('email, auth_id')
     .eq('organization_id', organizationId);
 
-  const hasSuperAdmin = orgUsers?.some((u) => isSuperAdminEmail(u.email)) || false;
+  // Check emails stored in users table
+  let hasSuperAdmin = orgUsers?.some((u) => isSuperAdminEmail(u.email)) || false;
+
+  // Also check auth emails for any users whose users.email may be null
+  if (!hasSuperAdmin && orgUsers?.length) {
+    const authIds = orgUsers.map((u) => u.auth_id).filter(Boolean);
+    if (authIds.length > 0) {
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      hasSuperAdmin = authUsers?.users?.some(
+        (au) => authIds.includes(au.id) && isSuperAdminEmail(au.email)
+      ) || false;
+    }
+  }
 
   if (hasSuperAdmin) {
     return { organizationId, plan: 'enterprise', limits: SUPER_ADMIN_LIMITS, isSuperAdmin: true };

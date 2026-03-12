@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { checkFeature } from '@/lib/check-plan';
+import { checkSuperAdmin } from '@/lib/super-admin';
 import { sendFollowUpEmail } from '@/lib/email';
 import { sendFollowUpSMS } from '@/lib/sms';
 
@@ -22,17 +23,22 @@ export async function POST(
       );
     }
 
-    // Plan gate — inbox_compose is Pro + Enterprise only
-    const { allowed, plan } = await checkFeature(organization_id, 'inbox_compose');
-    if (!allowed) {
-      return NextResponse.json(
-        {
-          error: 'Inbox compose is available on Professional and Enterprise plans',
-          upgrade_required: true,
-          current_plan: plan,
-        },
-        { status: 403 }
-      );
+    // Super admin bypasses all plan gates
+    const { isSuperAdmin } = await checkSuperAdmin(request);
+
+    if (!isSuperAdmin) {
+      // Plan gate — inbox_compose is Pro + Enterprise only
+      const { allowed, plan } = await checkFeature(organization_id, 'inbox_compose');
+      if (!allowed) {
+        return NextResponse.json(
+          {
+            error: 'Inbox compose is available on Professional and Enterprise plans',
+            upgrade_required: true,
+            current_plan: plan,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const supabase = await createServiceRoleClient();
