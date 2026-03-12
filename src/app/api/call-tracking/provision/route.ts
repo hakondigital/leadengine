@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
           PhoneNumber: phone_number,
           VoiceUrl: `${appUrl}/api/call-tracking/voice`,
           VoiceMethod: 'POST',
+          SmsUrl: `${appUrl}/api/call-tracking/inbound-sms`,
+          SmsMethod: 'POST',
           StatusCallback: `${appUrl}/api/call-tracking/status-callback`,
           StatusCallbackMethod: 'POST',
         }).toString(),

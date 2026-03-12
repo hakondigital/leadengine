@@ -74,7 +74,7 @@ export function useOrganization() {
         } catch (err) {
           console.error('Profile query failed:', err);
           if (!cancelled) {
-            setState({ organization: null, user: null, loading: false, error: 'Failed to load user profile' });
+            setState({ organization: null, user: null, authEmail: authUser?.email ?? null, loading: false, error: 'Failed to load user profile' });
           }
           return;
         }
@@ -117,7 +117,7 @@ export function useOrganization() {
       } catch (err) {
         console.error('useOrganization load failed:', err);
         if (!cancelled) {
-          setState({ organization: null, user: null, loading: false, error: 'Failed to load organization data' });
+          setState({ organization: null, user: null, authEmail: null, loading: false, error: 'Failed to load organization data' });
         }
       }
     }
