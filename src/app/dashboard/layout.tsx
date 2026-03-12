@@ -3,6 +3,7 @@ import { OnboardingWrapper } from '@/components/dashboard/onboarding-wrapper';
 import { ToastProvider } from '@/components/ui/toast';
 import { TourProvider } from '@/components/tour/tour-provider';
 import { TourOverlay } from '@/components/tour/tour-overlay';
+import { DashboardPageTransition } from '@/components/dashboard/page-transition';
 
 export default function DashboardLayout({
   children,
@@ -14,8 +15,10 @@ export default function DashboardLayout({
       <TourProvider>
         <div className="flex min-h-screen bg-[var(--od-bg-primary)]">
           <Sidebar />
-          <main className="flex-1 min-w-0 pb-20 lg:pb-0">
-            {children}
+          <main className="flex-1 min-w-0 pb-20 lg:pb-0 flex flex-col">
+            <DashboardPageTransition>
+              {children}
+            </DashboardPageTransition>
           </main>
           <OnboardingWrapper />
           <TourOverlay />

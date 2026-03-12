@@ -269,22 +269,64 @@ export default function LandingPage() {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-4xl mx-auto text-center"
           >
-            {/* Logo — big and prominent */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="mb-10 text-center"
-            >
-              <Image
-                src="/odyssey-logo.png" unoptimized
-                alt="Odyssey"
-                width={700}
-                height={190}
-                className="h-52 sm:h-64 lg:h-80 w-auto object-contain mx-auto"
-                priority
-              />
-            </motion.div>
+            {/* Logo — cinematic reveal */}
+            <div className="mb-10 text-center relative">
+              {/* Glow bloom that expands behind the logo */}
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: [0, 0.35, 0.18], scale: [0.5, 1.15, 1] }}
+                transition={{ duration: 1.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="w-[520px] h-[200px] rounded-full bg-[#4FD1E5] blur-[80px]" />
+              </motion.div>
+
+              {/* Secondary softer glow */}
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.15, 0.08] }}
+                transition={{ duration: 1.8, delay: 0.3, ease: 'easeOut' }}
+              >
+                <div className="w-[700px] h-[260px] rounded-full bg-[#5B8DEF] blur-[100px]" />
+              </motion.div>
+
+              {/* Logo — blur-dissolve reveal */}
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, y: 16, filter: 'blur(20px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ duration: 1.05, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Image
+                  src="/odyssey-logo.png" unoptimized
+                  alt="Odyssey"
+                  width={700}
+                  height={190}
+                  className="h-52 sm:h-64 lg:h-80 w-auto object-contain mx-auto"
+                  priority
+                />
+
+                {/* Light sweep across the logo */}
+                <motion.div
+                  className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.95, duration: 0 }}
+                >
+                  <motion.div
+                    className="absolute inset-y-0 w-[40%]"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)',
+                      skewX: '-12deg',
+                    }}
+                    initial={{ x: '-60%' }}
+                    animate={{ x: '280%' }}
+                    transition={{ duration: 0.75, delay: 1.0, ease: 'easeInOut' }}
+                  />
+                </motion.div>
+              </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -62,8 +62,9 @@ export default function LoginPage() {
   };
 
   const setSessionConfirmed = () => {
-    // Set a session cookie (no expiry = cleared when browser closes)
-    document.cookie = 'od_session_confirmed=1; path=/; SameSite=Lax';
+    // Persistent 30-day cookie so returning users don't hit the login gate again
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `od_session_confirmed=1; path=/; SameSite=Lax; expires=${expires}`;
   };
 
   const handleContinue = () => {

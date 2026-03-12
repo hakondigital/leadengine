@@ -42,12 +42,16 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Require session confirmation — user must go through login gate each browser session
+    // Auto-confirm session server-side to avoid client-side race condition.
+    // If the user has a valid Supabase session, stamp the confirmation cookie
+    // with a 30-day expiry so it persists across browser restarts.
     const confirmed = request.cookies.get('od_session_confirmed')?.value;
     if (!confirmed) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
+      supabaseResponse.cookies.set('od_session_confirmed', '1', {
+        path: '/',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30,
+      });
     }
   }
 
