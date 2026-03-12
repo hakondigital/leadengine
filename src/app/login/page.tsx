@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -12,7 +11,6 @@ import { createClient } from '@/lib/supabase/client';
 import { Turnstile } from '@/components/turnstile';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -70,7 +68,8 @@ export default function LoginPage() {
   const handleContinue = () => {
     setIsLoading(true);
     setSessionConfirmed();
-    router.push('/dashboard');
+    // Full navigation so all fresh Supabase auth cookies are sent to the middleware
+    window.location.href = '/dashboard';
   };
 
   const handleTurnstileVerify = useCallback((token: string) => {
@@ -132,7 +131,8 @@ export default function LoginPage() {
       }
 
       setSessionConfirmed();
-      router.push('/dashboard');
+      // Full navigation so all fresh Supabase auth cookies are sent to the middleware
+      window.location.href = '/dashboard';
     } catch {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
