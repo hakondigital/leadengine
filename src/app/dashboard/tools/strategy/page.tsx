@@ -40,10 +40,10 @@ const suggestedPrompts = [
 ];
 
 export default function StrategyPage() {
-  const { organization, user } = useOrganization();
+  const { organization, user, authEmail } = useOrganization();
   const orgSettings = (organization?.settings as Record<string, unknown>) || {};
   const orgPlan = (orgSettings.plan as string) || null;
-  const canUse = getEffectivePlanLimits(orgPlan, user?.email).ai_strategy;
+  const canUse = getEffectivePlanLimits(orgPlan, authEmail ?? user?.email).ai_strategy;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');

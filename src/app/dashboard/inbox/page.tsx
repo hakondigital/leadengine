@@ -99,13 +99,13 @@ const mockMessages: Message[] = [
 ];
 
 export default function InboxPage() {
-  const { organization, user } = useOrganization();
+  const { organization, user, authEmail } = useOrganization();
   const { messages: fetchedMessages, unreadCount: hookUnreadCount, loading, markAsRead, sendReply } = useInbox(organization?.id);
 
   // Plan gate: inbox compose is Pro + Enterprise only (super admin override)
   const orgSettings = (organization?.settings as Record<string, unknown>) || {};
   const orgPlan = (orgSettings.plan as string) || null;
-  const canCompose = getEffectivePlanLimits(orgPlan, user?.email).inbox_compose;
+  const canCompose = getEffectivePlanLimits(orgPlan, authEmail ?? user?.email).inbox_compose;
   const [localMessages, setLocalMessages] = useState(mockMessages);
   const messages: Message[] = fetchedMessages.length > 0
     ? fetchedMessages.map((m) => ({

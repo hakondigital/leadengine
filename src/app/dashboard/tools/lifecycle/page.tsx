@@ -70,10 +70,10 @@ function StageStatus({ daysSinceWon, stageDay }: { daysSinceWon: number; stageDa
 }
 
 export default function LifecyclePage() {
-  const { organization, user } = useOrganization();
+  const { organization, user, authEmail } = useOrganization();
   const orgSettings = (organization?.settings as Record<string, unknown>) || {};
   const orgPlan = (orgSettings.plan as string) || null;
-  const canUse = getEffectivePlanLimits(orgPlan, user?.email).post_job_lifecycle;
+  const canUse = getEffectivePlanLimits(orgPlan, authEmail ?? user?.email).post_job_lifecycle;
 
   const [wonLeads, setWonLeads] = useState<WonLead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);

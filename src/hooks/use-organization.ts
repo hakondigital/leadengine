@@ -7,6 +7,7 @@ import type { Organization, User } from '@/lib/database.types';
 interface OrgState {
   organization: Organization | null;
   user: User | null;
+  authEmail: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -18,6 +19,7 @@ export function useOrganization() {
     cachedState || {
       organization: null,
       user: null,
+      authEmail: null,
       loading: true,
       error: null,
     }
@@ -47,7 +49,7 @@ export function useOrganization() {
 
         if (!authUser || cancelled) {
           if (!cancelled) {
-            setState({ organization: null, user: null, loading: false, error: 'Not authenticated' });
+            setState({ organization: null, user: null, authEmail: null, loading: false, error: 'Not authenticated' });
           }
           return;
         }
@@ -64,7 +66,7 @@ export function useOrganization() {
           if (profileError) {
             console.error('Profile error:', profileError.message, profileError.code, profileError.details);
             if (!cancelled) {
-              setState({ organization: null, user: null, loading: false, error: profileError.message });
+              setState({ organization: null, user: null, authEmail: authUser.email ?? null, loading: false, error: profileError.message });
             }
             return;
           }
@@ -79,7 +81,7 @@ export function useOrganization() {
 
         if (!userProfile || cancelled) {
           if (!cancelled) {
-            setState({ organization: null, user: null, loading: false, error: 'User profile not found' });
+            setState({ organization: null, user: null, authEmail: authUser.email ?? null, loading: false, error: 'User profile not found' });
           }
           return;
         }
@@ -105,6 +107,7 @@ export function useOrganization() {
           const s: OrgState = {
             organization: (org as Organization) || null,
             user: userProfile as User,
+            authEmail: authUser.email ?? null,
             loading: false,
             error: org ? null : 'Organization not found',
           };
