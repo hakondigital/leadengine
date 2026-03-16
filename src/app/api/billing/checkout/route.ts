@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
       hasUsedTrial = !!settings.has_used_trial;
     }
 
-    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return NextResponse.json({ error: 'Server misconfiguration: APP_URL not set' }, { status: 500 });
+    }
+    const origin = req.headers.get('origin') || appUrl;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sessionParams: any = {

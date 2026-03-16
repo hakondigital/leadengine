@@ -1,8 +1,15 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`avail:${ip}`, 30);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const supabase = await createServiceRoleClient();
     const { searchParams } = new URL(request.url);
 

@@ -67,9 +67,18 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET: Process lifecycle events for all eligible won leads
+// GET: Process lifecycle events for all eligible won leads (cron-only, requires secret token)
 export async function GET(req: NextRequest) {
   try {
+    const expectedToken = process.env.LIFECYCLE_SECRET_TOKEN;
+    if (!expectedToken) {
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${expectedToken}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const orgId = req.nextUrl.searchParams.get('organization_id');
     if (!orgId) {
       return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
@@ -161,34 +170,50 @@ export async function GET(req: NextRequest) {
             .map((p: string) => `<p style="margin:0 0 16px;color:#4A5568;font-size:14px;line-height:1.7;">${p.replace(/\n/g, '<br>')}</p>`)
             .join('');
           const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F7F9FB;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 24px;"><div style="background:#FFFFFF;border:1px solid #EEF1F5;border-radius:12px;padding:32px 24px;">${bodyHtml}</div><p style="margin:24px 0 0;text-align:center;color:#A0ABB5;font-size:11px;">${org?.name || ''}</p></div></body></html>`;
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
-            body: JSON.stringify({
-              from: `${org?.name || 'Odyssey'} <${FROM_EMAIL}>`,
-              to: lead.email,
-              subject: message.email_subject || `${stage.replace(/_/g, ' ')} — ${org?.name || ''}`,
-              html,
-            }),
-          }).catch(e => console.error('[Lifecycle] Email error:', e));
+          try {
+            const emailRes = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
+              body: JSON.stringify({
+                from: `${org?.name || 'Odyssey'} <${FROM_EMAIL}>`,
+                to: lead.email,
+                subject: message.email_subject || `${stage.replace(/_/g, ' ')} — ${org?.name || ''}`,
+                html,
+              }),
+            });
+            if (!emailRes.ok) {
+              console.error(`[Lifecycle] Email send failed for ${lead.email}: ${emailRes.status}`);
+            }
+          } catch (emailErr) {
+            // Non-critical: lifecycle processing continues even if email fails
+            console.error('[Lifecycle] Email error:', emailErr instanceof Error ? emailErr.message : emailErr);
+          }
         }
 
         if ((lifecycleChannel === 'sms' || lifecycleChannel === 'both') && lead.phone && TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER) {
-          await fetch(
-            `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
-              },
-              body: new URLSearchParams({
-                From: TWILIO_PHONE_NUMBER,
-                To: lead.phone,
-                Body: message.sms_body || `Hi ${lead.first_name}, a message from ${org?.name || 'us'}`,
-              }).toString(),
+          try {
+            const smsRes = await fetch(
+              `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  Authorization: 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
+                },
+                body: new URLSearchParams({
+                  From: TWILIO_PHONE_NUMBER,
+                  To: lead.phone,
+                  Body: message.sms_body || `Hi ${lead.first_name}, a message from ${org?.name || 'us'}`,
+                }).toString(),
+              }
+            );
+            if (!smsRes.ok) {
+              console.error(`[Lifecycle] SMS send failed for ${lead.phone}: ${smsRes.status}`);
             }
-          ).catch(e => console.error('[Lifecycle] SMS error:', e));
+          } catch (smsErr) {
+            // Non-critical: lifecycle processing continues even if SMS fails
+            console.error('[Lifecycle] SMS error:', smsErr instanceof Error ? smsErr.message : smsErr);
+          }
         }
       }
     }

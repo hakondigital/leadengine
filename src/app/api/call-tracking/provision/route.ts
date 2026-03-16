@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Twilio not configured' }, { status: 500 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return NextResponse.json({ error: 'Server misconfiguration: APP_URL not set' }, { status: 500 });
+    }
 
     // Step 1: Purchase the number from Twilio and configure webhooks
     const purchaseRes = await fetch(

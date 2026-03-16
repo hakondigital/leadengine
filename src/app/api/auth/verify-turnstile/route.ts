@@ -1,9 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA'; // test key
-
 export async function POST(request: NextRequest) {
   try {
+    const secretKey = process.env.TURNSTILE_SECRET_KEY;
+    if (!secretKey) {
+      console.error('[Turnstile] TURNSTILE_SECRET_KEY is not configured');
+      return NextResponse.json(
+        { success: false, error: 'CAPTCHA service misconfigured' },
+        { status: 500 }
+      );
+    }
+
     const { token } = await request.json();
 
     if (!token) {
@@ -11,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = new URLSearchParams();
-    formData.append('secret', TURNSTILE_SECRET);
+    formData.append('secret', secretKey);
     formData.append('response', token);
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '';

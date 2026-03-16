@@ -61,7 +61,12 @@ export async function POST(request: NextRequest) {
       orgUsers?.some((u) => SUPER_ADMIN_EMAILS.includes(u.email?.toLowerCase())) || false;
     const canRecord = isEnterprise || hasSuperAdmin;
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return new Response('<Response><Say>Server configuration error.</Say><Hangup/></Response>', {
+        headers: { 'Content-Type': 'text/xml' },
+      });
+    }
     const recordingCallback = `${appUrl}/api/call-tracking/recording-callback`;
     const statusCallback = `${appUrl}/api/call-tracking/status-callback`;
 

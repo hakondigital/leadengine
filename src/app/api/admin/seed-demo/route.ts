@@ -4,9 +4,13 @@ import { checkSuperAdmin } from '@/lib/super-admin';
 
 // POST /api/admin/seed-demo
 // Seeds the authenticated super admin's org with realistic demo data.
-// Super admin only.
+// Super admin only. Blocked in production.
 
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const { isSuperAdmin, userId } = await checkSuperAdmin(request);
   if (!isSuperAdmin) {
     return NextResponse.json({ error: 'Super admin only' }, { status: 403 });

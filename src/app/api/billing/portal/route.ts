@@ -20,7 +20,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Customer ID required' }, { status: 400 });
     }
 
-    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return NextResponse.json({ error: 'Server misconfiguration: APP_URL not set' }, { status: 500 });
+    }
+    const origin = req.headers.get('origin') || appUrl;
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

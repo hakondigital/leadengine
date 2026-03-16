@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendFollowUpEmail } from '@/lib/email';
 import { sendFollowUpSMS } from '@/lib/sms';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
@@ -78,6 +79,12 @@ function matchesConditions(
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = rateLimit(`weather:${ip}`, 10);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { organization_id, location } = body;
 

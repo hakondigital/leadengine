@@ -3,8 +3,18 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendFollowUpEmail } from '@/lib/email';
 import { sendFollowUpSMS } from '@/lib/sms';
 
+// Cron-only endpoint — requires LIFECYCLE_SECRET_TOKEN bearer auth
 export async function POST(_request: NextRequest) {
   try {
+    const expectedToken = process.env.LIFECYCLE_SECRET_TOKEN;
+    if (!expectedToken) {
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+    const authHeader = _request.headers.get('authorization');
+    if (authHeader !== `Bearer ${expectedToken}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = await createServiceRoleClient();
     const now = new Date().toISOString();
 
