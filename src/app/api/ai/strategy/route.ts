@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!allowed) {
       return NextResponse.json(
         {
-          error: 'Agent Console is available on Professional and Enterprise plans',
+          error: 'AI Strategy Advisor is available on Professional and Enterprise plans',
           upgrade_required: true,
           current_plan: plan,
         },

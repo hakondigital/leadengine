@@ -193,31 +193,31 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
   const tools = [
     {
       id: 'follow-up',
-      label: 'Draft outreach',
+      label: 'AI Follow-Up Writer',
       icon: Mail,
-      description: 'Prepare email and SMS follow-up the user can send immediately.',
+      description: 'Generate personalized follow-up messages',
       color: '#6C8EEF',
     },
     {
       id: 'objection',
-      label: 'Recover objection',
+      label: 'AI Objection Handler',
       icon: ShieldAlert,
-      description: 'Handle resistance, silence, or loss with a clearer recovery response.',
+      description: 'Re-engage cold or lost leads',
       color: '#F87171',
       showWhen: ['lost', 'cold', 'contacted', 'qualified'],
     },
     {
       id: 'schedule',
-      label: 'Plan contact window',
+      label: 'Smart Scheduling',
       icon: Clock,
-      description: 'Suggest when and how the team should reach out next.',
+      description: 'Best time and method to reach out',
       color: '#60C3D0',
     },
     {
       id: 'quote',
-      label: 'Build quote draft',
+      label: 'AI Quote Estimator',
       icon: DollarSign,
-      description: 'Generate a fast pricing range and commercial talking points.',
+      description: 'Ballpark pricing based on lead details',
       color: '#4ADE80',
     },
   ];
@@ -228,37 +228,31 @@ export function AIToolsPanel({ leadId, leadStatus }: AIToolsPanelProps) {
 
   return (
     <div className="space-y-2">
-      <div className="rounded-[20px] border border-[rgba(79,209,229,0.16)] bg-[var(--od-accent-muted)] p-4">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)]" />
-          <h4 className="text-xs font-semibold text-[var(--od-accent-text)] uppercase tracking-wider">
-            Agent actions
-          </h4>
-        </div>
-        <p className="mt-2 text-sm leading-7 text-[var(--od-text-secondary)]">
-          The agent should help the user act faster here: draft outreach, recover stalled deals,
-          plan timing, and prepare quote guidance from the lead context.
-        </p>
+      <div className="flex items-center gap-1.5 mb-3">
+        <Sparkles className="w-3.5 h-3.5 text-[var(--od-accent)]" />
+        <h4 className="text-xs font-semibold text-[var(--od-text-muted)] uppercase tracking-wider">
+          AI Tools
+        </h4>
       </div>
 
       {visibleTools.map((tool) => (
         <div
           key={tool.id}
-          className="overflow-hidden rounded-[20px] border border-[var(--od-border-subtle)]"
+          className="border border-[var(--od-border-subtle)] rounded-[var(--od-radius-md)] overflow-hidden"
         >
           <button
             onClick={() => toggleTool(tool.id)}
-            className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--od-bg-secondary)]"
+            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--od-bg-secondary)] transition-colors"
           >
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${tool.color}15` }}
             >
               <tool.icon className="w-3.5 h-3.5" style={{ color: tool.color }} />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--od-text-primary)]">{tool.label}</p>
-              <p className="text-xs text-[var(--od-text-muted)]">{tool.description}</p>
+              <p className="text-xs font-medium text-[var(--od-text-primary)]">{tool.label}</p>
+              <p className="text-[10px] text-[var(--od-text-muted)] truncate">{tool.description}</p>
             </div>
             {expandedTool === tool.id ? (
               <ChevronUp className="w-3.5 h-3.5 text-[var(--od-text-muted)] shrink-0" />

@@ -239,7 +239,7 @@ export default function CallsPage() {
         organization_id: organization.id,
         country_code: searchCountry,
         type: 'local',
-        limit: '10',
+        limit: '30',
       });
       if (areaCode) params.set('area_code', areaCode);
 

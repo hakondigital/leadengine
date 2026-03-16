@@ -13,9 +13,9 @@ export default function DashboardLayout({
   return (
     <ToastProvider>
       <TourProvider>
-        <div className="flex min-h-screen bg-[var(--od-bg-primary)] text-[var(--od-text-primary)]">
+        <div className="flex min-h-screen bg-[var(--od-bg-primary)]">
           <Sidebar />
-          <main className="flex-1 min-w-0 pb-20 lg:pb-0 flex flex-col bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]">
+          <main className="flex-1 min-w-0 pb-20 lg:pb-0 flex flex-col">
             <DashboardPageTransition>
               {children}
             </DashboardPageTransition>

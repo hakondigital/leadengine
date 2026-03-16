@@ -1,53 +1,60 @@
 // Design Token System — Odyssey
-// Premium agent operating aesthetic — dark mineral surfaces with cyan system accents
+// Premium enterprise aesthetic — cool slate/blue, Palantir/Linear/Vercel inspired
 
 export const tokens = {
   colors: {
+    // Core neutrals — cool light surfaces
     bg: {
-      primary: '#07111B',
-      secondary: '#0D1723',
-      tertiary: '#132131',
-      elevated: '#18293C',
-      hover: '#20354D',
-      muted: '#30465F',
+      primary: '#D5DAE1',         // Main background — darker for contrast
+      secondary: '#E2E6EC',        // Card surface
+      tertiary: '#C8CED7',        // Muted panels
+      elevated: '#BEC5CF',        // Hover / raised
+      hover: '#B4BCC7',           // Interactive hover
+      muted: '#A8B1BC',           // Muted backgrounds
     },
+    // Text hierarchy
     text: {
-      primary: '#EDF3FB',
-      secondary: '#C7D3E2',
-      tertiary: '#97A7BC',
-      muted: '#708299',
-      inverse: '#07111B',
+      primary: '#0F1419',         // Primary text — near black
+      secondary: '#2D3748',       // Secondary text — dark slate
+      tertiary: '#4A5568',        // Tertiary / labels
+      muted: '#6B7B8D',          // Muted — still readable
+      inverse: '#F7F9FB',        // On dark surfaces
     },
+    // Accent — cyan/electric blue from logo
     accent: {
-      primary: '#4FD1E5',
-      hover: '#73DFF0',
-      muted: 'rgba(79, 209, 229, 0.12)',
-      text: '#9EEFFF',
+      primary: '#4FD1E5',        // Primary accent
+      hover: '#38BCD0',          // Accent hover
+      muted: 'rgba(79, 209, 229, 0.10)', // Accent background
+      text: '#2DA8BC',           // Accent as text
     },
+    // Status colors
     status: {
-      new: '#70A0FF',
-      reviewed: '#A78BFA',
+      new: '#5B8DEF',
+      reviewed: '#8B7CF6',
       contacted: '#4FD1E5',
-      quoted: '#F0B04F',
-      won: '#42D48B',
-      lost: '#F07F86',
+      quoted: '#F0A030',
+      won: '#34C77B',
+      lost: '#E8636C',
     },
+    // Priority
     priority: {
-      critical: '#F07F86',
-      high: '#E8A652',
-      medium: '#70A0FF',
-      low: '#8A9EB6',
+      critical: '#DC3545',
+      high: '#E8963C',
+      medium: '#5B8DEF',
+      low: '#A0ADB8',
     },
+    // Borders
     border: {
-      subtle: 'rgba(141, 166, 198, 0.10)',
-      default: 'rgba(151, 176, 209, 0.18)',
-      strong: 'rgba(174, 198, 230, 0.28)',
+      subtle: '#EEF1F5',
+      default: '#DDE3EA',
+      strong: '#CBD3DC',
       accent: 'rgba(79, 209, 229, 0.30)',
     },
-    success: '#42D48B',
-    warning: '#E8A652',
-    error: '#F07F86',
-    info: '#70A0FF',
+    // Semantic
+    success: '#34C77B',
+    warning: '#E8963C',
+    error: '#E8636C',
+    info: '#5B8DEF',
   },
 
   spacing: {
@@ -63,27 +70,27 @@ export const tokens = {
   },
 
   radii: {
-    sm: '8px',
-    md: '12px',
-    lg: '18px',
-    xl: '24px',
-    '2xl': '28px',
+    sm: '6px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    '2xl': '20px',
     full: '9999px',
   },
 
   shadows: {
-    sm: '0 8px 20px rgba(0, 0, 0, 0.18)',
-    md: '0 18px 40px rgba(0, 0, 0, 0.28)',
-    lg: '0 30px 80px rgba(0, 0, 0, 0.42)',
-    xl: '0 36px 100px rgba(0, 0, 0, 0.48)',
-    glow: '0 0 20px rgba(79, 209, 229, 0.18)',
-    card: '0 16px 36px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+    sm: '0 1px 2px rgba(28, 42, 58, 0.06)',
+    md: '0 4px 12px rgba(28, 42, 58, 0.08)',
+    lg: '0 8px 24px rgba(28, 42, 58, 0.10)',
+    xl: '0 16px 48px rgba(28, 42, 58, 0.12)',
+    glow: '0 0 20px rgba(79, 209, 229, 0.12)',
+    card: '0 1px 3px rgba(28, 42, 58, 0.06), 0 0 0 1px rgba(28, 42, 58, 0.04)',
   },
 
   typography: {
     fontFamily: {
-      display: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      body: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      display: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      body: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       mono: '"JetBrains Mono", "Fira Code", monospace',
     },
     fontSize: {
@@ -121,6 +128,7 @@ export const tokens = {
   },
 } as const;
 
+// Framer Motion variants for reuse
 export const motionVariants = {
   fadeIn: {
     initial: { opacity: 0 },
@@ -151,6 +159,7 @@ export const motionVariants = {
   },
 };
 
+// Lead pipeline stage config
 export const pipelineStages = [
   { id: 'new', label: 'New', color: tokens.colors.status.new },
   { id: 'reviewed', label: 'Reviewed', color: tokens.colors.status.reviewed },

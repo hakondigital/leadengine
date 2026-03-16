@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const countryCode = searchParams.get('country_code') || 'AU';
   const numberType = searchParams.get('type') || 'local';
   const areaCode = searchParams.get('area_code') || '';
-  const limit = searchParams.get('limit') || '10';
+  const limit = searchParams.get('limit') || '30';
 
   if (!orgId) {
     return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
