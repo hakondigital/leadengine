@@ -72,6 +72,7 @@ export default function PipelinePage() {
       </div>
 
       <LeadDetailDrawer
+        key={`${selectedLead?.id ?? 'empty'}-${drawerOpen ? 'open' : 'closed'}`}
         lead={selectedLead}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}

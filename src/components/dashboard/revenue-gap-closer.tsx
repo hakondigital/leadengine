@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  TrendingUp,
-  Target,
-  DollarSign,
-  ChevronRight,
-  Sparkles,
-  RefreshCw,
-  Loader2,
-  AlertTriangle,
-  CheckCircle2,
   ArrowUpRight,
+  ChevronRight,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Target,
+  TrendingUp,
 } from 'lucide-react';
 
 interface RevenueGapAction {
@@ -48,7 +45,7 @@ export function RevenueGapCloser({ organizationId, onLeadClick }: RevenueGapClos
   const [data, setData] = useState<RevenueGapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showActions, setShowActions] = useState(false);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -62,6 +59,7 @@ export function RevenueGapCloser({ organizationId, onLeadClick }: RevenueGapClos
         }
         throw new Error('Failed to fetch');
       }
+
       setData(await res.json());
     } catch {
       setError('Failed to load');
@@ -74,188 +72,221 @@ export function RevenueGapCloser({ organizationId, onLeadClick }: RevenueGapClos
     if (organizationId) fetchData();
   }, [organizationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const progress = useMemo(() => {
+    if (!data?.monthly_target) return 0;
+    return Math.min(100, Math.round((data.current_revenue / data.monthly_target) * 100));
+  }, [data]);
+
   if (error === 'upgrade') return null;
+
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-8 flex items-center justify-center gap-3">
-          <Loader2 className="w-4 h-4 animate-spin text-[var(--od-accent)]" />
-          <span className="text-sm text-[var(--od-text-tertiary)]">Analyzing revenue...</span>
+        <CardContent className="flex items-center justify-center gap-3 py-10">
+          <Loader2 className="h-4 w-4 animate-spin text-[var(--od-accent)]" />
+          <span className="text-sm text-[var(--od-text-tertiary)]">Building the revenue pressure view...</span>
         </CardContent>
       </Card>
     );
   }
+
   if (error || !data) return null;
 
-  const pct = data.monthly_target > 0
-    ? Math.min(100, Math.round((data.current_revenue / data.monthly_target) * 100))
-    : 0;
   const onTrack = data.gap <= 0;
   const pipelineCoversGap = data.weighted_pipeline >= data.gap;
+  const coverageRatio = data.gap > 0 ? Math.min(100, Math.round((data.weighted_pipeline / data.gap) * 100)) : 100;
+  const visibleActions = showAllActions ? data.actions : data.actions.slice(0, 3);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[rgba(74,222,128,0.1)] flex items-center justify-center">
-                <Target className="w-4 h-4 text-[#4ADE80]" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Revenue Tracker</CardTitle>
-                <p className="text-xs text-[var(--od-text-muted)] mt-0.5">
-                  {data.days_remaining} day{data.days_remaining !== 1 ? 's' : ''} left this month
-                </p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.08 }}
+    >
+      <Card className="overflow-hidden border-[var(--od-border-default)] bg-[linear-gradient(180deg,rgba(74,222,128,0.08),transparent_36%),var(--od-bg-secondary)]">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#42D48B]/12">
+                  <Target className="h-4 w-4 text-[#85F0B6]" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Revenue pressure</CardTitle>
+                  <p className="mt-1 text-sm text-[var(--od-text-tertiary)]">
+                    Turn target tracking into an execution queue the user can actually act on.
+                  </p>
+                </div>
               </div>
             </div>
+
             <button
               onClick={fetchData}
-              className="p-1.5 rounded-md hover:bg-[var(--od-bg-tertiary)] transition-colors"
-              title="Refresh"
+              className="rounded-xl border border-[var(--od-border-subtle)] bg-[var(--od-bg-tertiary)] p-2 text-[var(--od-text-muted)] transition-colors hover:border-[var(--od-border-default)] hover:text-[var(--od-text-secondary)]"
+              title="Refresh revenue view"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[var(--od-text-muted)]" />
+              <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          <div className="mt-5 rounded-[24px] border border-[var(--od-border-subtle)] bg-[rgba(255,255,255,0.03)] p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={onTrack ? 'success' : pipelineCoversGap ? 'warning' : 'error'} size="sm">
+                    {onTrack ? 'On target' : pipelineCoversGap ? 'Recoverable gap' : 'Revenue at risk'}
+                  </Badge>
+                  <span className="text-xs text-[var(--od-text-muted)]">
+                    {data.days_remaining} day{data.days_remaining === 1 ? '' : 's'} left this month
+                  </span>
+                </div>
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-3xl font-semibold tracking-tight text-[var(--od-text-primary)]">
+                    ${data.current_revenue.toLocaleString()}
+                  </span>
+                  <span className="pb-1 text-sm text-[var(--od-text-muted)]">
+                    of ${data.monthly_target.toLocaleString()}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-7 text-[var(--od-text-secondary)]">{data.forecast}</p>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[320px]">
+                <PressureStat label="Gap" value={onTrack ? 'Covered' : `$${data.gap.toLocaleString()}`} />
+                <PressureStat label="Pipeline" value={`$${data.pipeline_value.toLocaleString()}`} />
+                <PressureStat label="Coverage" value={`${coverageRatio}%`} />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="h-3 overflow-hidden rounded-full bg-[var(--od-bg-tertiary)]">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.75, ease: 'easeOut' }}
+                  className="h-full rounded-full"
+                  style={{
+                    background: onTrack
+                      ? 'linear-gradient(90deg,#42D48B,#73F5B1)'
+                      : pipelineCoversGap
+                      ? 'linear-gradient(90deg,#E8A652,#FFD08B)'
+                      : 'linear-gradient(90deg,#F07F86,#E8A652)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {data.ai_insight ? (
+            <div className="mt-4 rounded-[20px] border border-[rgba(79,209,229,0.16)] bg-[var(--od-accent-muted)] p-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--od-accent)]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--od-accent-text)]">
+                  Agent directive
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-[var(--od-text-secondary)]">{data.ai_insight}</p>
+            </div>
+          ) : null}
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* Progress bar */}
-          <div>
-            <div className="flex items-baseline justify-between mb-2">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-[var(--od-text-primary)]">
-                  ${data.current_revenue.toLocaleString()}
-                </span>
-                <span className="text-sm text-[var(--od-text-muted)]">
-                  / ${data.monthly_target.toLocaleString()}
-                </span>
-              </div>
-              <Badge variant={onTrack ? 'success' : pipelineCoversGap ? 'default' : 'error'} size="sm">
-                {onTrack ? 'Target hit' : `$${data.gap.toLocaleString()} to go`}
-              </Badge>
-            </div>
-            <div className="h-3 rounded-full bg-[var(--od-bg-tertiary)] overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="h-full rounded-full"
-                style={{
-                  background: onTrack
-                    ? '#4ADE80'
-                    : pct >= 60
-                    ? 'linear-gradient(90deg, #4ADE80, #F59E0B)'
-                    : 'linear-gradient(90deg, #EF4444, #F59E0B)',
-                }}
-              />
-            </div>
-            <p className="text-xs text-[var(--od-text-muted)] mt-1.5">{data.forecast}</p>
-          </div>
-
-          {/* Pipeline stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)]">
-              <p className="text-xs text-[var(--od-text-muted)]">Pipeline Value</p>
-              <p className="text-lg font-semibold text-[var(--od-text-primary)] mt-0.5">
-                ${data.pipeline_value.toLocaleString()}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)]">
-              <p className="text-xs text-[var(--od-text-muted)]">Weighted Forecast</p>
-              <p className="text-lg font-semibold text-[var(--od-text-primary)] mt-0.5">
-                ${data.weighted_pipeline.toLocaleString()}
-              </p>
-            </div>
-          </div>
-
-          {/* AI Insight */}
-          {data.ai_insight && (
-            <div className="p-3 rounded-lg bg-[var(--od-bg-secondary)] border border-[var(--od-border-subtle)]">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Sparkles className="w-3 h-3 text-[var(--od-accent)]" />
-                <span className="text-xs font-medium text-[var(--od-accent-text)]">AI Insight</span>
-              </div>
-              <p className="text-xs text-[var(--od-text-secondary)] leading-relaxed">{data.ai_insight}</p>
-            </div>
-          )}
-
-          {/* Actions toggle */}
-          {data.actions.length > 0 && !onTrack && (
+        <CardContent className="space-y-3 pt-0">
+          {!onTrack && data.actions.length > 0 ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowActions(!showActions)}
-                className="w-full text-xs justify-between"
-              >
-                <span className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {showActions ? 'Hide' : 'Show'} {data.actions.length} revenue opportunities
-                </span>
-                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showActions ? 'rotate-90' : ''}`} />
-              </Button>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--od-text-muted)]">
+                    Best recovery moves
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--od-text-tertiary)]">
+                    Surface the opportunities most likely to close the gap quickly.
+                  </p>
+                </div>
 
-              <AnimatePresence>
-                {showActions && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="space-y-1.5 overflow-hidden"
+                {data.actions.length > 3 ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setShowAllActions((current) => !current)}
                   >
-                    {data.actions.map((action, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--od-border-subtle)] hover:border-[var(--od-border-default)] transition-colors cursor-pointer group"
-                        onClick={() => onLeadClick?.(action.lead_id)}
-                      >
-                        {/* Probability ring */}
-                        <div className="relative w-9 h-9 shrink-0">
-                          <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--od-bg-tertiary)" strokeWidth="3" />
-                            <circle
-                              cx="18" cy="18" r="15.5" fill="none"
-                              stroke={action.close_probability >= 60 ? '#4ADE80' : action.close_probability >= 30 ? '#F59E0B' : '#6B7280'}
-                              strokeWidth="3"
-                              strokeDasharray={`${action.close_probability * 0.974} 100`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--od-text-secondary)]">
+                    {showAllActions ? 'Show fewer' : `Show all ${data.actions.length}`}
+                    <ChevronRight className={`h-3.5 w-3.5 transition-transform ${showAllActions ? 'rotate-90' : ''}`} />
+                  </Button>
+                ) : null}
+              </div>
+
+              <AnimatePresence initial={false}>
+                <div className="space-y-3">
+                  {visibleActions.map((action, index) => (
+                    <motion.button
+                      key={`${action.lead_id}-${index}`}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ delay: index * 0.04 }}
+                      onClick={() => onLeadClick?.(action.lead_id)}
+                      className="group flex w-full items-start gap-4 rounded-[22px] border border-[var(--od-border-subtle)] bg-[rgba(255,255,255,0.03)] p-4 text-left transition-all hover:border-[var(--od-border-default)] hover:bg-[rgba(255,255,255,0.04)]"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--od-border-subtle)] bg-[var(--od-bg-tertiary)]">
+                        <div className="flex flex-col items-center leading-none">
+                          <span className="text-xs font-semibold text-[var(--od-text-primary)]">
                             {action.close_probability}%
                           </span>
+                          <span className="mt-1 text-[10px] text-[var(--od-text-muted)]">likely</span>
+                        </div>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={action.close_probability >= 60 ? 'success' : action.close_probability >= 35 ? 'warning' : 'default'} size="sm">
+                            {action.close_probability >= 60 ? 'Strong chance' : action.close_probability >= 35 ? 'Worth pushing' : 'Longer shot'}
+                          </Badge>
+                          <Badge variant="accent" size="sm">
+                            ${action.estimated_value.toLocaleString()} potential
+                          </Badge>
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[var(--od-text-primary)] truncate">
-                            {action.lead_name}
-                          </p>
-                          <p className="text-xs text-[var(--od-text-muted)] truncate">{action.action}</p>
-                        </div>
+                        <h3 className="mt-3 text-sm font-semibold tracking-tight text-[var(--od-text-primary)]">
+                          {action.lead_name}
+                        </h3>
+                        <p className="mt-1 text-sm leading-7 text-[var(--od-text-secondary)]">{action.action}</p>
+                        <p className="mt-1 text-xs leading-6 text-[var(--od-text-tertiary)]">{action.reason}</p>
+                      </div>
 
-                        {/* Value */}
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-semibold text-[#4ADE80]">
-                            ${action.estimated_value.toLocaleString()}
-                          </p>
-                          <p className="text-[10px] text-[var(--od-text-muted)]">potential</p>
-                        </div>
-
-                        <ArrowUpRight className="w-3.5 h-3.5 text-[var(--od-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[var(--od-text-muted)]">
+                        <span>Open lead</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
               </AnimatePresence>
             </>
+          ) : (
+            <div className="rounded-[22px] border border-[#42D48B]/20 bg-[#42D48B]/10 p-4">
+              <div className="flex items-start gap-3">
+                <TrendingUp className="mt-0.5 h-4 w-4 text-[#85F0B6]" />
+                <div>
+                  <p className="text-sm font-semibold text-[#85F0B6]">Target pressure is under control</p>
+                  <p className="mt-1 text-sm leading-7 text-[var(--od-text-secondary)]">
+                    The revenue gap is covered. Keep the agent focused on protecting quote momentum and closing cleanly.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function PressureStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--od-border-subtle)] bg-[var(--od-bg-tertiary)] p-3">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--od-text-muted)]">{label}</p>
+      <p className="mt-2 text-base font-semibold tracking-tight text-[var(--od-text-primary)]">{value}</p>
+    </div>
   );
 }
