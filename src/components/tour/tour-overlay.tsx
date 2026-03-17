@@ -8,9 +8,12 @@ import { useTour } from './tour-provider';
 import type { TourStep } from '@/lib/tour-steps';
 
 // Padding (px) around the highlighted element
-const PADDING = 10;
+const PADDING = 12;
+const BORDER_RADIUS = 12;
 // How many 200 ms ticks to attempt finding the target element
 const MAX_POLLS = 25;
+// Max spotlight height — clamp large elements so the spotlight stays useful
+const MAX_SPOTLIGHT_H = 400;
 
 interface ViewportRect {
   top: number;
@@ -26,26 +29,32 @@ export function TourOverlay() {
     useTour();
 
   const [rect, setRect] = useState<ViewportRect | null>(null);
-  // True while navigating to a new page / polling for the target element.
-  // Prevents the tooltip from jumping to screen-centre before the element is found.
   const [searching, setSearching] = useState(false);
   const targetRef = useRef<Element | null>(null);
   const roRef = useRef<ResizeObserver | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const measure = useCallback((el: Element) => {
     const r = el.getBoundingClientRect();
-    setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    // Clamp height for large elements — keep the spotlight meaningful
+    const h = Math.min(r.height, MAX_SPOTLIGHT_H);
+    setRect({ top: r.top, left: r.left, width: r.width, height: h });
   }, []);
 
+  // Use rAF-based remeasure for smooth tracking during scroll
   const remeasure = useCallback(() => {
-    if (targetRef.current) measure(targetRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (targetRef.current) measure(targetRef.current);
+    });
   }, [measure]);
 
   useEffect(() => {
     // Cleanup previous
     roRef.current?.disconnect();
     if (pollRef.current) clearTimeout(pollRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     targetRef.current = null;
     setRect(null);
 
@@ -54,8 +63,6 @@ export function TourOverlay() {
       return;
     }
 
-    // Signal that we are looking for the new element — keeps the dark overlay
-    // visible but hides the tooltip so it doesn't jump to screen centre.
     setSearching(true);
 
     const selector = `[data-tour="${currentStep.target}"]`;
@@ -65,12 +72,14 @@ export function TourOverlay() {
       const el = document.querySelector(selector);
       if (el) {
         targetRef.current = el;
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Re-measure after scroll settles to get accurate viewport position
+        // Scroll into view first
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Wait for scroll to finish, then measure and reveal
         setTimeout(() => {
           measure(el);
           setSearching(false);
-        }, 400);
+        }, 500);
+        // Watch for resize
         const ro = new ResizeObserver(remeasure);
         ro.observe(el);
         roRef.current = ro;
@@ -78,7 +87,6 @@ export function TourOverlay() {
         attempts++;
         pollRef.current = setTimeout(poll, 200);
       } else {
-        // Give up — fall back to centred modal
         setSearching(false);
       }
     };
@@ -91,6 +99,7 @@ export function TourOverlay() {
     return () => {
       roRef.current?.disconnect();
       if (pollRef.current) clearTimeout(pollRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('scroll', remeasure, true);
       window.removeEventListener('resize', remeasure);
     };
@@ -101,153 +110,168 @@ export function TourOverlay() {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalSteps - 1;
 
-  // ── No spotlight (step with target: null) ──
+  const tooltipCard = (
+    <TourTooltipCard
+      step={currentStep}
+      currentIndex={currentIndex}
+      totalSteps={totalSteps}
+      isFirst={isFirst}
+      isLast={isLast}
+      onNext={nextStep}
+      onPrev={prevStep}
+      onEnd={endTour}
+    />
+  );
+
+  // ── No spotlight (step with target: null) → centred modal ──
   if (!currentStep.target) {
     return (
       <>
-        <div className="fixed inset-0 z-[9998] bg-black/70 backdrop-blur-sm" />
-        <AnimatePresence>
+        <div className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
           <motion.div
             key={`tour-modal-${currentStep.id}`}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-auto"
           >
-            <div className="pointer-events-auto">
-              <TourTooltipCard
-                step={currentStep}
-                currentIndex={currentIndex}
-                totalSteps={totalSteps}
-                isFirst={isFirst}
-                isLast={isLast}
-                onNext={nextStep}
-                onPrev={prevStep}
-                onEnd={endTour}
-              />
-            </div>
+            {tooltipCard}
           </motion.div>
-        </AnimatePresence>
+        </div>
       </>
     );
   }
 
   // ── Spotlight mode ──
   const showSpotlight = !!rect && !searching;
+
+  // Spotlight rect with padding
   const sTop = rect ? rect.top - PADDING : 0;
   const sLeft = rect ? rect.left - PADDING : 0;
   const sWidth = rect ? rect.width + PADDING * 2 : 0;
   const sHeight = rect ? rect.height + PADDING * 2 : 0;
 
+  // Tooltip positioning — try right side of spotlight, then below, then above, then left
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
-  const tooltipH = 360;
   const tooltipW = 360;
-  const belowFits = showSpotlight && sTop + sHeight + 16 + tooltipH < vh;
-  const aboveFits = showSpotlight && sTop - 16 - tooltipH > 0;
-  const tooltipTop = showSpotlight
-    ? belowFits
-      ? sTop + sHeight + 16
-      : aboveFits
-        ? sTop - 16 - tooltipH
-        : Math.max(16, Math.min(vh - tooltipH - 16, sTop + sHeight + 16))
-    : vh / 2;
-  const tooltipLeft = showSpotlight
-    ? Math.min(Math.max(sLeft, 16), vw - tooltipW - 16)
-    : (vw - tooltipW) / 2;
+  const tooltipH = 380; // estimated max height
+
+  let tooltipTop = 0;
+  let tooltipLeft = 0;
+
+  if (showSpotlight) {
+    const gap = 16;
+
+    // Prefer: position to the right of spotlight
+    const rightSpace = vw - (sLeft + sWidth + gap);
+    // Prefer: position below spotlight
+    const belowSpace = vh - (sTop + sHeight + gap);
+    // Prefer: position above spotlight
+    const aboveSpace = sTop - gap;
+    // Prefer: position to the left
+    const leftSpace = sLeft - gap;
+
+    if (rightSpace >= tooltipW) {
+      // Right
+      tooltipLeft = sLeft + sWidth + gap;
+      tooltipTop = Math.max(gap, Math.min(sTop, vh - tooltipH - gap));
+    } else if (belowSpace >= tooltipH) {
+      // Below
+      tooltipTop = sTop + sHeight + gap;
+      tooltipLeft = Math.max(gap, Math.min(sLeft, vw - tooltipW - gap));
+    } else if (aboveSpace >= tooltipH) {
+      // Above
+      tooltipTop = sTop - tooltipH - gap;
+      tooltipLeft = Math.max(gap, Math.min(sLeft, vw - tooltipW - gap));
+    } else if (leftSpace >= tooltipW) {
+      // Left
+      tooltipLeft = sLeft - tooltipW - gap;
+      tooltipTop = Math.max(gap, Math.min(sTop, vh - tooltipH - gap));
+    } else {
+      // Fallback: bottom-right corner
+      tooltipTop = Math.max(gap, vh - tooltipH - gap);
+      tooltipLeft = Math.max(gap, vw - tooltipW - gap);
+    }
+  } else {
+    tooltipTop = vh / 2 - tooltipH / 2;
+    tooltipLeft = (vw - tooltipW) / 2;
+  }
 
   return (
     <>
-      {/* ── Dark overlay — always present while tour is active ── */}
-      {showSpotlight ? (
-        // Four panels creating the spotlight "frame"
-        <div className="fixed inset-0 z-[9998]" style={{ pointerEvents: 'all' }}>
-          {/* Top */}
-          <div
-            className="fixed bg-black/70"
-            style={{ top: 0, left: 0, right: 0, height: Math.max(0, sTop) }}
-          />
-          {/* Bottom */}
-          <div
-            className="fixed bg-black/70"
-            style={{ top: sTop + sHeight, left: 0, right: 0, bottom: 0 }}
-          />
-          {/* Left */}
-          <div
-            className="fixed bg-black/70"
-            style={{
-              top: Math.max(0, sTop),
-              left: 0,
-              width: Math.max(0, sLeft),
-              height: sHeight,
-            }}
-          />
-          {/* Right */}
-          <div
-            className="fixed bg-black/70"
-            style={{
-              top: Math.max(0, sTop),
-              left: sLeft + sWidth,
-              right: 0,
-              height: sHeight,
-            }}
-          />
-        </div>
-      ) : (
-        // Full-screen veil while searching for the element — prevents the
-        // tooltip from snapping to centre between page navigations.
-        <div
-          className="fixed inset-0 z-[9998] bg-black/70"
-          style={{ pointerEvents: 'all' }}
+      {/* ── SVG overlay with cutout ── */}
+      <svg
+        className="fixed inset-0 z-[9998]"
+        style={{ width: '100vw', height: '100vh', pointerEvents: 'all' }}
+      >
+        <defs>
+          <mask id="tour-spotlight-mask">
+            {/* White = visible overlay (dark) */}
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            {/* Black = cutout (transparent hole) */}
+            {showSpotlight && (
+              <rect
+                x={sLeft}
+                y={sTop}
+                width={sWidth}
+                height={sHeight}
+                rx={BORDER_RADIUS}
+                ry={BORDER_RADIUS}
+                fill="black"
+              />
+            )}
+          </mask>
+        </defs>
+        {/* The dark overlay with the mask applied */}
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="rgba(0,0,0,0.65)"
+          mask="url(#tour-spotlight-mask)"
+        />
+      </svg>
+
+      {/* ── Spotlight border ring ── */}
+      {showSpotlight && (
+        <motion.div
+          className="fixed z-[9999] rounded-xl"
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: 1,
+            boxShadow: [
+              '0 0 0 2px rgba(79,209,229,0.6), 0 0 12px 2px rgba(79,209,229,0.15)',
+              '0 0 0 3px rgba(79,209,229,0.4), 0 0 24px 4px rgba(79,209,229,0.25)',
+              '0 0 0 2px rgba(79,209,229,0.6), 0 0 12px 2px rgba(79,209,229,0.15)',
+            ],
+          }}
+          transition={{
+            opacity: { duration: 0.3 },
+            boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          }}
+          style={{
+            top: sTop,
+            left: sLeft,
+            width: sWidth,
+            height: sHeight,
+            pointerEvents: 'none',
+          }}
         />
       )}
 
-      {/* ── Spotlight ring (accent border around the target) ── */}
-      {showSpotlight && (
-        <>
-          {/* Solid ring */}
-          <div
-            className="fixed z-[9999] rounded-xl ring-2 ring-[var(--od-accent)]"
-            style={{
-              top: sTop,
-              left: sLeft,
-              width: sWidth,
-              height: sHeight,
-              pointerEvents: 'none',
-            }}
-          />
-          {/* Pulsing glow ring — makes the spotlight unmistakably obvious */}
-          <motion.div
-            className="fixed z-[9999] rounded-xl"
-            animate={{
-              boxShadow: [
-                '0 0 0 4px rgba(79,209,229,0.25), 0 0 16px 2px rgba(79,209,229,0.10)',
-                '0 0 0 8px rgba(79,209,229,0.08), 0 0 32px 6px rgba(79,209,229,0.20)',
-                '0 0 0 4px rgba(79,209,229,0.25), 0 0 16px 2px rgba(79,209,229,0.10)',
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              top: sTop,
-              left: sLeft,
-              width: sWidth,
-              height: sHeight,
-              pointerEvents: 'none',
-            }}
-          />
-        </>
-      )}
-
-      {/* ── Tooltip card — only animates in once the element is found ── */}
+      {/* ── Tooltip card ── */}
       <AnimatePresence>
-        {showSpotlight && (
+        {(showSpotlight || !currentStep.target) && (
           <motion.div
             key={`tour-tooltip-${currentStep.id}`}
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            initial={{ opacity: 0, y: 10, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: 'fixed',
               top: tooltipTop,
@@ -257,16 +281,7 @@ export function TourOverlay() {
               pointerEvents: 'all',
             }}
           >
-            <TourTooltipCard
-              step={currentStep}
-              currentIndex={currentIndex}
-              totalSteps={totalSteps}
-              isFirst={isFirst}
-              isLast={isLast}
-              onNext={nextStep}
-              onPrev={prevStep}
-              onEnd={endTour}
-            />
+            {tooltipCard}
           </motion.div>
         )}
       </AnimatePresence>
@@ -298,14 +313,9 @@ function TourTooltipCard({
   onEnd,
 }: TourTooltipProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-[var(--od-bg-secondary)] rounded-2xl border border-[var(--od-border-subtle)] shadow-2xl overflow-hidden w-[360px]"
-    >
+    <div className="bg-[var(--od-bg-secondary)] rounded-2xl border border-[var(--od-border-subtle)] shadow-2xl overflow-hidden w-[360px]">
       {/* Progress bar */}
-      <div className="h-0.5 bg-[var(--od-bg-tertiary)]">
+      <div className="h-1 bg-[var(--od-bg-tertiary)]">
         <motion.div
           className="h-full bg-[var(--od-accent)]"
           initial={{ width: 0 }}
@@ -339,7 +349,7 @@ function TourTooltipCard({
           {step.description}
         </p>
 
-        {/* Action callout — what the user should do right now */}
+        {/* Action callout */}
         {step.action && (
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[rgba(79,209,229,0.07)] border border-[rgba(79,209,229,0.18)] mb-4">
             <MousePointerClick className="w-4 h-4 text-[var(--od-accent)] shrink-0 mt-0.5" />
@@ -349,7 +359,7 @@ function TourTooltipCard({
           </div>
         )}
 
-        {/* Tip — shown only when there is no action */}
+        {/* Tip */}
         {step.tip && !step.action && (
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[rgba(91,141,239,0.06)] border border-[rgba(91,141,239,0.12)] mb-4">
             <Sparkles className="w-4 h-4 text-[var(--od-accent)] shrink-0 mt-0.5" />
@@ -359,14 +369,14 @@ function TourTooltipCard({
           </div>
         )}
 
-        {/* Step dots — centred */}
+        {/* Step dots */}
         <div className="flex items-center justify-center gap-1.5 mb-4">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
               className="h-1 rounded-full transition-all duration-300"
               style={{
-                width: i === currentIndex ? 20 : 5,
+                width: i === currentIndex ? 16 : 4,
                 backgroundColor:
                   i === currentIndex
                     ? 'var(--od-accent)'
@@ -406,6 +416,6 @@ function TourTooltipCard({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
