@@ -31,14 +31,6 @@ interface ChannelROI {
   trend: 'up' | 'down' | 'flat';
 }
 
-const mockChannels: ChannelROI[] = [
-  { channel: 'Google Ads', spend: 2400, leads: 48, conversions: 12, revenue: 18600, roi: 675, costPerLead: 50, costPerConversion: 200, trend: 'up' },
-  { channel: 'Facebook Ads', spend: 1200, leads: 28, conversions: 6, revenue: 8400, roi: 600, costPerLead: 43, costPerConversion: 200, trend: 'up' },
-  { channel: 'Organic Search', spend: 0, leads: 35, conversions: 9, revenue: 12800, roi: 0, costPerLead: 0, costPerConversion: 0, trend: 'up' },
-  { channel: 'Referrals', spend: 0, leads: 15, conversions: 7, revenue: 14200, roi: 0, costPerLead: 0, costPerConversion: 0, trend: 'flat' },
-  { channel: 'Website Direct', spend: 800, leads: 22, conversions: 5, revenue: 6500, roi: 713, costPerLead: 36, costPerConversion: 160, trend: 'down' },
-];
-
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n);
 
@@ -60,19 +52,17 @@ function ROIPageContent() {
     return <UpgradeBanner feature="Advanced Analytics" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  const channels: ChannelROI[] = fetchedChannels.length > 0
-    ? fetchedChannels.map((c) => ({
-        channel: c.channel,
-        spend: c.spend,
-        leads: c.leads,
-        conversions: c.conversions,
-        revenue: c.revenue,
-        roi: c.roi,
-        costPerLead: c.cpl,
-        costPerConversion: c.conversions > 0 && c.spend > 0 ? Math.round(c.spend / c.conversions) : 0,
-        trend: c.roi > 0 ? 'up' as const : c.roi < 0 ? 'down' as const : 'flat' as const,
-      }))
-    : mockChannels;
+  const channels: ChannelROI[] = (fetchedChannels || []).map((c) => ({
+      channel: c.channel,
+      spend: c.spend,
+      leads: c.leads,
+      conversions: c.conversions,
+      revenue: c.revenue,
+      roi: c.roi,
+      costPerLead: c.cpl,
+      costPerConversion: c.conversions > 0 && c.spend > 0 ? Math.round(c.spend / c.conversions) : 0,
+      trend: c.roi > 0 ? 'up' as const : c.roi < 0 ? 'down' as const : 'flat' as const,
+    }));
 
   const totalSpend = channels.reduce((a, c) => a + c.spend, 0);
   const totalRevenue = channels.reduce((a, c) => a + c.revenue, 0);

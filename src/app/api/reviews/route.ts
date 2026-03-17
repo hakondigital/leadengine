@@ -59,6 +59,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Reply to a review
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { review_id, response } = body;
+
+    if (!review_id || !response) {
+      return NextResponse.json(
+        { error: 'review_id and response required' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = await createServiceRoleClient();
+
+    const { data: review, error } = await supabase
+      .from('reviews')
+      .update({
+        response,
+        responded_at: new Date().toISOString(),
+      })
+      .eq('id', review_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Review reply error:', error);
+      return NextResponse.json({ error: 'Failed to save reply' }, { status: 500 });
+    }
+
+    return NextResponse.json(review);
+  } catch (error) {
+    console.error('Review reply error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // Public endpoint for submitting a review
 export async function POST(request: NextRequest) {
   try {

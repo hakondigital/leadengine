@@ -36,15 +36,6 @@ interface Project {
   afterLabel: string;
 }
 
-const mockProjects: Project[] = [
-  { id: '1', title: 'Modern Kitchen Transformation', location: 'Neutral Bay, NSW', date: '2026-02-15', category: 'Kitchen', featured: true, published: true, beforeLabel: 'Dated 90s kitchen with laminate benchtops', afterLabel: 'Sleek modern kitchen with stone island bench' },
-  { id: '2', title: 'Luxury Bathroom Renovation', location: 'Mosman, NSW', date: '2026-01-20', category: 'Bathroom', featured: false, published: true, beforeLabel: 'Small cramped bathroom with old tiles', afterLabel: 'Spacious spa-like bathroom with frameless shower' },
-  { id: '3', title: 'Complete Home Repaint', location: 'Manly, NSW', date: '2026-02-28', category: 'Painting', featured: true, published: true, beforeLabel: 'Faded exterior with peeling paint', afterLabel: 'Fresh modern colour scheme throughout' },
-  { id: '4', title: 'Deck & Pergola Build', location: 'Cremorne, NSW', date: '2026-01-05', category: 'Outdoor', featured: false, published: false, beforeLabel: 'Bare backyard with patchy grass', afterLabel: 'Beautiful timber deck with covered pergola' },
-  { id: '5', title: 'Electrical Upgrade', location: 'Lane Cove, NSW', date: '2025-12-10', category: 'Electrical', featured: false, published: true, beforeLabel: 'Old fuse box and outdated wiring', afterLabel: 'Modern switchboard with safety switches' },
-  { id: '6', title: 'Roof Restoration', location: 'Chatswood, NSW', date: '2026-03-01', category: 'Roofing', featured: false, published: false, beforeLabel: 'Damaged tiles and rusted gutters', afterLabel: 'Restored tiles and new Colorbond gutters' },
-];
-
 const categories = ['Kitchen', 'Bathroom', 'Painting', 'Outdoor', 'Electrical', 'Roofing', 'Plumbing', 'HVAC', 'General'];
 
 export default function PortfolioPage() {
@@ -54,7 +45,6 @@ export default function PortfolioPage() {
 function PortfolioPageContent() {
   const { organization } = useOrganization();
   const { projects: fetchedProjects, loading, createProject, updateProject, deleteProject } = usePortfolio(organization?.id);
-  const [localProjects, setLocalProjects] = useState(mockProjects);
   const { canUsePortfolio, planName, loading: planLoading } = usePlan();
   const [showAddModal, setShowAddModal] = useState(false);
   const [projectSaving, setProjectSaving] = useState(false);
@@ -69,40 +59,26 @@ function PortfolioPageContent() {
     return <UpgradeBanner feature="Portfolio" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  const projects: Project[] = fetchedProjects.length > 0
-    ? fetchedProjects.map((p) => ({
-        id: p.id,
-        title: p.title,
-        location: p.location || '',
-        date: p.completed_date || p.created_at?.split('T')[0] || '',
-        category: p.category || '',
-        featured: p.is_featured ?? false,
-        published: p.is_published ?? false,
-        beforeLabel: '',
-        afterLabel: '',
-      }))
-    : localProjects;
+  const projects: Project[] = (fetchedProjects || []).map((p) => ({
+      id: p.id,
+      title: p.title,
+      location: p.location || '',
+      date: p.completed_date || p.created_at?.split('T')[0] || '',
+      category: p.category || '',
+      featured: p.is_featured ?? false,
+      published: p.is_published ?? false,
+      beforeLabel: '',
+      afterLabel: '',
+    }));
 
   const togglePublish = (id: string) => {
-    if (fetchedProjects.length > 0) {
-      const proj = projects.find((p) => p.id === id) as Project | undefined;
-      updateProject(id, { is_published: !proj?.published });
-    } else {
-      setLocalProjects((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, published: !p.published } : p))
-      );
-    }
+    const proj = projects.find((p) => p.id === id);
+    if (proj) updateProject(id, { is_published: !proj.published });
   };
 
   const toggleFeatured = (id: string) => {
-    if (fetchedProjects.length > 0) {
-      const proj = projects.find((p) => p.id === id) as Project | undefined;
-      updateProject(id, { is_featured: !proj?.featured });
-    } else {
-      setLocalProjects((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, featured: !p.featured } : p))
-      );
-    }
+    const proj = projects.find((p) => p.id === id);
+    if (proj) updateProject(id, { is_featured: !proj.featured });
   };
 
   const openAddProject = () => {
@@ -114,27 +90,12 @@ function PortfolioPageContent() {
     if (!projectForm.title) return;
     setProjectSaving(true);
     try {
-      if (fetchedProjects.length > 0) {
-        await createProject({
-          title: projectForm.title,
-          category: projectForm.category || undefined,
-          location: projectForm.location || undefined,
-          description: projectForm.description || undefined,
-        });
-      } else {
-        const newProject: Project = {
-          id: `mock-${Date.now()}`,
-          title: projectForm.title,
-          location: projectForm.location,
-          date: new Date().toISOString().split('T')[0],
-          category: projectForm.category,
-          featured: false,
-          published: false,
-          beforeLabel: '',
-          afterLabel: '',
-        };
-        setLocalProjects((prev) => [newProject, ...prev]);
-      }
+      await createProject({
+        title: projectForm.title,
+        category: projectForm.category || undefined,
+        location: projectForm.location || undefined,
+        description: projectForm.description || undefined,
+      });
       setShowAddModal(false);
       setProjectForm({ title: '', category: '', location: '', description: '' });
       showSuccess('Project added');

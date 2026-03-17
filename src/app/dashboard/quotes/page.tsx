@@ -41,15 +41,6 @@ interface Quote {
   isAiGenerated?: boolean;
 }
 
-const mockQuotes: Quote[] = [
-  { id: '1', number: 'QT-001', leadName: 'Sarah Mitchell', email: 'sarah@email.com', total: 12500, status: 'accepted', createdAt: '2026-03-01', expiresAt: '2026-03-31', items: 4 },
-  { id: '2', number: 'QT-002', leadName: 'James Cooper', email: 'james@email.com', total: 3200, status: 'sent', createdAt: '2026-03-03', expiresAt: '2026-04-03', items: 2 },
-  { id: '3', number: 'QT-003', leadName: 'Lisa Wang', email: 'lisa@email.com', total: 8750, status: 'viewed', createdAt: '2026-03-04', expiresAt: '2026-04-04', items: 5 },
-  { id: '4', number: 'QT-004', leadName: 'David Brooks', email: 'david@email.com', total: 15000, status: 'draft', createdAt: '2026-03-05', expiresAt: '2026-04-05', items: 6 },
-  { id: '5', number: 'QT-005', leadName: 'Emma Taylor', email: 'emma@email.com', total: 2100, status: 'rejected', createdAt: '2026-02-25', expiresAt: '2026-03-25', items: 1 },
-  { id: '6', number: 'QT-006', leadName: 'Michael Chen', email: 'michael@email.com', total: 6400, status: 'sent', createdAt: '2026-03-06', expiresAt: '2026-04-06', items: 3 },
-];
-
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
   draft: { label: 'Draft', color: '#6B7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.15)' },
   sent: { label: 'Sent', color: '#4070D0', bg: 'rgba(91,141,239,0.08)', border: 'rgba(91,141,239,0.15)' },
@@ -64,7 +55,6 @@ export default function QuotesPage() {
   const { canUseQuotes, planName, loading: planLoading } = usePlan();
   const { success: showSuccess } = useToast();
   const [actionsOpen, setActionsOpen] = useState<string | null>(null);
-  const [localQuotes, setLocalQuotes] = useState(mockQuotes);
   const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
   const [quoteSaving, setQuoteSaving] = useState(false);
@@ -78,20 +68,18 @@ export default function QuotesPage() {
     return <UpgradeBanner feature="Quotes" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  const quotes: Quote[] = fetchedQuotes.length > 0
-    ? fetchedQuotes.map((q) => ({
-        id: q.id,
-        number: q.quote_number,
-        leadName: q.lead_name || '',
-        email: q.lead_email || '',
-        total: q.total,
-        status: q.status === 'declined' ? 'rejected' as const : q.status === 'expired' ? 'draft' as const : q.status,
-        createdAt: q.created_at.split('T')[0],
-        expiresAt: q.valid_until?.split('T')[0] || '',
-        items: q.line_items?.length || 0,
-        isAiGenerated: (q as any).is_ai_generated || false,
-      }))
-    : localQuotes;
+  const quotes: Quote[] = fetchedQuotes.map((q) => ({
+    id: q.id,
+    number: q.quote_number,
+    leadName: q.lead_name || '',
+    email: q.lead_email || '',
+    total: q.total,
+    status: q.status === 'declined' ? 'rejected' as const : q.status === 'expired' ? 'draft' as const : q.status,
+    createdAt: q.created_at.split('T')[0],
+    expiresAt: q.valid_until?.split('T')[0] || '',
+    items: q.line_items?.length || 0,
+    isAiGenerated: (q as any).is_ai_generated || false,
+  }));
 
   const openNewQuote = () => {
     setQuoteForm({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
@@ -103,27 +91,12 @@ export default function QuotesPage() {
     setQuoteSaving(true);
     try {
       const amount = parseFloat(quoteForm.amount) || 0;
-      if (fetchedQuotes.length > 0) {
-        await createQuote({
-          lead_id: '',
-          title: quoteForm.title,
-          line_items: [{ description: quoteForm.title, quantity: 1, unit_price: amount, total: amount }],
-          notes: quoteForm.notes || undefined,
-        });
-      } else {
-        const newQuote: Quote = {
-          id: `mock-${Date.now()}`,
-          number: `QT-${String(localQuotes.length + 1).padStart(3, '0')}`,
-          leadName: quoteForm.leadName,
-          email: quoteForm.leadEmail,
-          total: amount,
-          status: 'draft',
-          createdAt: new Date().toISOString().split('T')[0],
-          expiresAt: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-          items: 1,
-        };
-        setLocalQuotes((prev) => [newQuote, ...prev]);
-      }
+      await createQuote({
+        lead_id: '',
+        title: quoteForm.title,
+        line_items: [{ description: quoteForm.title, quantity: 1, unit_price: amount, total: amount }],
+        notes: quoteForm.notes || undefined,
+      });
       setShowNewQuoteModal(false);
       setQuoteForm({ title: '', leadName: '', leadEmail: '', amount: '', notes: '' });
       showSuccess('Quote created successfully');
@@ -133,13 +106,7 @@ export default function QuotesPage() {
   };
 
   const handleSendQuote = async (quoteId: string) => {
-    if (fetchedQuotes.length > 0) {
-      await sendQuote(quoteId);
-    } else {
-      setLocalQuotes((prev) =>
-        prev.map((q) => (q.id === quoteId ? { ...q, status: 'sent' as const } : q))
-      );
-    }
+    await sendQuote(quoteId);
     showSuccess('Quote sent successfully');
   };
 

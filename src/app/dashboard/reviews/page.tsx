@@ -55,14 +55,6 @@ const platformConfig: Record<string, { label: string; color: string; bg: string 
   website: { label: 'Website', color: '#4FD1E5', bg: 'rgba(79,209,229,0.08)' },
 };
 
-const mockReviews: Review[] = [
-  { id: '1', reviewerName: 'Sarah Mitchell', rating: 5, text: 'Absolutely fantastic work on our kitchen renovation! The team was professional, clean, and finished on time. Couldn\'t be happier with the result.', date: '2026-03-05', platform: 'google', replied: true },
-  { id: '2', reviewerName: 'James Cooper', rating: 4, text: 'Good quality electrical work. Minor scheduling hiccup but they made it right. Would recommend.', date: '2026-03-03', platform: 'google', replied: true },
-  { id: '3', reviewerName: 'Lisa Wang', rating: 5, text: 'Best bathroom renovation experience we\'ve ever had. Attention to detail was incredible. Already recommended to two friends!', date: '2026-03-01', platform: 'facebook', replied: false },
-  { id: '4', reviewerName: 'David Brooks', rating: 3, text: 'Decent roof repair work but communication could have been better during the project. End result was solid though.', date: '2026-02-28', platform: 'yelp', replied: false },
-  { id: '5', reviewerName: 'Emma Taylor', rating: 5, text: 'Quick, professional plumbing service. Fixed our issue in under an hour. Very reasonable pricing too.', date: '2026-02-25', platform: 'google', replied: true },
-  { id: '6', reviewerName: 'Michael Chen', rating: 4, text: 'Great HVAC installation. The new system is working perfectly and our energy bills have already dropped. Thank you!', date: '2026-02-20', platform: 'website', replied: false },
-];
 
 
 function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
@@ -129,17 +121,15 @@ function ReviewsPageContent() {
     return <UpgradeBanner feature="Review Requests" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  const reviews: Review[] = fetchedReviews.length > 0
-    ? fetchedReviews.map((r) => ({
-        id: r.id,
-        reviewerName: r.reviewer_name,
-        rating: r.rating,
-        text: r.body || '',
-        date: r.review_date?.split('T')[0] || r.created_at?.split('T')[0] || '',
-        platform: (r.platform === 'internal' ? 'website' : r.platform === 'other' ? 'website' : r.platform) as Review['platform'],
-        replied: !!r.response || !!r.responded_at,
-      }))
-    : mockReviews;
+  const reviews: Review[] = fetchedReviews.map((r) => ({
+    id: r.id,
+    reviewerName: r.reviewer_name,
+    rating: r.rating,
+    text: r.body || '',
+    date: r.review_date?.split('T')[0] || r.created_at?.split('T')[0] || '',
+    platform: (r.platform === 'internal' ? 'website' : r.platform === 'other' ? 'website' : r.platform) as Review['platform'],
+    replied: !!r.response || !!r.responded_at,
+  }));
 
   const filteredReviews = reviews.filter((r) => {
     if (platformFilter !== 'all' && r.platform !== platformFilter) return false;
@@ -148,7 +138,7 @@ function ReviewsPageContent() {
   });
 
   const totalReviews = reviews.length;
-  const avgRating = fetchedReviews.length > 0 ? averageRating.toFixed(1) : (reviews.reduce((a, r) => a + r.rating, 0) / (totalReviews || 1)).toFixed(1);
+  const avgRating = averageRating.toFixed(1);
   const pendingReplies = reviews.filter((r) => !r.replied).length;
 
   const exportReviewsCSV = () => {
@@ -343,12 +333,19 @@ function ReviewsPageContent() {
                             <Button size="sm" disabled={!replyText.trim() || replySending} onClick={async () => {
                               setReplySending(true);
                               try {
-                                await new Promise(r => setTimeout(r, 500));
+                                const res = await fetch('/api/reviews', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ review_id: review.id, response: replyText }),
+                                });
+                                if (!res.ok) throw new Error('Failed to send reply');
+                                showSuccess('Reply sent');
+                              } catch {
+                                // error handled silently
                               } finally {
                                 setReplySending(false);
                                 setReplyingTo(null);
                                 setReplyText('');
-                                showSuccess('Reply sent');
                               }
                             }}>
                               <Send className="w-3 h-3" />

@@ -50,53 +50,6 @@ const channelConfig: Record<string, { icon: typeof Mail; color: string; label: s
   phone: { icon: Phone, color: '#C48020', label: 'Phone' },
 };
 
-const mockMessages: Message[] = [
-  {
-    id: '1', channel: 'email', senderName: 'Sarah Mitchell', senderEmail: 'sarah@email.com',
-    subject: 'Re: Kitchen Renovation Quote',
-    preview: 'Thanks for the quote! I had a few questions about the timeline...',
-    fullMessage: 'Thanks for the quote! I had a few questions about the timeline and materials. When would you be able to start the project? Also, could you clarify the warranty terms for the countertops? Looking forward to hearing from you.',
-    timestamp: '10 min ago', read: false,
-  },
-  {
-    id: '2', channel: 'sms', senderName: 'James Cooper', senderPhone: '+61 412 345 678',
-    preview: 'Hey, can we reschedule to Thursday instead?',
-    fullMessage: 'Hey, can we reschedule to Thursday instead? Something came up with work on Wednesday. Let me know if 2pm works.',
-    timestamp: '25 min ago', read: false,
-  },
-  {
-    id: '3', channel: 'chat', senderName: 'Lisa Wang',
-    preview: 'I saw your website and I\'m interested in getting a bathroom remodel...',
-    fullMessage: 'I saw your website and I\'m interested in getting a bathroom remodel done. Our bathroom is about 8sqm and we\'re looking for a complete renovation including new tiles, vanity, and shower screen. Could you give me a rough estimate? When would you be available to come take a look?',
-    timestamp: '1 hour ago', read: false,
-  },
-  {
-    id: '4', channel: 'email', senderName: 'David Brooks', senderEmail: 'david.b@email.com',
-    subject: 'Roof Inspection Follow-up',
-    preview: 'Just wanted to follow up on the roof inspection we discussed...',
-    fullMessage: 'Just wanted to follow up on the roof inspection we discussed last week. I noticed a few more tiles that seem loose after the recent storm. Would you be able to come take another look? Happy to adjust the quote if needed.',
-    timestamp: '2 hours ago', read: true,
-  },
-  {
-    id: '5', channel: 'phone', senderName: 'Emma Taylor', senderPhone: '+61 498 765 432',
-    preview: 'Missed call - Voicemail: "Hi, calling about the plumbing estimate..."',
-    fullMessage: 'Missed call with voicemail: "Hi, this is Emma Taylor calling about the plumbing estimate you sent through. The price looks great, I just wanted to confirm the start date. Can you give me a call back when you get a chance? Thanks!"',
-    timestamp: '3 hours ago', read: true,
-  },
-  {
-    id: '6', channel: 'sms', senderName: 'Michael Chen', senderPhone: '+61 455 123 789',
-    preview: 'Sounds good, see you Monday at 9:30.',
-    fullMessage: 'Sounds good, see you Monday at 9:30. I\'ll make sure the garage is cleared so you can access the electrical panel.',
-    timestamp: '5 hours ago', read: true,
-  },
-  {
-    id: '7', channel: 'email', senderName: 'Anna Kowalski', senderEmail: 'anna.k@email.com',
-    subject: 'New enquiry from website',
-    preview: 'Hi, I\'m looking for someone to do a full house paint...',
-    fullMessage: 'Hi, I\'m looking for someone to do a full house paint - interior and exterior. The house is a 4-bedroom, double storey in Neutral Bay. We\'re hoping to get it done before Easter. Could you provide a quote? Happy to send through some photos if that helps.',
-    timestamp: 'Yesterday', read: true,
-  },
-];
 
 export default function InboxPage() {
   const { organization, user, authEmail } = useOrganization();
@@ -106,21 +59,18 @@ export default function InboxPage() {
   const orgSettings = (organization?.settings as Record<string, unknown>) || {};
   const orgPlan = (orgSettings.plan as string) || null;
   const canCompose = getEffectivePlanLimits(orgPlan, authEmail ?? user?.email).inbox_compose;
-  const [localMessages, setLocalMessages] = useState(mockMessages);
-  const messages: Message[] = fetchedMessages.length > 0
-    ? fetchedMessages.map((m) => ({
-        id: m.id,
-        channel: m.channel === 'form' ? 'email' as const : m.channel,
-        senderName: m.lead_name || m.lead_email || 'Unknown',
-        senderEmail: m.lead_email,
-        subject: m.subject,
-        preview: m.body.slice(0, 100),
-        fullMessage: m.body,
-        timestamp: new Date(m.created_at).toLocaleString(),
-        read: m.is_read,
-        leadId: m.lead_id,
-      }))
-    : localMessages;
+  const messages: Message[] = fetchedMessages.map((m) => ({
+    id: m.id,
+    channel: m.channel === 'form' ? 'email' as const : m.channel,
+    senderName: m.lead_name || m.lead_email || 'Unknown',
+    senderEmail: m.lead_email,
+    subject: m.subject,
+    preview: m.body.slice(0, 100),
+    fullMessage: m.body,
+    timestamp: new Date(m.created_at).toLocaleString(),
+    read: m.is_read,
+    leadId: m.lead_id,
+  }));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<Channel>('all');
   const [replyText, setReplyText] = useState('');
@@ -144,7 +94,7 @@ export default function InboxPage() {
   });
 
   const selectedMessage = messages.find((m) => m.id === selectedId);
-  const unreadCount = fetchedMessages.length > 0 ? hookUnreadCount : messages.filter((m) => !m.read).length;
+  const unreadCount = hookUnreadCount;
   const channelCounts = {
     all: messages.filter((m) => !m.read).length,
     email: messages.filter((m) => m.channel === 'email' && !m.read).length,
@@ -155,13 +105,7 @@ export default function InboxPage() {
 
   const selectMessage = (id: string) => {
     setSelectedId(id);
-    if (fetchedMessages.length > 0) {
-      markAsRead(id);
-    } else {
-      setLocalMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, read: true } : m))
-      );
-    }
+    markAsRead(id);
   };
 
   const channels: { key: Channel; label: string }[] = [
@@ -384,9 +328,7 @@ export default function InboxPage() {
                             if (!selectedId || !replyText.trim()) return;
                             setReplySending(true);
                             try {
-                              if (fetchedMessages.length > 0) {
-                                await sendReply(selectedId, replyText);
-                              }
+                              await sendReply(selectedId, replyText);
                               setReplyText('');
                               showSuccess('Reply sent');
                             } finally {

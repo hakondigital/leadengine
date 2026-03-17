@@ -47,71 +47,6 @@ interface Sequence {
   steps: SequenceStep[];
 }
 
-const mockSequences: Sequence[] = [
-  {
-    id: '1',
-    name: 'New Lead Welcome',
-    triggerType: 'new_lead',
-    triggerLabel: 'New Lead Created',
-    stepsCount: 4,
-    activeEnrollments: 12,
-    totalCompleted: 87,
-    active: true,
-    steps: [
-      { id: 's1', type: 'email', label: 'Welcome Email', delay: 'Immediately', subject: 'Thanks for reaching out!' },
-      { id: 's2', type: 'wait', label: 'Wait', delay: '24 hours' },
-      { id: 's3', type: 'sms', label: 'Follow-up SMS', delay: 'After wait' },
-      { id: 's4', type: 'email', label: 'Value Proposition', delay: '72 hours', subject: 'Here\'s what we can do for you' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Quote Follow-Up',
-    triggerType: 'quote_sent',
-    triggerLabel: 'Quote Sent',
-    stepsCount: 3,
-    activeEnrollments: 5,
-    totalCompleted: 34,
-    active: true,
-    steps: [
-      { id: 's1', type: 'wait', label: 'Wait', delay: '48 hours' },
-      { id: 's2', type: 'email', label: 'Quote Check-in', delay: 'After wait', subject: 'Any questions about your quote?' },
-      { id: 's3', type: 'call', label: 'Follow-up Call', delay: '5 days' },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Re-engagement',
-    triggerType: 'no_response',
-    triggerLabel: 'No Response (7 days)',
-    stepsCount: 5,
-    activeEnrollments: 8,
-    totalCompleted: 22,
-    active: false,
-    steps: [
-      { id: 's1', type: 'email', label: 'We Miss You', delay: '7 days', subject: 'Still interested?' },
-      { id: 's2', type: 'wait', label: 'Wait', delay: '3 days' },
-      { id: 's3', type: 'sms', label: 'Quick Check-in', delay: 'After wait' },
-      { id: 's4', type: 'wait', label: 'Wait', delay: '5 days' },
-      { id: 's5', type: 'email', label: 'Final Follow-up', delay: 'After wait', subject: 'Last chance - special offer inside' },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Post-Job Review Request',
-    triggerType: 'job_completed',
-    triggerLabel: 'Job Completed',
-    stepsCount: 2,
-    activeEnrollments: 3,
-    totalCompleted: 56,
-    active: true,
-    steps: [
-      { id: 's1', type: 'wait', label: 'Wait', delay: '24 hours' },
-      { id: 's2', type: 'email', label: 'Review Request', delay: 'After wait', subject: 'How did we do?' },
-    ],
-  },
-];
-
 const stepTypeConfig: Record<string, { icon: typeof Mail; color: string; bg: string }> = {
   email: { icon: Mail, color: '#4070D0', bg: 'rgba(91,141,239,0.08)' },
   sms: { icon: MessageSquare, color: '#1F9B5A', bg: 'rgba(52,199,123,0.08)' },
@@ -123,7 +58,6 @@ export default function SequencesPage() {
   const { organization } = useOrganization();
   const { canUseSequences, planName, loading: planLoading } = usePlan();
   const { sequences: fetchedSequences, loading, createSequence, toggleSequence } = useSequences(organization?.id);
-  const [localSequences, setLocalSequences] = useState(mockSequences);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [seqForm, setSeqForm] = useState({ name: '', trigger: 'new_lead' });
@@ -137,45 +71,37 @@ export default function SequencesPage() {
   if (!canUseSequences) {
     return <UpgradeBanner feature="Sequences" requiredPlan="Professional" currentPlan={planName} />;
   }
-  const sequences: Sequence[] = fetchedSequences.length > 0
-    ? fetchedSequences.map((s) => ({
-        id: s.id,
-        name: s.name,
-        triggerType: s.trigger,
-        triggerLabel: ({ new_lead: 'New Lead Created', quote_sent: 'Quote Sent', no_response: 'No Response (7 days)', status_change: 'Status Change', job_completed: 'Job Completed', appointment_completed: 'Appointment Completed', manual: 'Manual' } as Record<string, string>)[s.trigger] || s.trigger,
-        stepsCount: s.steps?.length || 0,
-        activeEnrollments: s.enrolled_count || 0,
-        totalCompleted: s.completed_count || 0,
-        active: s.is_active,
-        steps: (s.steps || []).map((step) => {
-          // Steps are normalized by API: type, delay_days, subject, body
-          const channel = step.type || 'email';
-          const delayDays = step.delay_days || 0;
-          const subj = step.subject;
-          return {
-            id: step.id,
-            type: channel as 'email' | 'sms' | 'call' | 'wait',
-            label: subj || channel.charAt(0).toUpperCase() + channel.slice(1),
-            delay: delayDays === 0 ? 'Immediately' : `${delayDays} day${delayDays !== 1 ? 's' : ''}`,
-            subject: subj,
-          };
-        }),
-      }))
-    : localSequences;
+  const sequences: Sequence[] = fetchedSequences.map((s) => ({
+    id: s.id,
+    name: s.name,
+    triggerType: s.trigger,
+    triggerLabel: ({ new_lead: 'New Lead Created', quote_sent: 'Quote Sent', no_response: 'No Response (7 days)', status_change: 'Status Change', job_completed: 'Job Completed', appointment_completed: 'Appointment Completed', manual: 'Manual' } as Record<string, string>)[s.trigger] || s.trigger,
+    stepsCount: s.steps?.length || 0,
+    activeEnrollments: s.enrolled_count || 0,
+    totalCompleted: s.completed_count || 0,
+    active: s.is_active,
+    steps: (s.steps || []).map((step) => {
+      // Steps are normalized by API: type, delay_days, subject, body
+      const channel = step.type || 'email';
+      const delayDays = step.delay_days || 0;
+      const subj = step.subject;
+      return {
+        id: step.id,
+        type: channel as 'email' | 'sms' | 'call' | 'wait',
+        label: subj || channel.charAt(0).toUpperCase() + channel.slice(1),
+        delay: delayDays === 0 ? 'Immediately' : `${delayDays} day${delayDays !== 1 ? 's' : ''}`,
+        subject: subj,
+      };
+    }),
+  }));
 
   const selectedSequence = sequences.find((s) => s.id === selectedId);
 
   const toggleActive = (id: string) => {
-    if (fetchedSequences.length > 0) {
-      const seq = fetchedSequences.find((s) => s.id === id);
-      toggleSequence(id, !seq?.is_active);
-    } else {
-      setLocalSequences((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s))
-      );
-    }
-    const seq = sequences.find((s) => s.id === id);
-    showSuccess(seq?.active ? 'Sequence paused' : 'Sequence activated');
+    const seq = fetchedSequences.find((s) => s.id === id);
+    toggleSequence(id, !seq?.is_active);
+    const uiSeq = sequences.find((s) => s.id === id);
+    showSuccess(uiSeq?.active ? 'Sequence paused' : 'Sequence activated');
   };
 
   const openCreateSequence = () => {
@@ -187,27 +113,11 @@ export default function SequencesPage() {
     if (!seqForm.name) return;
     setSeqSaving(true);
     try {
-      if (fetchedSequences.length > 0) {
-        await createSequence?.({
-          name: seqForm.name,
-          trigger: seqForm.trigger as 'new_lead' | 'status_change' | 'manual',
-          steps: [],
-        });
-      } else {
-        const triggerLabels: Record<string, string> = { new_lead: 'New Lead Created', quote_sent: 'Quote Sent', no_response: 'No Response (7 days)', job_completed: 'Job Completed' };
-        const newSeq: Sequence = {
-          id: `mock-${Date.now()}`,
-          name: seqForm.name,
-          triggerType: seqForm.trigger,
-          triggerLabel: triggerLabels[seqForm.trigger] || seqForm.trigger,
-          stepsCount: 0,
-          activeEnrollments: 0,
-          totalCompleted: 0,
-          active: false,
-          steps: [],
-        };
-        setLocalSequences((prev) => [newSeq, ...prev]);
-      }
+      await createSequence?.({
+        name: seqForm.name,
+        trigger: seqForm.trigger as 'new_lead' | 'status_change' | 'manual',
+        steps: [],
+      });
       setShowCreateModal(false);
       showSuccess('Sequence created');
     } finally {

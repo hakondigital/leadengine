@@ -64,23 +64,6 @@ interface SearchNumber {
   type: string;
 }
 
-const mockTrackingNumbers: TrackingNumber[] = [
-  { id: '1', number: '+61 2 8000 1001', label: 'Google Ads', source: 'google_ads', totalCalls: 142, active: true },
-  { id: '2', number: '+61 2 8000 1002', label: 'Website Header', source: 'website', totalCalls: 98, active: true },
-  { id: '3', number: '+61 2 8000 1003', label: 'Facebook Ads', source: 'facebook', totalCalls: 56, active: true },
-  { id: '4', number: '+61 2 8000 1004', label: 'Business Cards', source: 'offline', totalCalls: 23, active: false },
-];
-
-const mockCallLog: CallLog[] = [
-  { id: '1', callerName: 'Sarah Mitchell', callerNumber: '+61 412 345 678', trackingNumber: '+61 2 8000 1001', trackingLabel: 'Google Ads', duration: '4:32', durationSeconds: 272, status: 'answered', timestamp: '12 min ago', linkedLead: 'Sarah Mitchell' },
-  { id: '2', callerName: 'Unknown', callerNumber: '+61 498 111 222', trackingNumber: '+61 2 8000 1002', trackingLabel: 'Website Header', duration: '0:00', durationSeconds: 0, status: 'missed', timestamp: '45 min ago' },
-  { id: '3', callerName: 'James Cooper', callerNumber: '+61 455 333 444', trackingNumber: '+61 2 8000 1001', trackingLabel: 'Google Ads', duration: '2:15', durationSeconds: 135, status: 'answered', timestamp: '1 hour ago', linkedLead: 'James Cooper' },
-  { id: '4', callerName: 'Unknown', callerNumber: '+61 411 555 666', trackingNumber: '+61 2 8000 1003', trackingLabel: 'Facebook Ads', duration: '1:08', durationSeconds: 68, status: 'voicemail', timestamp: '2 hours ago' },
-  { id: '5', callerName: 'Lisa Wang', callerNumber: '+61 422 777 888', trackingNumber: '+61 2 8000 1002', trackingLabel: 'Website Header', duration: '6:45', durationSeconds: 405, status: 'answered', timestamp: '3 hours ago', linkedLead: 'Lisa Wang' },
-  { id: '6', callerName: 'Unknown', callerNumber: '+61 433 999 000', trackingNumber: '+61 2 8000 1003', trackingLabel: 'Facebook Ads', duration: '0:00', durationSeconds: 0, status: 'missed', timestamp: '4 hours ago' },
-  { id: '7', callerName: 'David Brooks', callerNumber: '+61 444 111 333', trackingNumber: '+61 2 8000 1001', trackingLabel: 'Google Ads', duration: '3:22', durationSeconds: 202, status: 'answered', timestamp: 'Yesterday', linkedLead: 'David Brooks' },
-];
-
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Phone }> = {
   answered: { label: 'Answered', color: '#1F9B5A', bg: 'rgba(52,199,123,0.08)', icon: PhoneIncoming },
   missed: { label: 'Missed', color: '#C44E56', bg: 'rgba(232,99,108,0.08)', icon: PhoneMissed },
@@ -176,37 +159,33 @@ export default function CallsPage() {
     return <UpgradeBanner feature="Call Tracking" requiredPlan="Professional" currentPlan={planName} />;
   }
 
-  const calls: CallLog[] = fetchedCL.length > 0
-    ? fetchedCL.map((c) => {
-        const mins = Math.floor(c.duration_seconds / 60);
-        const secs = c.duration_seconds % 60;
-        return {
-          id: c.id,
-          callerName: c.caller_name || 'Unknown',
-          callerNumber: c.caller_number,
-          trackingNumber: '',
-          trackingLabel: c.tracking_label || '',
-          duration: `${mins}:${secs.toString().padStart(2, '0')}`,
-          durationSeconds: c.duration_seconds,
-          status: c.status === 'busy' ? 'missed' as const : c.status,
-          timestamp: new Date(c.created_at).toLocaleString(),
-          linkedLead: c.lead_name,
-          transcript: c.transcript,
-          aiSummary: c.ai_summary,
-        };
-      })
-    : mockCallLog;
+  const calls: CallLog[] = fetchedCL.map((c) => {
+    const mins = Math.floor(c.duration_seconds / 60);
+    const secs = c.duration_seconds % 60;
+    return {
+      id: c.id,
+      callerName: c.caller_name || 'Unknown',
+      callerNumber: c.caller_number,
+      trackingNumber: '',
+      trackingLabel: c.tracking_label || '',
+      duration: `${mins}:${secs.toString().padStart(2, '0')}`,
+      durationSeconds: c.duration_seconds,
+      status: c.status === 'busy' ? 'missed' as const : c.status,
+      timestamp: new Date(c.created_at).toLocaleString(),
+      linkedLead: c.lead_name,
+      transcript: c.transcript,
+      aiSummary: c.ai_summary,
+    };
+  });
 
-  const trackingNumbers: TrackingNumber[] = fetchedTN.length > 0
-    ? fetchedTN.map((t) => ({
-        id: t.id,
-        number: t.phone_number,
-        label: t.label,
-        source: t.source,
-        totalCalls: t.total_calls,
-        active: t.is_active,
-      }))
-    : mockTrackingNumbers;
+  const trackingNumbers: TrackingNumber[] = fetchedTN.map((t) => ({
+    id: t.id,
+    number: t.phone_number,
+    label: t.label,
+    source: t.source,
+    totalCalls: t.total_calls,
+    active: t.is_active,
+  }));
 
   const totalCalls = calls.length;
   const answered = calls.filter((c) => c.status === 'answered').length;

@@ -45,14 +45,6 @@ interface Appointment {
   hour: number;
 }
 
-const mockAppointments: Appointment[] = [
-  { id: '1', leadName: 'Sarah Mitchell', service: 'Kitchen Renovation Quote', date: '2026-03-09', time: '9:00 AM', duration: 60, status: 'confirmed', location: '42 Oak Street', dayIndex: 0, hour: 9 },
-  { id: '2', leadName: 'James Cooper', service: 'Electrical Inspection', date: '2026-03-09', time: '11:30 AM', duration: 45, status: 'pending', location: '18 Elm Avenue', dayIndex: 0, hour: 11 },
-  { id: '3', leadName: 'Lisa Wang', service: 'Bathroom Remodel Consult', date: '2026-03-10', time: '2:00 PM', duration: 60, status: 'confirmed', location: '7 Pine Road', dayIndex: 1, hour: 14 },
-  { id: '4', leadName: 'David Brooks', service: 'Roof Assessment', date: '2026-03-11', time: '10:00 AM', duration: 90, status: 'pending', location: '55 Maple Drive', dayIndex: 2, hour: 10 },
-  { id: '5', leadName: 'Emma Taylor', service: 'Plumbing Estimate', date: '2026-03-12', time: '3:30 PM', duration: 30, status: 'confirmed', location: '23 Cedar Lane', dayIndex: 3, hour: 15 },
-  { id: '6', leadName: 'Michael Chen', service: 'HVAC Installation Quote', date: '2026-03-13', time: '9:30 AM', duration: 60, status: 'confirmed', location: '91 Birch Court', dayIndex: 4, hour: 9 },
-];
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   confirmed: { label: 'Confirmed', color: '#1F9B5A', bg: 'rgba(52,199,123,0.08)' },
@@ -64,12 +56,14 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
 const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
 function getWeekDates(offset: number) {
-  const base = new Date('2026-03-09');
-  base.setDate(base.getDate() + offset * 7);
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + offset * 7);
   const days: { day: string; date: string; full: string }[] = [];
   for (let i = 0; i < 5; i++) {
-    const d = new Date(base);
-    d.setDate(d.getDate() + i);
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
     days.push({
       day: d.toLocaleDateString('en-US', { weekday: 'short' }),
       date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -82,7 +76,6 @@ function getWeekDates(offset: number) {
 export default function AppointmentsPage() {
   const { organization } = useOrganization();
   const { appointments: fetchedAppointments, loading, updateAppointment, createAppointment } = useAppointments(organization?.id);
-  const [appointments, setAppointments] = useState(mockAppointments);
   const [weekOffset, setWeekOffset] = useState(0);
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookingForm, setBookingForm] = useState({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
@@ -103,35 +96,27 @@ export default function AppointmentsPage() {
   }
 
   const week = getWeekDates(weekOffset);
-  const weekLabel = `${week[0].date} - ${week[4].date}, 2026`;
+  const weekLabel = `${week[0].date} - ${week[4].date}`;
 
-  const activeAppointments: Appointment[] = fetchedAppointments.length > 0
-    ? fetchedAppointments.map((a) => ({
-        id: a.id,
-        leadName: a.lead_name || a.title,
-        service: a.title,
-        date: a.scheduled_at.split('T')[0],
-        time: new Date(a.scheduled_at).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        duration: a.duration_minutes,
-        status: a.status === 'scheduled' ? 'pending' as const : a.status === 'no_show' ? 'cancelled' as const : a.status,
-        location: a.location || '',
-        dayIndex: (() => { const d = new Date(a.scheduled_at).getDay(); return d === 0 ? 6 : d - 1; })(),
-        hour: new Date(a.scheduled_at).getHours(),
-      }))
-    : appointments;
+  const activeAppointments: Appointment[] = fetchedAppointments.map((a) => ({
+    id: a.id,
+    leadName: a.lead_name || a.title,
+    service: a.title,
+    date: a.scheduled_at.split('T')[0],
+    time: new Date(a.scheduled_at).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true }),
+    duration: a.duration_minutes,
+    status: a.status === 'scheduled' ? 'pending' as const : a.status === 'no_show' ? 'cancelled' as const : a.status,
+    location: a.location || '',
+    dayIndex: (() => { const d = new Date(a.scheduled_at).getDay(); return d === 0 ? 6 : d - 1; })(),
+    hour: new Date(a.scheduled_at).getHours(),
+  }));
 
   const todayFull = week[0].full;
   const todayAppointments = activeAppointments.filter((a) => a.date === todayFull);
 
   const handleAction = (id: string, action: 'confirm' | 'complete' | 'cancel') => {
     const newStatus: 'confirmed' | 'completed' | 'cancelled' = action === 'confirm' ? 'confirmed' : action === 'complete' ? 'completed' : 'cancelled';
-    if (fetchedAppointments.length > 0) {
-      updateAppointment(id, newStatus);
-    } else {
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
-      );
-    }
+    updateAppointment(id, newStatus);
     const labels = { confirm: 'Appointment confirmed', complete: 'Appointment completed', cancel: 'Appointment cancelled' };
     showSuccess(labels[action]);
   };
@@ -139,31 +124,14 @@ export default function AppointmentsPage() {
   const handleBook = async () => {
     if (!bookingForm.leadName || !bookingForm.service || !bookingForm.date) return;
     setBookingSaving(true);
-    if (fetchedAppointments.length > 0 || organization?.id) {
-      await createAppointment?.({
-        lead_id: '',
-        title: bookingForm.service,
-        scheduled_at: `${bookingForm.date}T${bookingForm.time}:00`,
-        duration_minutes: parseInt(bookingForm.duration) || 60,
-        location: bookingForm.location,
-        notes: bookingForm.leadName,
-      });
-    } else {
-      const dt = new Date(`${bookingForm.date}T${bookingForm.time}:00`);
-      const newApt: Appointment = {
-        id: Date.now().toString(),
-        leadName: bookingForm.leadName,
-        service: bookingForm.service,
-        date: bookingForm.date,
-        time: dt.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        duration: parseInt(bookingForm.duration) || 60,
-        status: 'pending',
-        location: bookingForm.location,
-        dayIndex: dt.getDay() === 0 ? 6 : dt.getDay() - 1,
-        hour: dt.getHours(),
-      };
-      setAppointments((prev) => [...prev, newApt]);
-    }
+    await createAppointment?.({
+      lead_id: '',
+      title: bookingForm.service,
+      scheduled_at: `${bookingForm.date}T${bookingForm.time}:00`,
+      duration_minutes: parseInt(bookingForm.duration) || 60,
+      location: bookingForm.location,
+      notes: bookingForm.leadName,
+    });
     setBookingSaving(false);
     setShowBookModal(false);
     setBookingForm({ leadName: '', service: '', date: '', time: '09:00', duration: '60', location: '' });
