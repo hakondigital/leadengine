@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { getEffectivePlanLimits } from '@/lib/client-plan';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,10 @@ function StageStatus({ daysSinceWon, stageDay }: { daysSinceWon: number; stageDa
 }
 
 export default function LifecyclePage() {
+  return <AddonGate addonId="lifecycle"><LifecyclePageContent /></AddonGate>;
+}
+
+function LifecyclePageContent() {
   const { organization, user, authEmail } = useOrganization();
   const orgSettings = (organization?.settings as Record<string, unknown>) || {};
   const orgPlan = (orgSettings.plan as string) || null;

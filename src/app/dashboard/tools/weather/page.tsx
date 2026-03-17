@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useWeatherCampaigns } from '@/hooks/use-weather-campaigns';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,10 @@ const triggerConfig: Record<string, { icon: typeof CloudRain; color: string; lab
 };
 
 export default function WeatherPage() {
+  return <AddonGate addonId="weather-campaigns"><WeatherPageContent /></AddonGate>;
+}
+
+function WeatherPageContent() {
   const { organization } = useOrganization();
   const { campaigns, loading, createCampaign, toggleCampaign, deleteCampaign } = useWeatherCampaigns(organization?.id);
   const [showForm, setShowForm] = useState(false);

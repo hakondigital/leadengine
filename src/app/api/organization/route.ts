@@ -35,6 +35,7 @@ export async function PATCH(request: NextRequest) {
       'name', 'notification_email', 'phone', 'sms_notifications_enabled',
       'auto_reply_enabled', 'google_review_link', 'follow_up_enabled',
       'primary_color', 'accent_color', 'logo_url', 'timezone',
+      'enabled_addons',
     ];
 
     const updates: Record<string, unknown> = {};

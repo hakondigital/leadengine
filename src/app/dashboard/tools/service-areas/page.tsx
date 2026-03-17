@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useServiceAreas } from '@/hooks/use-service-areas';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,10 @@ import {
 } from 'lucide-react';
 
 export default function ServiceAreasPage() {
+  return <AddonGate addonId="service-areas"><ServiceAreasPageContent /></AddonGate>;
+}
+
+function ServiceAreasPageContent() {
   const { organization } = useOrganization();
   const { areas, loading, createArea, deleteArea } = useServiceAreas(organization?.id);
   const [showForm, setShowForm] = useState(false);

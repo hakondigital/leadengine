@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useReviews } from '@/hooks/use-reviews';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { usePlan } from '@/hooks/use-plan';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,6 +80,10 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 export default function ReviewsPage() {
+  return <AddonGate addonId="reviews"><ReviewsPageContent /></AddonGate>;
+}
+
+function ReviewsPageContent() {
   const { organization } = useOrganization();
   const { reviews: fetchedReviews, averageRating, loading, requestReview } = useReviews(organization?.id);
   const { canUseReviewRequests, planName, loading: planLoading } = usePlan();

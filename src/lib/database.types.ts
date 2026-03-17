@@ -205,6 +205,7 @@ export interface Organization {
   portfolio_enabled: boolean;
   default_assignment_rule: string | null;
   timezone: string;
+  enabled_addons: string[];
   settings: Json;
   created_at: string;
   updated_at: string;

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { useROI } from '@/hooks/use-roi';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { usePlan } from '@/hooks/use-plan';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +43,10 @@ const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n);
 
 export default function ROIPage() {
+  return <AddonGate addonId="roi-tracker"><ROIPageContent /></AddonGate>;
+}
+
+function ROIPageContent() {
   const { organization } = useOrganization();
   const { channels: fetchedChannels, totalRevenue: hookTotalRevenue, totalSpend: hookTotalSpend, loading } = useROI(organization?.id);
   const { canUseAdvancedAnalytics, planName, loading: planLoading } = usePlan();

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useOrganization } from '@/hooks/use-organization';
 import { createClient } from '@/lib/supabase/client';
+import { MARKETPLACE_ADDONS } from '@/lib/marketplace';
 import Image from 'next/image';
 import {
   LayoutDashboard,
@@ -24,24 +25,33 @@ import {
   MessageSquare,
   Phone,
   Briefcase,
-  Star,
-  Image as ImageIcon,
-  Wrench,
-  DollarSign,
+  Brain,
+  Zap,
+  Calculator,
+  Upload,
   Shield,
   LogOut,
   ChevronUp,
   User,
+  Store,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-interface NavSection {
-  label?: string;
-  items: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[];
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
-function getNavSections(showAdmin: boolean): NavSection[] {
-  const sections: NavSection[] = [
+interface NavSection {
+  label?: string;
+  items: NavItem[];
+}
+
+// ─── Core navigation (always visible) ───────────────────────────────────────
+
+function getCoreNavSections(showAdmin: boolean): NavSection[] {
+  return [
     {
       items: [
         { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -61,36 +71,62 @@ function getNavSections(showAdmin: boolean): NavSection[] {
       ],
     },
     {
-      label: 'Grow',
+      label: 'AI',
       items: [
-        { name: 'Reviews', href: '/dashboard/reviews', icon: Star },
-        { name: 'Portfolio', href: '/dashboard/portfolio', icon: ImageIcon },
-        { name: 'ROI', href: '/dashboard/roi', icon: DollarSign },
-        { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+        { name: 'Strategy Advisor', href: '/dashboard/tools/strategy', icon: Brain },
+        { name: 'Daily Game Plan', href: '/dashboard/game-plan', icon: Zap },
       ],
     },
     {
-      label: 'Configure',
+      label: 'Manage',
       items: [
+        { name: 'Estimator', href: '/dashboard/tools/estimator', icon: Calculator },
+        { name: 'Team Routing', href: '/dashboard/tools/routing', icon: Users },
+        { name: 'CSV Import', href: '/dashboard/tools/import', icon: Upload },
+        { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
         { name: 'Forms', href: '/dashboard/forms', icon: FileText },
-        { name: 'Tools', href: '/dashboard/tools', icon: Wrench },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [
         { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
         ...(showAdmin ? [{ name: 'Admin', href: '/dashboard/admin', icon: Shield }] : []),
       ],
     },
   ];
-  return sections;
 }
 
-// Flat list for mobile nav (first 5)
+// ─── Map marketplace addon IDs to sidebar nav items ─────────────────────────
+
+function getAddonNavItems(enabledAddons: string[]): NavItem[] {
+  if (!enabledAddons.length) return [];
+
+  const items: NavItem[] = [];
+  for (const addon of MARKETPLACE_ADDONS) {
+    if (enabledAddons.includes(addon.id)) {
+      items.push({
+        name: addon.name,
+        href: addon.href,
+        icon: addon.icon,
+      });
+    }
+  }
+  return items;
+}
+
+// ─── Mobile nav ─────────────────────────────────────────────────────────────
+
 const mobileNav = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Leads', href: '/dashboard/leads', icon: Users },
   { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
   { name: 'Pipeline', href: '/dashboard/pipeline', icon: Inbox },
-  { name: 'Tools', href: '/dashboard/tools', icon: Wrench },
+  { name: 'More', href: '/dashboard/marketplace', icon: Store },
 ];
+
+// ─── Sidebar component ─────────────────────────────────────────────────────
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -101,6 +137,11 @@ export function Sidebar() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const enabledAddons = organization?.enabled_addons || [];
+
+  const coreSections = useMemo(() => getCoreNavSections(isSuperAdmin), [isSuperAdmin]);
+  const addonItems = useMemo(() => getAddonNavItems(enabledAddons), [enabledAddons]);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,7 +181,62 @@ export function Sidebar() {
       .eq('organization_id', organization.id)
       .eq('status', 'new')
       .then(({ count }) => setNewLeadCount(count || 0));
-  }, [organization?.id, pathname]); // re-check on navigation
+  }, [organization?.id, pathname]);
+
+  // ── Render a single nav item ──
+  const renderNavItem = (item: NavItem) => {
+    const isActive =
+      item.href === '/dashboard'
+        ? pathname === '/dashboard'
+        : pathname.startsWith(item.href);
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        className={cn(
+          'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
+          isActive
+            ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+            : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
+        )}
+      >
+        {isActive && (
+          <motion.div
+            layoutId="sidebar-active"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        )}
+        <div className="relative shrink-0">
+          <item.icon className={cn('w-[18px] h-[18px]', collapsed && 'mx-auto')} />
+          {item.name === 'Leads' && newLeadCount > 0 && collapsed && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#EF6C6C] text-[8px] font-bold text-white flex items-center justify-center">
+              {newLeadCount > 9 ? '9+' : newLeadCount}
+            </span>
+          )}
+        </div>
+        <AnimatePresence mode="wait">
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="whitespace-nowrap overflow-hidden flex-1"
+            >
+              {item.name}
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {item.name === 'Leads' && newLeadCount > 0 && !collapsed && (
+          <span className="ml-auto px-1.5 py-0.5 rounded-full bg-[#EF6C6C] text-[9px] font-bold text-white leading-none">
+            {newLeadCount}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -204,7 +300,8 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4">
-          {getNavSections(isSuperAdmin).map((section, sIdx) => (
+          {/* Core sections */}
+          {coreSections.map((section, sIdx) => (
             <div key={sIdx}>
               {section.label && !collapsed && (
                 <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
@@ -215,62 +312,75 @@ export function Sidebar() {
                 <div className="mx-auto w-5 border-t border-white/[0.08] mb-2" />
               )}
               <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const isActive =
-                    item.href === '/dashboard'
-                      ? pathname === '/dashboard'
-                      : pathname.startsWith(item.href);
-
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
-                        isActive
-                          ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
-                          : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="sidebar-active"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
-                          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        />
-                      )}
-                      <div className="relative shrink-0">
-                        <item.icon className={cn('w-[18px] h-[18px]', collapsed && 'mx-auto')} />
-                        {item.name === 'Leads' && newLeadCount > 0 && collapsed && (
-                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#EF6C6C] text-[8px] font-bold text-white flex items-center justify-center">
-                            {newLeadCount > 9 ? '9+' : newLeadCount}
-                          </span>
-                        )}
-                      </div>
-                      <AnimatePresence mode="wait">
-                        {!collapsed && (
-                          <motion.span
-                            initial={{ opacity: 0, width: 0 }}
-                            animate={{ opacity: 1, width: 'auto' }}
-                            exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="whitespace-nowrap overflow-hidden flex-1"
-                          >
-                            {item.name}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                      {item.name === 'Leads' && newLeadCount > 0 && !collapsed && (
-                        <span className="ml-auto px-1.5 py-0.5 rounded-full bg-[#EF6C6C] text-[9px] font-bold text-white leading-none">
-                          {newLeadCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+                {section.items.map(renderNavItem)}
               </div>
             </div>
           ))}
+
+          {/* Enabled marketplace add-ons */}
+          {addonItems.length > 0 && (
+            <div>
+              {!collapsed && (
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                  Add-ons
+                </p>
+              )}
+              {collapsed && (
+                <div className="mx-auto w-5 border-t border-white/[0.08] mb-2" />
+              )}
+              <div className="space-y-0.5">
+                {addonItems.map(renderNavItem)}
+              </div>
+            </div>
+          )}
+
+          {/* Marketplace link */}
+          <div>
+            {!collapsed && (
+              <div className="mx-3 border-t border-white/[0.06] mb-2" />
+            )}
+            {collapsed && (
+              <div className="mx-auto w-5 border-t border-white/[0.08] mb-2" />
+            )}
+            <Link
+              href="/dashboard/marketplace"
+              className={cn(
+                'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
+                pathname === '/dashboard/marketplace'
+                  ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                  : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
+              )}
+            >
+              {pathname === '/dashboard/marketplace' && (
+                <motion.div
+                  layoutId="sidebar-active"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <div className="relative shrink-0">
+                <Store className={cn('w-[18px] h-[18px]', collapsed && 'mx-auto')} />
+              </div>
+              <AnimatePresence mode="wait">
+                {!collapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="whitespace-nowrap overflow-hidden flex-1"
+                  >
+                    Marketplace
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {!collapsed && addonItems.length === 0 && (
+                <span className="ml-auto px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[9px] font-bold text-[#A78BFA] leading-none">
+                  NEW
+                </span>
+              )}
+            </Link>
+          </div>
         </nav>
 
         {/* Bottom section — user menu */}

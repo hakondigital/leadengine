@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrganization } from '@/hooks/use-organization';
 import { usePortfolio } from '@/hooks/use-portfolio';
+import { AddonGate } from '@/components/marketplace/addon-gate';
 import { usePlan } from '@/hooks/use-plan';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,10 @@ const mockProjects: Project[] = [
 const categories = ['Kitchen', 'Bathroom', 'Painting', 'Outdoor', 'Electrical', 'Roofing', 'Plumbing', 'HVAC', 'General'];
 
 export default function PortfolioPage() {
+  return <AddonGate addonId="portfolio"><PortfolioPageContent /></AddonGate>;
+}
+
+function PortfolioPageContent() {
   const { organization } = useOrganization();
   const { projects: fetchedProjects, loading, createProject, updateProject, deleteProject } = usePortfolio(organization?.id);
   const [localProjects, setLocalProjects] = useState(mockProjects);

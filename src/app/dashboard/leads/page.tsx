@@ -8,7 +8,8 @@ import { useLeads } from '@/hooks/use-leads';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Lead, LeadWithRelations, LeadStatus } from '@/lib/database.types';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LeadsPage() {
   const { organization, loading: orgLoading } = useOrganization();
@@ -58,6 +59,16 @@ export default function LeadsPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                asChild
+              >
+                <Link href="/dashboard/tools/import">
+                  <Upload className="w-3.5 h-3.5" />
+                  Import
+                </Link>
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"
