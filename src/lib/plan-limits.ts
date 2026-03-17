@@ -36,6 +36,11 @@ export interface PlanLimits {
   post_job_lifecycle: boolean;
   meeting_briefing: boolean;
   ai_strategy: boolean;
+  // New features
+  morning_briefing: boolean;
+  credibility_package: boolean;
+  missed_call_sms: boolean;
+  source_roi: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
@@ -70,6 +75,10 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     post_job_lifecycle: false,
     meeting_briefing: false,
     ai_strategy: false,
+    morning_briefing: false,
+    credibility_package: true,
+    missed_call_sms: false,
+    source_roi: false,
   },
   professional: {
     leads_per_month: 250,
@@ -102,6 +111,10 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     post_job_lifecycle: true,
     meeting_briefing: true,
     ai_strategy: true,
+    morning_briefing: true,
+    credibility_package: true,
+    missed_call_sms: true,
+    source_roi: false,
   },
   enterprise: {
     leads_per_month: -1,
@@ -134,6 +147,10 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     post_job_lifecycle: true,
     meeting_briefing: true,
     ai_strategy: true,
+    morning_briefing: true,
+    credibility_package: true,
+    missed_call_sms: true,
+    source_roi: true,
   },
 };
 
@@ -169,6 +186,10 @@ export const FREE_LIMITS: PlanLimits = {
   post_job_lifecycle: false,
   meeting_briefing: false,
   ai_strategy: false,
+  morning_briefing: false,
+  credibility_package: false,
+  missed_call_sms: false,
+  source_roi: false,
 };
 
 export function getPlanLimits(plan: string | null | undefined): PlanLimits {

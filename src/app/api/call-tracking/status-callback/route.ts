@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { checkFeature } from '@/lib/check-plan';
 
 // Twilio status callback — called when a dialed call leg completes.
 // Updates call_logs with final duration and status.
@@ -62,7 +63,9 @@ export async function POST(request: NextRequest) {
             .single();
 
           const settings = (org?.settings as Record<string, unknown>) || {};
-          if (settings.missed_call_sms_enabled !== false && org) {
+          // Plan gate: missed_call_sms requires Professional+
+          const { allowed: smsAllowed } = await checkFeature(callLog.organization_id, 'missed_call_sms');
+          if (settings.missed_call_sms_enabled !== false && org && smsAllowed) {
             const bookingLink = `${appUrl}/book/${callLog.organization_id}`;
             const smsBody = `Hi, this is ${org.name}. Sorry we missed your call! We'll try to call you back shortly. If you'd like to book a time that suits you, tap here: ${bookingLink}`;
 

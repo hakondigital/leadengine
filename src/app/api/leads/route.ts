@@ -294,7 +294,8 @@ export async function POST(request: NextRequest) {
       sendProspectConfirmation(lead, org).catch(console.error);
 
       // 5b. Credibility package (delayed 2 minutes so it doesn't stack with confirmation)
-      if (settings.credibility_package_enabled !== false) {
+      // Plan gate: Starter+ (credibility_package)
+      if (settings.credibility_package_enabled !== false && limits.credibility_package) {
         setTimeout(() => {
           sendCredibilityPackage(lead, org!).catch(console.error);
         }, 2 * 60 * 1000);

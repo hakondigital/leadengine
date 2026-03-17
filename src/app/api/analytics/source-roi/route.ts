@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { requireCallerOwnsOrg } from '@/lib/require-org-access';
+import { checkFeature } from '@/lib/check-plan';
 
 // GET: Lead source ROI breakdown
 // Returns: source → total leads, won leads, won revenue, conversion rate
+// Plan gate: Enterprise only.
 export async function GET(req: NextRequest) {
   try {
     const orgId = req.nextUrl.searchParams.get('organization_id');
@@ -14,6 +16,11 @@ export async function GET(req: NextRequest) {
 
     const { unauthorized } = await requireCallerOwnsOrg(orgId);
     if (unauthorized) return unauthorized;
+
+    const { allowed } = await checkFeature(orgId, 'source_roi');
+    if (!allowed) {
+      return NextResponse.json({ error: 'Source ROI analytics requires Enterprise plan' }, { status: 403 });
+    }
 
     const supabase = await createServiceRoleClient();
     const since = new Date();

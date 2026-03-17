@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { checkFeature } from '@/lib/check-plan';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'leads@odyssey.io';
@@ -31,6 +32,10 @@ export async function GET(req: NextRequest) {
   for (const org of orgs) {
     const settings = (org.settings as Record<string, unknown>) || {};
     if (settings.ghost_recovery_enabled === false) continue;
+
+    // Plan gate: ghost_recovery requires Professional+
+    const { allowed } = await checkFeature(org.id, 'ghost_recovery');
+    if (!allowed) continue;
 
     try {
       // Find ghost leads: contacted/quoted but no activity in 5+ days, not already in ghost recovery

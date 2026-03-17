@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { checkFeature } from '@/lib/check-plan';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'leads@odyssey.io';
 
 // Vercel Cron — runs every morning at 6:30am AEST (20:30 UTC previous day).
 // Sends each org owner a morning briefing with today's agenda.
+// Plan gate: Professional+ only.
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.get('authorization');
@@ -15,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createServiceRoleClient();
 
-  // Get all orgs with morning briefing enabled
+  // Get all orgs
   const { data: orgs } = await supabase
     .from('organizations')
     .select('id, name, notification_email, settings, phone');
@@ -29,6 +31,10 @@ export async function GET(req: NextRequest) {
   for (const org of orgs) {
     const settings = (org.settings as Record<string, unknown>) || {};
     if (settings.morning_briefing_enabled === false) continue;
+
+    // Plan gate: morning_briefing requires Professional+
+    const { allowed } = await checkFeature(org.id, 'morning_briefing');
+    if (!allowed) continue;
 
     try {
       const briefing = await buildBriefing(supabase, org.id, org.name);
