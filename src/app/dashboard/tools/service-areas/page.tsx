@@ -52,11 +52,11 @@ function ServiceAreasPageContent() {
       <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
           <a
-            href="/dashboard/tools"
+            href="/dashboard/marketplace"
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2 transition-colors"
           >
             <ArrowLeft className="w-3 h-3" />
-            Back to Tools
+            Marketplace
           </a>
           <div className="flex items-center justify-between">
             <div>

@@ -195,8 +195,8 @@ function LifecyclePageContent() {
       <div className="min-h-screen">
         <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
           <div className="px-4 lg:px-6 py-4">
-            <a href="/dashboard/tools" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
-              <ArrowLeft className="w-3 h-3" /> Tools
+            <a href="/dashboard/marketplace" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
+              <ArrowLeft className="w-3 h-3" /> Marketplace
             </a>
             <div className="flex items-center gap-2">
               <RotateCcw className="w-5 h-5 text-emerald-400" />
@@ -231,8 +231,8 @@ function LifecyclePageContent() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
-          <a href="/dashboard/tools" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
-            <ArrowLeft className="w-3 h-3" /> Tools
+          <a href="/dashboard/marketplace" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
+            <ArrowLeft className="w-3 h-3" /> Marketplace
           </a>
           <div className="flex items-center gap-2">
             <RotateCcw className="w-5 h-5 text-emerald-400" />

@@ -16,7 +16,7 @@ import {
   Target,
   BarChart3,
   Lightbulb,
-  ArrowLeft,
+
   Lock,
   ArrowUpRight,
   Sparkles,
@@ -129,9 +129,6 @@ export default function StrategyPage() {
       <div className="min-h-screen">
         <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
           <div className="px-4 lg:px-6 py-4">
-            <a href="/dashboard/tools" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
-              <ArrowLeft className="w-3 h-3" /> Tools
-            </a>
             <div className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-[var(--od-accent)]" />
               <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">AI Strategy Advisor</h1>
@@ -165,9 +162,6 @@ export default function StrategyPage() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
         <div className="px-4 lg:px-6 py-4">
-          <a href="/dashboard/tools" className="inline-flex items-center gap-1.5 text-xs text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)] mb-2">
-            <ArrowLeft className="w-3 h-3" /> Tools
-          </a>
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-[var(--od-accent)]" />
             <h1 className="text-xl font-bold text-[var(--od-text-primary)] tracking-tight">AI Strategy Advisor</h1>

@@ -436,3 +436,46 @@ export async function sendReviewRequestEmail(
     html,
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 7. Team Invite Email
+// ═══════════════════════════════════════════════════════════════
+
+export async function sendTeamInviteEmail({
+  to,
+  orgName,
+  inviterName,
+  role,
+}: {
+  to: string;
+  orgName: string;
+  inviterName: string;
+  role: string;
+}) {
+  const signupUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://leadengine-phi.vercel.app'}/signup?email=${encodeURIComponent(to)}`;
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0F1A26; color: #E2E8F0; border-radius: 12px;">
+      <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 8px; color: #FFFFFF;">You're invited to ${orgName}</h1>
+      <p style="font-size: 14px; color: #94A3B8; margin: 0 0 24px; line-height: 1.6;">
+        ${inviterName} has invited you to join <strong style="color: #E2E8F0;">${orgName}</strong> on Odyssey as a <strong style="color: #4FD1E5;">${role}</strong>.
+      </p>
+      <p style="font-size: 14px; color: #94A3B8; margin: 0 0 24px; line-height: 1.6;">
+        Odyssey is where your team manages leads, tracks pipeline, and closes more jobs — all in one place.
+      </p>
+      <a href="${signupUrl}" style="display: inline-block; background: #4FD1E5; color: #0F1A26; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 8px; text-decoration: none;">
+        Accept Invite &amp; Sign Up
+      </a>
+      <p style="font-size: 12px; color: #64748B; margin: 24px 0 0; line-height: 1.5;">
+        If you didn't expect this invitation, you can safely ignore this email.
+      </p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: `${orgName} <${FROM_EMAIL}>`,
+    to,
+    subject: `${inviterName} invited you to ${orgName} on Odyssey`,
+    html,
+  });
+}

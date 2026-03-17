@@ -542,21 +542,21 @@ export default function LandingPage() {
             {[
               {
                 name: 'Starter',
-                price: 79,
+                price: 39,
                 originalPrice: null as number | null,
                 features: ['Up to 50 leads/month', 'AI lead qualification', 'Email notifications', '1 lead capture form', 'Basic analytics'],
               },
               {
                 name: 'Professional',
-                price: 149,
+                price: 79,
                 originalPrice: null as number | null,
                 popular: true,
                 features: ['Up to 250 leads/month', 'AI qualification + follow-ups', 'Email & SMS notifications', '3 forms, 3 users', 'Advanced analytics + AI tools', 'Full AI tools suite', 'Priority support'],
               },
               {
                 name: 'Enterprise',
-                price: 410,
-                originalPrice: 550 as number | null,
+                price: 199,
+                originalPrice: null as number | null,
                 features: ['Unlimited leads', 'Full AI suite (all features)', 'White-label branding', 'Unlimited forms & users', 'Call recording & transcription', 'Dedicated account manager', 'SLA guarantee'],
               },
             ].map((plan, i) => (

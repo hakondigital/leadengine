@@ -29,6 +29,7 @@ import {
   Zap,
   Calculator,
   Upload,
+  UsersRound,
   Shield,
   LogOut,
   ChevronUp,
@@ -80,6 +81,7 @@ function getCoreNavSections(showAdmin: boolean): NavSection[] {
     {
       label: 'Manage',
       items: [
+        { name: 'Team', href: '/dashboard/team', icon: UsersRound },
         { name: 'Estimator', href: '/dashboard/tools/estimator', icon: Calculator },
         { name: 'Team Routing', href: '/dashboard/tools/routing', icon: Users },
         { name: 'CSV Import', href: '/dashboard/tools/import', icon: Upload },
