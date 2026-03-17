@@ -26,6 +26,9 @@ import {
   Ghost,
   Calendar,
   RotateCcw,
+  Sun,
+  Shield,
+  PhoneMissed,
 } from 'lucide-react';
 
 function Toggle({
@@ -89,6 +92,15 @@ export default function SettingsPage() {
   const [lifecycleMaintenance, setLifecycleMaintenance] = useState(false);
   const [meetingBriefingEnabled, setMeetingBriefingEnabled] = useState(true);
 
+  // New feature settings
+  const [morningBriefingEnabled, setMorningBriefingEnabled] = useState(true);
+  const [morningBriefingSms, setMorningBriefingSms] = useState(true);
+  const [credibilityPackageEnabled, setCredibilityPackageEnabled] = useState(true);
+  const [reviewScore, setReviewScore] = useState('');
+  const [licenseInfo, setLicenseInfo] = useState('');
+  const [missedCallSmsEnabled, setMissedCallSmsEnabled] = useState(true);
+  const [missedCallSmsMessage, setMissedCallSmsMessage] = useState('');
+
   // Integration statuses (fetched from server)
   const [integrationStatus, setIntegrationStatus] = useState<Record<string, boolean | string>>({});
 
@@ -129,6 +141,14 @@ export default function SettingsPage() {
       setLifecycleCrossSell(settings.lifecycle_cross_sell_enabled !== false);
       setLifecycleMaintenance(!!(settings.lifecycle_maintenance_enabled));
       setMeetingBriefingEnabled(settings.meeting_briefing_enabled !== false);
+      // New features
+      setMorningBriefingEnabled(settings.morning_briefing_enabled !== false);
+      setMorningBriefingSms(settings.morning_briefing_sms !== false);
+      setCredibilityPackageEnabled(settings.credibility_package_enabled !== false);
+      setReviewScore((settings.review_score as string) || '');
+      setLicenseInfo((settings.license_info as string) || '');
+      setMissedCallSmsEnabled(settings.missed_call_sms_enabled !== false);
+      setMissedCallSmsMessage((settings.missed_call_sms_message as string) || '');
     }
   }, [organization]);
 
@@ -168,6 +188,14 @@ export default function SettingsPage() {
             lifecycle_cross_sell_enabled: lifecycleCrossSell,
             lifecycle_maintenance_enabled: lifecycleMaintenance,
             meeting_briefing_enabled: meetingBriefingEnabled,
+            // New features
+            morning_briefing_enabled: morningBriefingEnabled,
+            morning_briefing_sms: morningBriefingSms,
+            credibility_package_enabled: credibilityPackageEnabled,
+            review_score: reviewScore || null,
+            license_info: licenseInfo || null,
+            missed_call_sms_enabled: missedCallSmsEnabled,
+            missed_call_sms_message: missedCallSmsMessage || null,
           },
         }),
       });
@@ -359,7 +387,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <div>
                     <span className="text-sm text-[var(--od-text-secondary)]">Smart Ghost Recovery</span>
-                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">AI analyses why leads go silent and crafts personalised re-engagement</p>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Auto-detects silent leads and escalates: email (5d) → SMS (10d) → flags for manual call (15d)</p>
                   </div>
                 </div>
                 <Toggle enabled={ghostRecoveryEnabled} onChange={setGhostRecoveryEnabled} />
@@ -373,6 +401,57 @@ export default function SettingsPage() {
                 </div>
                 <Toggle enabled={meetingBriefingEnabled} onChange={setMeetingBriefingEnabled} />
               </div>
+
+              {/* Morning Briefing */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-2">
+                  <Sun className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <div>
+                    <span className="text-sm text-[var(--od-text-secondary)]">Morning Briefing</span>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Daily email + SMS at 6:30am with overnight leads, appointments, hot leads, and expiring quotes</p>
+                  </div>
+                </div>
+                <Toggle enabled={morningBriefingEnabled} onChange={setMorningBriefingEnabled} />
+              </div>
+
+              {morningBriefingEnabled && (
+                <div className="ml-4 pl-3 border-l-2 border-[var(--od-border-subtle)]">
+                  <div className="flex items-center justify-between py-1.5">
+                    <div>
+                      <span className="text-sm text-[var(--od-text-secondary)]">Also send via SMS</span>
+                      <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Get a concise text summary alongside the email</p>
+                    </div>
+                    <Toggle enabled={morningBriefingSms} onChange={setMorningBriefingSms} />
+                  </div>
+                </div>
+              )}
+
+              {/* Missed Call Auto-SMS */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-2">
+                  <PhoneMissed className="w-3.5 h-3.5 text-[#E8636C]" />
+                  <div>
+                    <span className="text-sm text-[var(--od-text-secondary)]">Missed Call Auto-SMS</span>
+                    <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Auto-text callers when you miss their call with an apology and booking link</p>
+                  </div>
+                </div>
+                <Toggle enabled={missedCallSmsEnabled} onChange={setMissedCallSmsEnabled} />
+              </div>
+
+              {missedCallSmsEnabled && (
+                <div className="ml-4 pl-3 border-l-2 border-[var(--od-border-subtle)]">
+                  <label className="block text-sm font-medium text-[var(--od-text-secondary)] mb-1.5">
+                    Custom SMS Message <span className="text-xs text-[var(--od-text-muted)] font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    value={missedCallSmsMessage}
+                    onChange={(e) => setMissedCallSmsMessage(e.target.value)}
+                    placeholder="Leave blank for default: 'Sorry we missed your call! Book a time here...'"
+                    rows={2}
+                    className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--od-accent)] resize-none"
+                  />
+                </div>
+              )}
 
               <div className="pt-2 border-t border-[var(--od-border-subtle)]">
                 <p className="text-xs text-[var(--od-text-muted)]">
@@ -608,6 +687,60 @@ export default function SettingsPage() {
                 onChange={(e) => setGoogleReviewLink(e.target.value)}
                 hint="When a lead is marked as Won, we'll send a review request after 7 days"
               />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Credibility Package */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#4ADE80]" />
+                <CardTitle>Instant Credibility Package</CardTitle>
+              </div>
+              <CardDescription>Auto-send a trust-building email to new leads with your reviews, license info, and booking link</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <span className="text-sm text-[var(--od-text-secondary)]">Enable credibility package</span>
+                  <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Sends 2 minutes after the confirmation email</p>
+                </div>
+                <Toggle enabled={credibilityPackageEnabled} onChange={setCredibilityPackageEnabled} />
+              </div>
+
+              {credibilityPackageEnabled && (
+                <div className="space-y-4 pt-2 border-t border-[var(--od-border-subtle)]">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--od-text-secondary)] mb-1.5">
+                      Google Review Score
+                    </label>
+                    <input
+                      type="text"
+                      value={reviewScore}
+                      onChange={(e) => setReviewScore(e.target.value)}
+                      placeholder="e.g. 4.9"
+                      className="w-32 h-9 px-3 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--od-accent)]"
+                    />
+                    <p className="text-xs text-[var(--od-text-muted)] mt-1">Displayed prominently in the credibility email</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--od-text-secondary)] mb-1.5">
+                      License / Insurance Info
+                    </label>
+                    <input
+                      type="text"
+                      value={licenseInfo}
+                      onChange={(e) => setLicenseInfo(e.target.value)}
+                      placeholder="e.g. Licensed Electrician #12345 — Fully Insured"
+                      className="w-full h-9 px-3 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--od-accent)]"
+                    />
+                    <p className="text-xs text-[var(--od-text-muted)] mt-1">Shows your credentials to build trust instantly</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

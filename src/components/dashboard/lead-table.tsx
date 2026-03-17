@@ -282,6 +282,23 @@ function LeadRow({
           )}
         </div>
 
+        {/* Ghost recovery stage indicator */}
+        {lead.ghost_recovery_stage && lead.ghost_recovery_stage > 0 && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${
+              lead.ghost_recovery_stage === 1
+                ? 'bg-[#F59E0B]/10 text-[#F59E0B]'
+                : lead.ghost_recovery_stage === 2
+                ? 'bg-[#E8636C]/10 text-[#E8636C]'
+                : 'bg-[#8B5CF6]/10 text-[#8B5CF6]'
+            }`}
+          >
+            {lead.ghost_recovery_stage === 1 && '📧 Recovery email'}
+            {lead.ghost_recovery_stage === 2 && '💬 Recovery SMS'}
+            {lead.ghost_recovery_stage === 3 && '📞 Needs call'}
+          </span>
+        )}
+
         <ChevronRight className="w-4 h-4 text-[var(--od-text-muted)] group-hover:text-[var(--od-text-tertiary)] transition-colors shrink-0" />
       </div>
     </motion.button>

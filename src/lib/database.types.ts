@@ -282,6 +282,8 @@ export interface Lead {
   assigned_to: string | null;
   last_contacted_at: string | null;
   follow_up_date: string | null;
+  // Ghost recovery
+  ghost_recovery_stage?: number | null;
   created_at: string;
   updated_at: string;
 }
