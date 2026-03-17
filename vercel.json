@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/sequences",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/morning-briefing",
+      "schedule": "30 20 * * *"
+    },
+    {
+      "path": "/api/cron/ghost-recovery",
+      "schedule": "0 23 * * *"
     }
   ]
 }

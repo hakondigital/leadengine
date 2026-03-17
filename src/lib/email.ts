@@ -302,6 +302,92 @@ export async function sendFollowUpEmail(
   });
 }
 
+// Instant Credibility Package — sent to new leads with trust signals
+export async function sendCredibilityPackage(
+  lead: Lead,
+  org: Organization,
+  extras?: {
+    reviewScore?: string;
+    reviewCount?: number;
+    recentReviews?: Array<{ author: string; text: string; rating: number }>;
+    licenseInfo?: string;
+    responseTime?: string;
+  }
+) {
+  const settings = (org as unknown as { settings: Record<string, unknown> }).settings || {};
+  const reviewLink = (settings.google_review_link as string) || '';
+  const reviewScore = extras?.reviewScore || (settings.review_score as string) || '';
+  const licenseInfo = extras?.licenseInfo || (settings.license_info as string) || '';
+  const responseTime = extras?.responseTime || 'within 1 business hour';
+
+  const reviewSection = reviewScore ? `
+    <div style="background:#F7F9FB;border:1px solid #EEF1F5;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;font-weight:700;color:#F59E0B;">★ ${reviewScore}</div>
+      <div style="font-size:12px;color:#7B8794;margin-top:4px;">Google Reviews${extras?.reviewCount ? ` (${extras.reviewCount} reviews)` : ''}</div>
+      ${extras?.recentReviews?.slice(0, 2).map(r => `
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #EEF1F5;text-align:left;">
+          <div style="font-size:12px;color:#F59E0B;">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+          <p style="margin:4px 0 0;color:#4A5568;font-size:12px;line-height:1.5;font-style:italic;">"${r.text.slice(0, 120)}${r.text.length > 120 ? '...' : ''}"</p>
+          <p style="margin:2px 0 0;color:#7B8794;font-size:11px;">— ${r.author}</p>
+        </div>
+      `).join('') || ''}
+    </div>` : '';
+
+  const licenseSection = licenseInfo ? `
+    <div style="background:#F7F9FB;border:1px solid #EEF1F5;border-radius:8px;padding:12px 16px;margin-bottom:16px;">
+      <p style="margin:0;color:#7B8794;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Licensed & Insured</p>
+      <p style="margin:4px 0 0;color:#1A2332;font-size:13px;">${licenseInfo}</p>
+    </div>` : '';
+
+  const bookingLink = `${process.env.NEXT_PUBLIC_APP_URL}/book/${org.slug || org.id}`;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F7F9FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 24px;">
+  <div style="margin-bottom:32px;text-align:center;">
+    <h2 style="margin:0;color:#1A2332;font-size:18px;font-weight:600;">${org.name}</h2>
+  </div>
+
+  <div style="background:#FFFFFF;border:1px solid #EEF1F5;border-radius:12px;padding:32px 24px;box-shadow:0 1px 3px rgba(28,42,58,0.06);">
+    <h1 style="margin:0 0 16px;color:#1A2332;font-size:20px;font-weight:600;">
+      Hi ${lead.first_name}, here's a bit about us
+    </h1>
+
+    <p style="margin:0 0 20px;color:#4A5568;font-size:14px;line-height:1.7;">
+      Thanks for your enquiry${lead.service_type ? ` about ${lead.service_type}` : ''}. We wanted to share some information so you know you're in good hands.
+    </p>
+
+    ${reviewSection}
+    ${licenseSection}
+
+    <div style="background:#F7F9FB;border:1px solid #EEF1F5;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+      <p style="margin:0;color:#7B8794;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Our Response Time</p>
+      <p style="margin:4px 0 0;color:#1A2332;font-size:13px;">We typically get back to you <strong style="color:#2DA8BC;">${responseTime}</strong></p>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <a href="${bookingLink}" style="display:inline-block;padding:12px 28px;background:#2F3E4F;color:#FFFFFF;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">
+        Book a Time to Chat
+      </a>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;text-align:center;">
+    <p style="margin:0;color:#A0ABB5;font-size:11px;">${org.name} — Powered by Odyssey</p>
+  </div>
+</div>
+</body></html>`;
+
+  return sendEmail({
+    from: `${org.name} <${FROM_EMAIL}>`,
+    to: lead.email,
+    reply_to: org.notification_email,
+    subject: `Why customers choose ${org.name}`,
+    html,
+  });
+}
+
 // Google Review request email — supports custom AI-generated content
 export async function sendReviewRequestEmail(
   lead: Lead,

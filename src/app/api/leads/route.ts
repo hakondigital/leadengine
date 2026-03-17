@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { requireCallerOwnsOrg } from '@/lib/require-org-access';
-import { sendBusinessNotification, sendProspectConfirmation, sendSmartAutoReply } from '@/lib/email';
+import { sendBusinessNotification, sendProspectConfirmation, sendSmartAutoReply, sendCredibilityPackage } from '@/lib/email';
 import { qualifyLead } from '@/lib/ai-qualification';
 import { sendNewLeadSMS } from '@/lib/sms';
 import { fireWebhooks } from '@/lib/webhooks';
@@ -292,6 +292,13 @@ export async function POST(request: NextRequest) {
 
       // 5. Confirmation email to prospect
       sendProspectConfirmation(lead, org).catch(console.error);
+
+      // 5b. Credibility package (delayed 2 minutes so it doesn't stack with confirmation)
+      if (settings.credibility_package_enabled !== false) {
+        setTimeout(() => {
+          sendCredibilityPackage(lead, org!).catch(console.error);
+        }, 2 * 60 * 1000);
+      }
 
       // 6. SMS notification to business (if enabled)
       if (org.sms_notifications_enabled && org.phone) {
