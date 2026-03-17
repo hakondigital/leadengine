@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { checkFeature } from '@/lib/check-plan';
+import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 
 interface CSVRow {
   first_name?: string;
@@ -14,6 +15,7 @@ interface CSVRow {
   urgency?: string;
   message?: string;
   source?: string;
+  postcode?: string;
   [key: string]: string | undefined;
 }
 
@@ -21,7 +23,6 @@ function parseCSV(csvText: string): CSVRow[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
 
-  // Parse header row
   const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
 
   const rows: CSVRow[] = [];
@@ -76,10 +77,11 @@ function validateRow(row: CSVRow): { valid: boolean; errors: string[] } {
   return { valid: errors.length === 0, errors };
 }
 
+// POST: Import leads from CSV
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { organization_id, csv_data, source, skip_duplicates } = body;
+    const { organization_id, csv_data, file_name, skip_duplicates } = body;
 
     if (!organization_id || !csv_data) {
       return NextResponse.json(
@@ -88,9 +90,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { unauthorized } = await requireCallerOwnsOrg(organization_id);
+    if (unauthorized) return unauthorized;
+
     const importCheck = await checkFeature(organization_id, 'lead_import');
     if (!importCheck.allowed) {
-      return NextResponse.json({ error: 'Lead import is not available on your plan. Upgrade to Professional or Enterprise.' }, { status: 403 });
+      return NextResponse.json({ error: 'Lead import requires Professional or Enterprise plan.' }, { status: 403 });
     }
 
     const supabase = await createServiceRoleClient();
@@ -104,8 +109,8 @@ export async function POST(request: NextRequest) {
       total: rows.length,
       imported: 0,
       skipped: 0,
-      errors: [] as { row: number; errors: string[] }[],
       duplicates: 0,
+      errors: [] as { row: number; errors: string[] }[],
     };
 
     for (let i = 0; i < rows.length; i++) {
@@ -113,13 +118,13 @@ export async function POST(request: NextRequest) {
       const validation = validateRow(row);
 
       if (!validation.valid) {
-        results.errors.push({ row: i + 2, errors: validation.errors }); // +2 for header + 0-index
+        results.errors.push({ row: i + 2, errors: validation.errors });
         results.skipped++;
         continue;
       }
 
-      // Check for duplicates if requested
-      if (skip_duplicates && row.email) {
+      // Check for duplicates
+      if (skip_duplicates !== false && row.email) {
         const { data: existing } = await supabase
           .from('leads')
           .select('id')
@@ -148,7 +153,8 @@ export async function POST(request: NextRequest) {
         budget_range: row.budget_range || null,
         urgency: row.urgency || null,
         message: row.message || null,
-        source: source || row.source || 'csv_import',
+        postcode: row.postcode || null,
+        source: 'csv_import',
         status: 'new',
         priority: 'medium',
       });
@@ -161,20 +167,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create import log
+    // Create import log — use correct column names from schema
+    const status = results.imported === 0 ? 'failed' : results.errors.length > 0 ? 'completed' : 'completed';
     await supabase.from('import_logs').insert({
       organization_id,
-      source: 'csv',
+      file_name: file_name || 'import.csv',
       total_rows: results.total,
-      imported: results.imported,
-      skipped: results.skipped,
-      duplicates: results.duplicates,
+      imported_count: results.imported,
+      skipped_count: results.skipped,
+      error_count: results.errors.length,
       errors: results.errors,
+      status,
     });
 
     return NextResponse.json(results, { status: 201 });
   } catch (error) {
     console.error('Import error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// GET: Fetch import history
+export async function GET(request: NextRequest) {
+  try {
+    const orgId = request.nextUrl.searchParams.get('organization_id');
+    if (!orgId) {
+      return NextResponse.json({ error: 'organization_id required' }, { status: 400 });
+    }
+
+    const { unauthorized } = await requireCallerOwnsOrg(orgId);
+    if (unauthorized) return unauthorized;
+
+    const supabase = await createServiceRoleClient();
+    const { data, error } = await supabase
+      .from('import_logs')
+      .select('*')
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ history: data || [] });
+  } catch (error) {
+    console.error('Import history error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
