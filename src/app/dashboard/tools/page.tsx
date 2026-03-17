@@ -335,7 +335,7 @@ export default function ToolsPage() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div data-tour="tools-grid" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {configurableTools.map((tool, i) => {
               const ToolIcon = tool.icon;
               const enabled = toolStates[tool.id];

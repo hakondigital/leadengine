@@ -202,7 +202,7 @@ export default function InboxPage() {
             {/* Left panel - Message list */}
             <div className={`w-full md:w-[380px] border-r border-[var(--od-border-subtle)] flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
               {/* Channel tabs */}
-              <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--od-border-subtle)] overflow-x-auto">
+              <div data-tour="inbox-tabs" className="flex items-center gap-1 px-3 py-2 border-b border-[var(--od-border-subtle)] overflow-x-auto">
                 {channels.map((ch) => (
                   <button
                     key={ch.key}

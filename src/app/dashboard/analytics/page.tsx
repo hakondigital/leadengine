@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
 
       <div className="px-4 lg:px-6 py-6 space-y-6">
         {/* Summary stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div data-tour="analytics-overview" className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <StatCard label="Total Leads" value={total} icon={Users} color="#6C8EEF" index={0} />
           <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={Percent} color="#4ADE80" index={1} />
           <StatCard label="Avg. AI Score" value={avgScore} icon={Target} color="#4FD1E5" index={2} />

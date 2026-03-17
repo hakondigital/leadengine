@@ -63,11 +63,13 @@ export default function PipelinePage() {
             ))}
           </div>
         ) : (
-          <PipelineBoard
-            leads={leads}
-            onLeadClick={handleLeadClick}
-            onStatusChange={handleStatusChange}
-          />
+          <div data-tour="pipeline-board">
+            <PipelineBoard
+              leads={leads}
+              onLeadClick={handleLeadClick}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
         )}
       </div>
 

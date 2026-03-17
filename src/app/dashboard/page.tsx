@@ -117,7 +117,7 @@ export default function DashboardPage() {
             {/* Getting started checklist */}
             <GettingStartedChecklist />
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
               <StatCard label="Total Leads" value={stats.total} icon={Users} color="#6C8EEF" index={0} />
               <StatCard label="New" value={stats.newLeads} icon={UserPlus} color="#4ADE80" index={1} />
               <StatCard label="Active Pipeline" value={stats.active} icon={Clock} color="#4FD1E5" index={2} />

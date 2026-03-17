@@ -90,7 +90,9 @@ export default function LeadsPage() {
             ))}
           </div>
         ) : (
-          <LeadTable leads={leads} onLeadClick={handleLeadClick} />
+          <div data-tour="leads-table">
+            <LeadTable leads={leads} onLeadClick={handleLeadClick} />
+          </div>
         )}
       </div>
 

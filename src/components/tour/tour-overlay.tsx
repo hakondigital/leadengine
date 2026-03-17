@@ -64,10 +64,13 @@ export function TourOverlay() {
     const poll = () => {
       const el = document.querySelector(selector);
       if (el) {
-        setSearching(false);
         targetRef.current = el;
-        measure(el);
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Re-measure after scroll settles to get accurate viewport position
+        setTimeout(() => {
+          measure(el);
+          setSearching(false);
+        }, 400);
         const ro = new ResizeObserver(remeasure);
         ro.observe(el);
         roRef.current = ro;
@@ -142,10 +145,13 @@ export function TourOverlay() {
   const tooltipH = 360;
   const tooltipW = 360;
   const belowFits = showSpotlight && sTop + sHeight + 16 + tooltipH < vh;
+  const aboveFits = showSpotlight && sTop - 16 - tooltipH > 0;
   const tooltipTop = showSpotlight
     ? belowFits
       ? sTop + sHeight + 16
-      : sTop - 16 - tooltipH
+      : aboveFits
+        ? sTop - 16 - tooltipH
+        : Math.max(16, Math.min(vh - tooltipH - 16, sTop + sHeight + 16))
     : vh / 2;
   const tooltipLeft = showSpotlight
     ? Math.min(Math.max(sLeft, 16), vw - tooltipW - 16)
