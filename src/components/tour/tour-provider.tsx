@@ -15,6 +15,8 @@ interface TourContextValue {
   currentStep: TourStep | null;
   currentIndex: number;
   totalSteps: number;
+  /** True when the browser is on the correct page for the current step */
+  pageReady: boolean;
   startTour: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -88,6 +90,9 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
   const currentStep = active ? TOUR_STEPS[currentIndex] : null;
 
+  // pageReady = true when pathname matches what the current step expects
+  const pageReady = active && currentStep ? pathname === currentStep.page : false;
+
   return (
     <TourContext.Provider
       value={{
@@ -95,6 +100,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         currentStep,
         currentIndex,
         totalSteps: TOUR_STEPS.length,
+        pageReady,
         startTour,
         nextStep,
         prevStep,

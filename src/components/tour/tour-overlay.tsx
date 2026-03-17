@@ -25,7 +25,7 @@ interface ViewportRect {
 // ─── Main overlay ──────────────────────────────────────────────────────────────
 
 export function TourOverlay() {
-  const { active, currentStep, currentIndex, totalSteps, nextStep, prevStep, endTour } =
+  const { active, currentStep, currentIndex, totalSteps, nextStep, prevStep, endTour, pageReady } =
     useTour();
 
   const [rect, setRect] = useState<ViewportRect | null>(null);
@@ -63,6 +63,12 @@ export function TourOverlay() {
       return;
     }
 
+    // Don't start searching until we're on the correct page
+    if (!pageReady) {
+      setSearching(true);
+      return;
+    }
+
     setSearching(true);
 
     const selector = `[data-tour="${currentStep.target}"]`;
@@ -76,22 +82,26 @@ export function TourOverlay() {
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         // Wait for scroll to finish, then measure and reveal
         setTimeout(() => {
-          measure(el);
+          // Re-measure fresh — the element may have moved during scroll
+          if (targetRef.current) {
+            measure(targetRef.current);
+          }
           setSearching(false);
-        }, 500);
+        }, 600);
         // Watch for resize
         const ro = new ResizeObserver(remeasure);
         ro.observe(el);
         roRef.current = ro;
       } else if (attempts < MAX_POLLS) {
         attempts++;
-        pollRef.current = setTimeout(poll, 200);
+        pollRef.current = setTimeout(poll, 250);
       } else {
         setSearching(false);
       }
     };
 
-    poll();
+    // Extra delay after page arrives to let React render the new page content
+    pollRef.current = setTimeout(poll, 300);
 
     window.addEventListener('scroll', remeasure, true);
     window.addEventListener('resize', remeasure);
@@ -103,7 +113,7 @@ export function TourOverlay() {
       window.removeEventListener('scroll', remeasure, true);
       window.removeEventListener('resize', remeasure);
     };
-  }, [active, currentStep, measure, remeasure]);
+  }, [active, currentStep, pageReady, measure, remeasure]);
 
   if (!active || !currentStep) return null;
 
