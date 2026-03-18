@@ -57,9 +57,9 @@ export default function PipelinePage() {
 
       <div className="px-4 lg:px-6 py-6">
         {loading ? (
-          <div className="grid grid-cols-6 gap-4">
+          <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 lg:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-xl" />
+              <Skeleton key={i} className="h-16 lg:h-64 rounded-xl" />
             ))}
           </div>
         ) : (

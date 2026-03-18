@@ -35,6 +35,8 @@ import {
   ChevronUp,
   User,
   Store,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -118,14 +120,13 @@ function getAddonNavItems(enabledAddons: string[]): NavItem[] {
   return items;
 }
 
-// ─── Mobile nav ─────────────────────────────────────────────────────────────
+// ─── Mobile bottom bar (quick-access) ───────────────────────────────────────
 
 const mobileNav = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Leads', href: '/dashboard/leads', icon: Users },
   { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
   { name: 'Pipeline', href: '/dashboard/pipeline', icon: Inbox },
-  { name: 'More', href: '/dashboard/marketplace', icon: Store },
 ];
 
 // ─── Sidebar component ─────────────────────────────────────────────────────
@@ -134,6 +135,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const { organization, user } = useOrganization();
   const [newLeadCount, setNewLeadCount] = useState(0);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -141,6 +143,11 @@ export function Sidebar() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const enabledAddons = organization?.enabled_addons || [];
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileDrawerOpen(false);
+  }, [pathname]);
 
   const coreSections = useMemo(() => getCoreNavSections(isSuperAdmin), [isSuperAdmin]);
   const addonItems = useMemo(() => getAddonNavItems(enabledAddons), [enabledAddons]);
@@ -477,9 +484,200 @@ export function Sidebar() {
         </div>
       </motion.aside>
 
+      {/* Mobile drawer overlay */}
+      <AnimatePresence>
+        {mobileDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+              onClick={() => setMobileDrawerOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+              className="lg:hidden fixed inset-y-0 left-0 z-[70] w-[280px] bg-[#1C2A3A] border-r border-white/[0.08] flex flex-col overflow-hidden"
+            >
+              {/* Drawer header */}
+              <div className="flex items-center justify-between h-[64px] px-4 border-b border-white/[0.08] shrink-0">
+                <Link href="/dashboard" onClick={() => setMobileDrawerOpen(false)}>
+                  <Image
+                    src="/odyssey-logo.png" unoptimized
+                    alt="Odyssey"
+                    width={130}
+                    height={40}
+                    className="h-10 w-auto object-contain"
+                    priority
+                  />
+                </Link>
+                <button
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Drawer navigation — scrollable */}
+              <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4">
+                {coreSections.map((section, sIdx) => (
+                  <div key={sIdx}>
+                    {section.label && (
+                      <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                        {section.label}
+                      </p>
+                    )}
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => {
+                        const isActive =
+                          item.href === '/dashboard'
+                            ? pathname === '/dashboard'
+                            : pathname.startsWith(item.href);
+
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                              isActive
+                                ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                                : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
+                            )}
+                          >
+                            <item.icon className="w-[18px] h-[18px] shrink-0" />
+                            <span className="flex-1">{item.name}</span>
+                            {item.name === 'Leads' && newLeadCount > 0 && (
+                              <span className="px-1.5 py-0.5 rounded-full bg-[#EF6C6C] text-[9px] font-bold text-white leading-none">
+                                {newLeadCount}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Enabled marketplace add-ons */}
+                {addonItems.length > 0 && (
+                  <div>
+                    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                      Add-ons
+                    </p>
+                    <div className="space-y-0.5">
+                      {addonItems.map((item) => {
+                        const isActive = pathname.startsWith(item.href);
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                              isActive
+                                ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                                : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
+                            )}
+                          >
+                            <item.icon className="w-[18px] h-[18px] shrink-0" />
+                            <span className="flex-1">{item.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Marketplace link */}
+                <div>
+                  <div className="mx-3 border-t border-white/[0.06] mb-2" />
+                  <Link
+                    href="/dashboard/marketplace"
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      pathname === '/dashboard/marketplace'
+                        ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                        : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
+                    )}
+                  >
+                    <Store className="w-[18px] h-[18px] shrink-0" />
+                    <span className="flex-1">Marketplace</span>
+                    {addonItems.length === 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[9px] font-bold text-[#A78BFA] leading-none">
+                        NEW
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </nav>
+
+              {/* Drawer footer — user info + logout */}
+              <div className="p-3 border-t border-white/[0.08] shrink-0">
+                <div className="flex items-center gap-3 px-2 py-1.5 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-xs font-semibold text-white/70">
+                    {(organization?.name || 'OD').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="text-xs font-medium text-white/90 truncate">
+                      {organization?.name || 'Odyssey'}
+                    </p>
+                    <p className="text-[10px] text-white/40 truncate capitalize">
+                      {user?.role || 'Member'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    href="/dashboard/settings"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setLoggingOut(true);
+                      const supabase = createClient();
+                      await supabase.auth.signOut();
+                      document.cookie = 'od_session_confirmed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                      router.push('/login');
+                    }}
+                    disabled={loggingOut}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {loggingOut ? 'Logging out...' : 'Log Out'}
+                  </button>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--od-bg-secondary)]/95 backdrop-blur-lg border-t border-[var(--od-border-subtle)] px-2 py-1.5 safe-area-bottom">
         <div className="flex items-center justify-around">
+          {/* Menu (hamburger) button */}
+          <button
+            onClick={() => setMobileDrawerOpen(true)}
+            className={cn(
+              'flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg transition-colors min-w-[48px] min-h-[44px] justify-center',
+              mobileDrawerOpen
+                ? 'text-[var(--od-accent)]'
+                : 'text-[var(--od-text-muted)]'
+            )}
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[11px] font-medium">Menu</span>
+          </button>
+
           {mobileNav.map((item) => {
             const isActive =
               item.href === '/dashboard'
@@ -491,14 +689,14 @@ export function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg transition-colors',
+                  'flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg transition-colors min-w-[48px] min-h-[44px] justify-center',
                   isActive
                     ? 'text-[var(--od-accent)]'
                     : 'text-[var(--od-text-muted)]'
                 )}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.name}</span>
+                <span className="text-[11px] font-medium">{item.name}</span>
               </Link>
             );
           })}
