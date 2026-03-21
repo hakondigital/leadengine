@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         }
       } else if (channel === 'sms' && (recipient_phone || lead?.phone)) {
         const toPhone = recipient_phone || lead.phone;
-        await sendFollowUpSMS(toPhone, messageBody);
+        await sendFollowUpSMS(toPhone, messageBody, organization_id);
       }
     }
 

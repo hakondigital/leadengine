@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
     }
 
     const reviewLink = org.google_review_link || `${process.env.NEXT_PUBLIC_APP_URL}/review/${org.id}`;
-    const sendChannels = channels || ['email'];
+    const orgSettings = (org.settings as Record<string, unknown>) || {};
+    const outboundPref = (orgSettings.outbound_channel as string) || 'email';
+    // Filter out SMS channel if org is email-only mode
+    const requestedChannels = channels || ['email'];
+    const sendChannels = outboundPref === 'email'
+      ? requestedChannels.filter((c: string) => c !== 'sms')
+      : requestedChannels;
     const results: Record<string, string> = {};
 
     // Send email review request (with optional custom content)
@@ -53,8 +59,8 @@ export async function POST(request: NextRequest) {
         : undefined;
 
       const smsResult = smsBody
-        ? await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink, smsBody)
-        : await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink);
+        ? await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink, smsBody, org.id)
+        : await sendReviewRequestSMS(lead.phone, lead.first_name, org.name, reviewLink, undefined, org.id);
 
       results.sms = smsResult ? 'sent' : 'failed';
 

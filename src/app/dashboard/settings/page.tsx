@@ -100,6 +100,7 @@ export default function SettingsPage() {
   const [licenseInfo, setLicenseInfo] = useState('');
   const [missedCallSmsEnabled, setMissedCallSmsEnabled] = useState(true);
   const [missedCallSmsMessage, setMissedCallSmsMessage] = useState('');
+  const [outboundChannel, setOutboundChannel] = useState<'sms' | 'email'>('email');
 
   // Integration statuses (fetched from server)
   const [integrationStatus, setIntegrationStatus] = useState<Record<string, boolean | string>>({});
@@ -149,6 +150,7 @@ export default function SettingsPage() {
       setLicenseInfo((settings.license_info as string) || '');
       setMissedCallSmsEnabled(settings.missed_call_sms_enabled !== false);
       setMissedCallSmsMessage((settings.missed_call_sms_message as string) || '');
+      setOutboundChannel((settings.outbound_channel as 'sms' | 'email') || 'email');
     }
   }, [organization]);
 
@@ -196,6 +198,7 @@ export default function SettingsPage() {
             license_info: licenseInfo || null,
             missed_call_sms_enabled: missedCallSmsEnabled,
             missed_call_sms_message: missedCallSmsMessage || null,
+            outbound_channel: outboundChannel,
           },
         }),
       });
@@ -300,6 +303,72 @@ export default function SettingsPage() {
                   <p className="text-xs text-[var(--od-text-muted)] mt-0.5">Get a text when a new lead comes in</p>
                 </div>
                 <Toggle enabled={smsEnabled} onChange={setSmsEnabled} />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Outbound Communication Channel */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#A78BFA]" />
+                <CardTitle>Outbound Communication</CardTitle>
+              </div>
+              <CardDescription>How automated messages (follow-ups, review requests, sequences) are sent to your leads</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOutboundChannel('email')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
+                    outboundChannel === 'email'
+                      ? 'border-[var(--od-accent)] bg-[var(--od-accent-muted)] ring-1 ring-[var(--od-accent)]'
+                      : 'border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/30'
+                  }`}
+                >
+                  <Sparkles className={`w-5 h-5 ${outboundChannel === 'email' ? 'text-[var(--od-accent)]' : 'text-[var(--od-text-muted)]'}`} />
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${outboundChannel === 'email' ? 'text-[var(--od-accent)]' : 'text-[var(--od-text-secondary)]'}`}>
+                      Email Only
+                    </p>
+                    <p className="text-[10px] text-[var(--od-text-muted)] mt-0.5 leading-tight">
+                      Use your existing phone number. All automated outreach sent via email.
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOutboundChannel('sms')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
+                    outboundChannel === 'sms'
+                      ? 'border-[var(--od-accent)] bg-[var(--od-accent-muted)] ring-1 ring-[var(--od-accent)]'
+                      : 'border-[var(--od-border-subtle)] hover:border-[var(--od-accent)]/30'
+                  }`}
+                >
+                  <Phone className={`w-5 h-5 ${outboundChannel === 'sms' ? 'text-[var(--od-accent)]' : 'text-[var(--od-text-muted)]'}`} />
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${outboundChannel === 'sms' ? 'text-[var(--od-accent)]' : 'text-[var(--od-text-secondary)]'}`}>
+                      SMS + Email
+                    </p>
+                    <p className="text-[10px] text-[var(--od-text-muted)] mt-0.5 leading-tight">
+                      Requires a tracking number. Automated texts sent from your business number.
+                    </p>
+                  </div>
+                </button>
+              </div>
+              <div className={`p-3 rounded-lg text-[10px] leading-relaxed ${
+                outboundChannel === 'email'
+                  ? 'bg-[rgba(91,141,239,0.06)] border border-[rgba(91,141,239,0.12)] text-[var(--od-accent)]'
+                  : 'bg-[rgba(74,222,128,0.06)] border border-[rgba(74,222,128,0.12)] text-[#4ADE80]'
+              }`}>
+                {outboundChannel === 'email' ? (
+                  <><strong>Email Only mode:</strong> Follow-ups, review requests, and sequences will be sent via email. No need to purchase a tracking number — keep using your existing phone number on your website and cards.</>
+                ) : (
+                  <><strong>SMS + Email mode:</strong> Automated messages will be sent via SMS from your provisioned tracking number, with email as a backup. Go to Call Tracking to purchase a number if you haven&apos;t already.</>
+                )}
               </div>
             </CardContent>
           </Card>

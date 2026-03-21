@@ -73,11 +73,16 @@ export async function POST(request: NextRequest) {
     // Build TwiML response
     let twiml = '<?xml version="1.0" encoding="UTF-8"?><Response>';
 
+    // Pass the caller's real number as callerId so the business owner
+    // sees who is actually calling — not the tracking number.
+    // This means missed-call callbacks go straight to the lead.
+    const callerId = from;
+
     if (canRecord) {
       twiml += '<Say voice="Polly.Nicole">For quality and training purposes, this call may be recorded.</Say>';
-      twiml += `<Dial record="record-from-answer-dual" recordingStatusCallback="${recordingCallback}" recordingStatusCallbackMethod="POST" action="${statusCallback}" method="POST">`;
+      twiml += `<Dial callerId="${callerId}" record="record-from-answer-dual" recordingStatusCallback="${recordingCallback}" recordingStatusCallbackMethod="POST" action="${statusCallback}" method="POST">`;
     } else {
-      twiml += `<Dial action="${statusCallback}" method="POST">`;
+      twiml += `<Dial callerId="${callerId}" action="${statusCallback}" method="POST">`;
     }
 
     twiml += `<Number>${trackingNumber.forwarding_number}</Number>`;

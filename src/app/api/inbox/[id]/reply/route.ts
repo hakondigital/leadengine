@@ -88,7 +88,7 @@ export async function POST(
     } else if (channel === 'sms') {
       const recipientPhone = lead?.phone || originalMessage.sender_contact;
       if (recipientPhone) {
-        await sendFollowUpSMS(recipientPhone, replyBody);
+        await sendFollowUpSMS(recipientPhone, replyBody, organization_id);
         sent = true;
       }
     }

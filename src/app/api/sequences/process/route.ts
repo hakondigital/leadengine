@@ -57,6 +57,8 @@ export async function POST(_request: NextRequest) {
 
         const lead = enrollment.lead;
         const org = enrollment.sequence.organization;
+        const orgSettings = (org.settings as Record<string, unknown>) || {};
+        const outboundChannel = (orgSettings.outbound_channel as string) || 'email';
 
         // Send based on channel — use message_template (DB column name)
         const messageBody = step.message_template || step.body || '';
@@ -65,8 +67,9 @@ export async function POST(_request: NextRequest) {
             console.error('[Process] Email error:', e)
           );
         }
-        if ((step.channel === 'sms' || step.channel === 'both') && lead.phone) {
-          await sendFollowUpSMS(lead.phone, messageBody).catch((e: Error) =>
+        // Only send SMS if org has opted into SMS outbound
+        if (outboundChannel === 'sms' && (step.channel === 'sms' || step.channel === 'both') && lead.phone) {
+          await sendFollowUpSMS(lead.phone, messageBody, org.id).catch((e: Error) =>
             console.error('[Process] SMS error:', e)
           );
         }

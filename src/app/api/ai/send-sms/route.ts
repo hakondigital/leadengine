@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Lead has no phone number' }, { status: 400 });
     }
 
-    const result = await sendFollowUpSMS(lead.phone, message);
+    const result = await sendFollowUpSMS(lead.phone, message, userProfile.organization_id);
 
     if (result) {
       await supabase.from('lead_notes').insert({

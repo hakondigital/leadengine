@@ -1,4 +1,5 @@
 import type { Lead, Organization } from './database.types';
+import { createServiceRoleClient } from './supabase/server';
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -8,13 +9,36 @@ function twilioAuth(): string {
   return 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
 }
 
+// Look up the org's primary tracking number so all outbound SMS comes
+// from a number the lead recognises (instead of the platform number).
+// Falls back to the platform-level TWILIO_PHONE_NUMBER if none provisioned.
+async function getOrgFromNumber(organizationId?: string): Promise<string> {
+  if (!organizationId) return TWILIO_PHONE_NUMBER || '';
+  try {
+    const supabase = await createServiceRoleClient();
+    const { data } = await supabase
+      .from('tracking_numbers')
+      .select('phone_number')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return data?.phone_number || TWILIO_PHONE_NUMBER || '';
+  } catch {
+    return TWILIO_PHONE_NUMBER || '';
+  }
+}
+
 interface SMSPayload {
   to: string;
   body: string;
+  from?: string;
 }
 
 async function sendSMS(payload: SMSPayload): Promise<{ id: string } | null> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+  const fromNumber = payload.from || TWILIO_PHONE_NUMBER;
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !fromNumber) {
     console.warn('Twilio not configured — SMS skipped');
     return null;
   }
@@ -28,7 +52,7 @@ async function sendSMS(payload: SMSPayload): Promise<{ id: string } | null> {
         Authorization: twilioAuth(),
       },
       body: new URLSearchParams({
-        From: TWILIO_PHONE_NUMBER,
+        From: fromNumber,
         To: payload.to,
         Body: payload.body,
       }).toString(),
@@ -92,17 +116,24 @@ export async function sendNewLeadSMS(lead: Lead, org: Organization) {
 
   message += `\n\nView: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 
+  // Send from the org's own tracking number so the business recognises it
+  const fromNumber = await getOrgFromNumber(org.id);
+
   return sendSMS({
     to: org.phone,
     body: message,
+    from: fromNumber,
   });
 }
 
 export async function sendFollowUpSMS(
   phone: string,
-  message: string
+  message: string,
+  organizationId?: string
 ): Promise<{ id: string } | null> {
-  return sendSMS({ to: phone, body: message });
+  // Send from the org's tracking number so leads see a consistent number
+  const fromNumber = organizationId ? await getOrgFromNumber(organizationId) : undefined;
+  return sendSMS({ to: phone, body: message, from: fromNumber });
 }
 
 export async function sendReviewRequestSMS(
@@ -110,9 +141,11 @@ export async function sendReviewRequestSMS(
   customerName: string,
   orgName: string,
   reviewLink: string,
-  customBody?: string
+  customBody?: string,
+  organizationId?: string
 ): Promise<{ id: string } | null> {
   const message = customBody || `Hi ${customerName}, thanks for choosing ${orgName}! If you had a great experience, we'd really appreciate a quick review: ${reviewLink}`;
 
-  return sendSMS({ to: customerPhone, body: message });
+  const fromNumber = organizationId ? await getOrgFromNumber(organizationId) : undefined;
+  return sendSMS({ to: customerPhone, body: message, from: fromNumber });
 }

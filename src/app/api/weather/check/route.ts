@@ -153,6 +153,8 @@ export async function POST(request: NextRequest) {
         // Send campaign messages to matching leads
         for (const lead of leads || []) {
           const org = lead.organization;
+          const orgSettings = (org?.settings as Record<string, unknown>) || {};
+          const outboundPref = (orgSettings.outbound_channel as string) || 'email';
           const messageBody = (campaign.message_template || '')
             .replace('{{first_name}}', lead.first_name)
             .replace('{{weather}}', weather.weather[0]?.description || '')
@@ -163,12 +165,13 @@ export async function POST(request: NextRequest) {
             sendFollowUpEmail(lead, org, messageBody).catch(console.error);
           }
 
-          if (campaign.sms_template && lead.phone) {
+          // Only send SMS if org has opted into SMS outbound
+          if (outboundPref === 'sms' && campaign.sms_template && lead.phone) {
             const smsBody = (campaign.sms_template || '')
               .replace('{{first_name}}', lead.first_name)
               .replace('{{weather}}', weather.weather[0]?.description || '')
               .replace('{{temp}}', String(Math.round(weather.main.temp)));
-            sendFollowUpSMS(lead.phone, smsBody).catch(console.error);
+            sendFollowUpSMS(lead.phone, smsBody, organization_id).catch(console.error);
           }
         }
 
