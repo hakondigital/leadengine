@@ -292,10 +292,21 @@ export default function SettingsPage() {
               <Input
                 label="Mobile Number"
                 type="tel"
-                placeholder="+61 400 000 000"
+                placeholder="0400 000 000"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                hint="Include country code for SMS delivery"
+                onChange={(e) => {
+                  let val = e.target.value.replace(/[^\d+\s]/g, '');
+                  setPhone(val);
+                }}
+                onBlur={() => {
+                  // Auto-format: if starts with 0, convert to +61
+                  let cleaned = phone.replace(/\s/g, '');
+                  if (cleaned.startsWith('0') && cleaned.length >= 10) {
+                    cleaned = '+61' + cleaned.slice(1);
+                    setPhone(cleaned);
+                  }
+                }}
+                hint="Australian numbers starting with 0 are auto-converted to +61"
               />
               <div className="flex items-center justify-between py-2">
                 <div>
