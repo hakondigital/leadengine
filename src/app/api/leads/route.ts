@@ -247,14 +247,14 @@ export async function POST(request: NextRequest) {
       to_status: 'new',
     });
 
-    // ── Auto-link to existing client ──────────────────────────
-    // Check if email domain or company name matches an existing client.
-    // If found, link this lead to the client record.
+    // ── Auto-create or link client record ─────────────────────
+    // Every lead immediately gets a client record. If an existing client
+    // matches (by email, company, or domain), link to them instead.
     (async () => {
       try {
         let clientId: string | null = null;
 
-        // Match by email
+        // Match by exact email
         if (email) {
           const { data: emailMatch } = await supabase
             .from('clients')
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
           if (companyMatch) clientId = companyMatch.id;
         }
 
-        // Match by email domain (e.g. two leads from @smithbuilders.com.au)
+        // Match by email domain (skip personal email providers)
         if (!clientId && email && !email.endsWith('@gmail.com') && !email.endsWith('@outlook.com') && !email.endsWith('@hotmail.com') && !email.endsWith('@yahoo.com') && !email.endsWith('@icloud.com')) {
           const domain = email.split('@')[1];
           if (domain) {
@@ -294,18 +294,49 @@ export async function POST(request: NextRequest) {
         }
 
         if (clientId) {
+          // Link lead to existing client
           await supabase.from('leads').update({ client_id: clientId }).eq('id', lead.id);
-          // Log activity on the client
           await supabase.from('client_activities').insert({
             client_id: clientId,
             organization_id,
             type: 'note',
-            title: 'New lead linked',
-            description: `${first_name} ${last_name} (${email}) was automatically linked to this client.`,
+            title: 'New enquiry received',
+            description: `${first_name} ${last_name} (${email}) submitted a new enquiry${service_type ? ` for ${service_type}` : ''}.`,
           });
+        } else {
+          // Create new client record from lead data
+          const { data: newClient } = await supabase
+            .from('clients')
+            .insert({
+              organization_id,
+              first_name: first_name || '',
+              last_name: last_name || '',
+              email: email || null,
+              phone: phone || null,
+              company_name: company || null,
+              address: location || null,
+              postcode: postcode || null,
+              source: source || 'form',
+              status: 'active',
+              type: company ? 'company' : 'individual',
+              primary_lead_id: lead.id,
+            })
+            .select('id')
+            .single();
+
+          if (newClient) {
+            await supabase.from('leads').update({ client_id: newClient.id }).eq('id', lead.id);
+            await supabase.from('client_activities').insert({
+              client_id: newClient.id,
+              organization_id,
+              type: 'note',
+              title: 'New client from lead',
+              description: `${first_name} ${last_name} submitted an enquiry${service_type ? ` for ${service_type}` : ''} and was added to the client database.`,
+            });
+          }
         }
       } catch (err) {
-        console.error('Client auto-link error:', err);
+        console.error('Client auto-create error:', err);
       }
     })();
 

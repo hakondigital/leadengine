@@ -839,6 +839,7 @@ export default function ClientProfilePage({
                 onCancel={cancelEditing}
                 onStartEdit={startEditing}
                 activities={client.activities || []}
+                communications={communications}
               />
             )}
 
@@ -939,6 +940,7 @@ function OverviewTab({
   onCancel,
   onStartEdit,
   activities,
+  communications,
 }: {
   client: ClientDetail;
   editing: boolean;
@@ -949,7 +951,9 @@ function OverviewTab({
   onCancel: () => void;
   onStartEdit: () => void;
   activities: ClientActivity[];
+  communications: TimelineEntry[];
 }) {
+  const [commsOpen, setCommsOpen] = useState(true);
   const recentActivities = activities.slice(0, 15);
 
   const contactFields: {
@@ -1067,8 +1071,71 @@ function OverviewTab({
         </Card>
       </div>
 
-      {/* Right — Recent Activity */}
-      <div className="lg:col-span-2">
+      {/* Right — Recent Activity + Communications */}
+      <div className="lg:col-span-2 space-y-4">
+        {/* Collapsible Communications */}
+        <Card>
+          <button
+            onClick={() => setCommsOpen(!commsOpen)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[var(--od-bg-tertiary)] transition-colors rounded-t-[var(--od-radius-lg)]"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[var(--od-accent)]" />
+              <span className="text-sm font-semibold text-[var(--od-text-primary)]">
+                Communications
+              </span>
+              {communications.length > 0 && (
+                <Badge variant="accent" size="sm">{communications.length}</Badge>
+              )}
+            </div>
+            <motion.div
+              animate={{ rotate: commsOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <svg className="w-4 h-4 text-[var(--od-text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {commsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <CardContent className="pt-0 border-t border-[var(--od-border-subtle)]">
+                  {communications.length === 0 ? (
+                    <p className="text-sm text-[var(--od-text-muted)] py-4 text-center">No communications yet</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto pt-3">
+                      {communications.map((c) => {
+                        const Icon = c.type === 'email' ? Mail : c.type === 'sms' ? MessageSquare : Phone;
+                        return (
+                          <div key={c.id} className="flex items-start gap-2 p-2 rounded-[var(--od-radius-md)] hover:bg-[var(--od-bg-tertiary)] transition-colors">
+                            <div className="shrink-0 w-6 h-6 rounded-full bg-[var(--od-bg-tertiary)] flex items-center justify-center mt-0.5">
+                              <Icon className="w-3 h-3 text-[var(--od-text-muted)]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-[var(--od-text-primary)] truncate">
+                                {c.summary || c.type}
+                              </p>
+                              <p className="text-[10px] text-[var(--od-text-muted)] mt-1">
+                                {relativeTime(c.date)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
+
+        {/* Recent Activity */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
