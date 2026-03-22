@@ -111,18 +111,18 @@ export function AIChatWidget() {
 
   return (
     <>
-      {/* Top-right button — always visible in the header area */}
+      {/* Floating button — bottom right, above mobile nav */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 right-4 lg:top-5 lg:right-6 z-40
-                   flex items-center gap-2 px-3.5 py-2 rounded-full
-                   bg-[#1C2A3A] hover:bg-[#243447] text-white
-                   shadow-lg hover:shadow-xl transition-all duration-200
+        className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-40
+                   flex items-center gap-2 px-4 py-2.5 rounded-2xl
+                   bg-[#09090B] hover:bg-[#1a1a1e] text-white
+                   shadow-xl hover:shadow-2xl transition-all duration-200
                    border border-white/10"
         aria-label="Open AI assistant"
       >
-        <Sparkles className="w-4 h-4 text-[var(--od-accent)]" />
-        <span className="text-sm font-medium hidden sm:inline">AI Assistant</span>
+        <Sparkles className="w-4 h-4 text-[#6366F1]" />
+        <span className="text-[13px] font-medium">AI Assistant</span>
       </button>
 
       {/* Full side panel overlay */}

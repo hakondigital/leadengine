@@ -319,6 +319,79 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
+        {/* Email Integration */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#6366F1]" />
+                <CardTitle>Email Integration</CardTitle>
+              </div>
+              <CardDescription>Connect your email to sync all business enquiries into the CRM automatically</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(() => {
+                const s = (organization?.settings as Record<string, unknown>) || {};
+                const gmailEmail = s.gmail_email as string | undefined;
+                const outlookEmail = s.outlook_email as string | undefined;
+                const connected = gmailEmail || outlookEmail;
+
+                if (connected) {
+                  return (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0]">
+                      <div className="flex items-center gap-3">
+                        <img src={gmailEmail ? '/gmail-logo.svg' : '/outlook-logo.svg'} alt="" className="w-6 h-6" />
+                        <div>
+                          <p className="text-sm font-medium text-[#059669]">Connected</p>
+                          <p className="text-xs text-[#6B7280]">{gmailEmail || outlookEmail}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const endpoint = gmailEmail ? '/api/auth/google/disconnect' : '/api/auth/outlook/disconnect';
+                          await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ organization_id: organization?.id }),
+                          });
+                          window.location.reload();
+                        }}
+                        className="text-xs text-[#DC2626] hover:underline"
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3">
+                    <p className="text-sm text-[var(--od-text-tertiary)]">
+                      Connect your email so all business enquiries automatically appear in your CRM. Spam and marketing emails are filtered out by AI.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={`/api/auth/google?organization_id=${organization?.id}`}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white hover:bg-[#F9FAFB] transition-colors text-sm font-medium text-[#0A0A0A]"
+                      >
+                        <img src="/gmail-logo.svg" alt="Gmail" className="w-5 h-5" />
+                        Connect Gmail
+                      </a>
+                      <a
+                        href={`/api/auth/outlook?organization_id=${organization?.id}`}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white hover:bg-[#F9FAFB] transition-colors text-sm font-medium text-[#0A0A0A]"
+                      >
+                        <img src="/outlook-logo.svg" alt="Outlook" className="w-5 h-5" />
+                        Connect Outlook
+                      </a>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Outbound Communication Channel */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
           <Card>
