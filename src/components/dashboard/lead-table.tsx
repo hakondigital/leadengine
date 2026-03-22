@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -28,17 +28,35 @@ const priorityConfig: Record<LeadPriority, { label: string; variant: 'error' | '
 
 function ScorePopover({ lead }: { lead: Lead }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const scoreColor =
     lead.ai_score! >= 70 ? '#22C55E' : lead.ai_score! >= 40 ? '#F59E0B' : '#EF4444';
   const scoreLabel =
     lead.ai_score! >= 70 ? 'High' : lead.ai_score! >= 40 ? 'Medium' : 'Low';
 
+  const updatePos = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    // Clamp left so the 256px popover doesn't go off-screen
+    const popoverWidth = 256;
+    let left = rect.left + rect.width / 2;
+    if (left + popoverWidth / 2 > window.innerWidth - 16) {
+      left = window.innerWidth - popoverWidth / 2 - 16;
+    }
+    if (left - popoverWidth / 2 < 16) {
+      left = popoverWidth / 2 + 16;
+    }
+    setPos({ top: rect.top - 8, left });
+  };
+
   return (
     <div
+      ref={triggerRef}
       className="relative flex items-center gap-1.5"
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={() => { updatePos(); setOpen(true); }}
       onMouseLeave={() => setOpen(false)}
-      onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+      onClick={(e) => { e.stopPropagation(); updatePos(); setOpen((v) => !v); }}
     >
       <div className="w-8 h-1 rounded-full bg-[#F5F5F5] overflow-hidden">
         <div
@@ -54,17 +72,14 @@ function ScorePopover({ lead }: { lead: Lead }) {
       <AnimatePresence>
         {open && (lead.ai_summary || lead.ai_recommended_action) && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+            initial={{ opacity: 0, y: 4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.95 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-white rounded-xl shadow-lg border border-[rgba(0,0,0,0.08)] p-3"
+            className="fixed z-[100] w-64 bg-white rounded-xl shadow-xl border border-[rgba(0,0,0,0.08)] p-3"
+            style={{ top: pos.top, left: pos.left, transform: 'translate(-50%, -100%)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Arrow */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-r border-b border-[rgba(0,0,0,0.08)] rotate-45 -mt-1.25" />
-
-            {/* Score badge */}
             <div className="flex items-center gap-2 mb-2">
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center"
@@ -77,12 +92,10 @@ function ScorePopover({ lead }: { lead: Lead }) {
               </span>
             </div>
 
-            {/* Summary */}
             {lead.ai_summary && (
               <p className="text-[12px] text-[#404040] leading-relaxed mb-2">{lead.ai_summary}</p>
             )}
 
-            {/* Recommended action */}
             {lead.ai_recommended_action && (
               <div className="bg-[#F5F5F5] rounded-lg px-2.5 py-2">
                 <p className="text-[11px] font-medium text-[#737373] uppercase tracking-wider mb-0.5">
