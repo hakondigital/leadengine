@@ -114,6 +114,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Trigger immediate email sync (fire and forget)
+    import('@/app/api/gmail/sync/route').then(({ syncGmailForOrg }) => {
+      syncGmailForOrg(state).catch(console.error);
+    }).catch(console.error);
+
     return NextResponse.redirect(`${appUrl}/dashboard/settings?gmail=connected`);
   } catch (error) {
     console.error('Google OAuth callback error:', error);

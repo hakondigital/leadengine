@@ -122,9 +122,25 @@ export function OnboardingAgent() {
       return;
     }
 
-    const savedStep = settings.onboarding_step;
-    if (typeof savedStep === 'number' && savedStep >= 0 && savedStep <= 4) {
-      setStep(savedStep as OnboardingStep);
+    // Auto-detect completed steps and skip ahead
+    const emailConnected = !!(settings.gmail_email || settings.outlook_email || organization.notification_email);
+    const hasPhone = !!organization.phone;
+    const hasName = !!organization.name && organization.name !== 'My Business';
+
+    if (hasName && hasPhone && emailConnected) {
+      // Everything done — jump to form link step or complete
+      setStep(3);
+    } else if (hasName && hasPhone) {
+      // Name + phone done, need email
+      setStep(emailConnected ? 3 : 2);
+    } else if (hasName) {
+      // Name done, need phone
+      setStep(1);
+    } else {
+      const savedStep = settings.onboarding_step;
+      if (typeof savedStep === 'number' && savedStep >= 0 && savedStep <= 4) {
+        setStep(savedStep as OnboardingStep);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgLoading, organization?.id, alreadyComplete]);

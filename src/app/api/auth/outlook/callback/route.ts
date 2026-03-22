@@ -117,6 +117,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Trigger immediate email sync (fire and forget)
+    import('@/app/api/outlook/sync/route').then(({ syncOutlookForOrg }) => {
+      syncOutlookForOrg(state).catch(console.error);
+    }).catch(console.error);
+
     return NextResponse.redirect(`${appUrl}/dashboard/settings?outlook=connected`);
   } catch (error) {
     console.error('Microsoft OAuth callback error:', error);

@@ -439,6 +439,28 @@ export async function syncGmailForOrg(organizationId: string): Promise<{
             from_status: null,
             to_status: 'new',
           });
+
+          // Auto-link to existing client or create new one
+          let clientId: string | null = null;
+          const { data: existingClient } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('organization_id', organizationId)
+            .eq('email', senderEmail)
+            .limit(1)
+            .maybeSingle();
+
+          if (existingClient) {
+            clientId = existingClient.id;
+            await supabase.from('leads').update({ client_id: clientId }).eq('id', lead.id);
+            await supabase.from('client_activities').insert({
+              client_id: clientId,
+              organization_id: organizationId,
+              type: 'email',
+              title: `New enquiry via email: ${subject}`,
+              description: classification.summary,
+            });
+          }
         }
       }
 
