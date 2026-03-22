@@ -152,16 +152,31 @@ Rules:
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // SendGrid Inbound Parse sends multipart form data
+    let inboundEmail: InboundEmail;
 
-    // Resend inbound email webhook format
-    const inboundEmail: InboundEmail = {
-      from: body.from || body.sender || '',
-      to: body.to || body.recipient || '',
-      subject: body.subject || '(No subject)',
-      text: body.text || body.plain || body.body || '',
-      html: body.html || '',
-    };
+    const contentType = request.headers.get('content-type') || '';
+    if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+      // SendGrid format
+      const formData = await request.formData();
+      inboundEmail = {
+        from: (formData.get('from') as string) || '',
+        to: (formData.get('to') as string) || '',
+        subject: (formData.get('subject') as string) || '(No subject)',
+        text: (formData.get('text') as string) || '',
+        html: (formData.get('html') as string) || '',
+      };
+    } else {
+      // JSON format (fallback for other services)
+      const body = await request.json();
+      inboundEmail = {
+        from: body.from || body.sender || '',
+        to: body.to || body.recipient || '',
+        subject: body.subject || '(No subject)',
+        text: body.text || body.plain || body.body || '',
+        html: body.html || '',
+      };
+    }
 
     if (!inboundEmail.from || !inboundEmail.to) {
       return NextResponse.json({ received: true });
@@ -169,26 +184,38 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServiceRoleClient();
 
-    // Find org by matching the "to" email with notification_email or phone
-    // Try exact match first, then domain match
+    // Extract the slug from the "to" address (e.g. "my-slug@mail.hakondigital.com")
     const toEmail = inboundEmail.to.replace(/.*</, '').replace(/>.*/, '').trim();
+    const toLocal = toEmail.split('@')[0]; // the part before @
 
     let orgId: string | null = null;
 
-    // Match by notification email
-    const { data: orgByEmail } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('notification_email', toEmail)
-      .limit(1)
-      .maybeSingle();
+    // Match by slug from the "to" address (e.g. "my-slug@mail.hakondigital.com")
+    if (toLocal) {
+      const { data: orgBySlug } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', toLocal)
+        .limit(1)
+        .maybeSingle();
+      if (orgBySlug) orgId = orgBySlug.id;
+    }
 
-    if (orgByEmail) {
-      orgId = orgByEmail.id;
-    } else {
-      // Match by domain — find orgs whose notification_email shares the same domain
+    // Fallback: match by notification email
+    if (!orgId) {
+      const { data: orgByEmail } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('notification_email', toEmail)
+        .limit(1)
+        .maybeSingle();
+      if (orgByEmail) orgId = orgByEmail.id;
+    }
+
+    // Fallback: match by domain
+    if (!orgId) {
       const domain = toEmail.split('@')[1];
-      if (domain) {
+      if (domain && domain !== 'mail.hakondigital.com') {
         const { data: orgByDomain } = await supabase
           .from('organizations')
           .select('id')
