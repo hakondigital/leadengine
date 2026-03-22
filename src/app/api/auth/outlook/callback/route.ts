@@ -12,9 +12,10 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
 
     if (error) {
-      console.error('Microsoft OAuth error:', error);
+      const errorDesc = searchParams.get('error_description') || '';
+      console.error('Microsoft OAuth error:', error, errorDesc);
       return NextResponse.redirect(
-        `${appUrl}/dashboard/settings?outlook=error&reason=${encodeURIComponent(error)}`
+        `${appUrl}/dashboard/settings?outlook=error&reason=${encodeURIComponent(error)}&detail=${encodeURIComponent(errorDesc)}`
       );
     }
 
