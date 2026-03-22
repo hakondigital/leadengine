@@ -38,6 +38,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { useOrganization } from '@/hooks/use-organization';
 import { useClients } from '@/hooks/use-clients';
+import { InvoiceManager } from '@/components/dashboard/invoice-manager';
+import { TemplatePicker } from '@/components/dashboard/template-picker';
 import type {
   Client,
   ClientStatus,
@@ -58,14 +60,6 @@ interface ClientDetail extends Client {
   quotes?: Array<Record<string, unknown>>;
   appointments?: Array<Record<string, unknown>>;
   inbox_messages?: Array<Record<string, unknown>>;
-}
-
-interface InvoiceRow {
-  id: string;
-  description: string;
-  amount: number;
-  status: 'paid' | 'unpaid' | 'overdue';
-  date: string;
 }
 
 interface TimelineEntry {
@@ -230,16 +224,6 @@ export default function ClientProfilePage({
   const [newNote, setNewNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
 
-  // Financials
-  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
-  const [addingInvoice, setAddingInvoice] = useState(false);
-  const [invoiceForm, setInvoiceForm] = useState<Omit<InvoiceRow, 'id'>>({
-    description: '',
-    amount: 0,
-    status: 'unpaid',
-    date: new Date().toISOString().slice(0, 10),
-  });
-
   // ── Fetch client ──
   const fetchClient = useCallback(async () => {
     try {
@@ -251,22 +235,6 @@ export default function ClientProfilePage({
       }
       const data: ClientDetail = await res.json();
       setClient(data);
-
-      // Extract invoices from payment activities
-      const paymentActivities = (data.activities || []).filter(
-        (a) => a.type === 'payment'
-      );
-      const extractedInvoices: InvoiceRow[] = paymentActivities.map((a) => {
-        const meta = (a.metadata || {}) as Record<string, unknown>;
-        return {
-          id: a.id,
-          description: a.title || 'Invoice',
-          amount: (meta.amount as number) || 0,
-          status: (meta.status as 'paid' | 'unpaid' | 'overdue') || 'unpaid',
-          date: (meta.date as string) || a.created_at,
-        };
-      });
-      setInvoices(extractedInvoices);
     } catch {
       setNotFound(true);
     } finally {
@@ -421,75 +389,6 @@ export default function ClientProfilePage({
     }
   }, [client, newNote, toast, fetchClient, fetchTimeline]);
 
-  // ── Add invoice ──
-  const addInvoice = useCallback(async () => {
-    if (!client || !invoiceForm.description.trim() || invoiceForm.amount <= 0) {
-      toast.warning('Please fill in description and amount');
-      return;
-    }
-    try {
-      setAddingInvoice(true);
-      const res = await fetch(`/api/clients/${client.id}/timeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'payment',
-          title: invoiceForm.description,
-          description: `${currency(invoiceForm.amount)} — ${invoiceForm.status}`,
-          organization_id: client.organization_id,
-          metadata: {
-            amount: invoiceForm.amount,
-            status: invoiceForm.status,
-            date: invoiceForm.date,
-          },
-        }),
-      });
-
-      const newInvoice: InvoiceRow = {
-        id: `local-${Date.now()}`,
-        ...invoiceForm,
-      };
-      setInvoices((prev) => [newInvoice, ...prev]);
-
-      // Update financial stats
-      const newInvoiced = (client.total_invoiced || 0) + invoiceForm.amount;
-      const newPaid =
-        invoiceForm.status === 'paid'
-          ? (client.total_paid || 0) + invoiceForm.amount
-          : client.total_paid || 0;
-      await updateClient(client.id, {
-        total_invoiced: newInvoiced,
-        total_paid: newPaid,
-      });
-      setClient((prev) =>
-        prev
-          ? {
-              ...prev,
-              total_invoiced: newInvoiced,
-              total_paid: newPaid,
-              outstanding_balance: newInvoiced - newPaid,
-            }
-          : prev
-      );
-
-      setInvoiceForm({
-        description: '',
-        amount: 0,
-        status: 'unpaid',
-        date: new Date().toISOString().slice(0, 10),
-      });
-
-      if (res.ok) {
-        await fetchClient();
-      }
-      toast.success('Invoice added');
-    } catch {
-      toast.error('Failed to add invoice');
-    } finally {
-      setAddingInvoice(false);
-    }
-  }, [client, invoiceForm, toast, updateClient, fetchClient]);
-
   // ── Derived data ──
   const notes = useMemo(
     () =>
@@ -517,13 +416,6 @@ export default function ClientProfilePage({
     () => (client?.leads || []).filter((l) => (l.status as string) === 'won'),
     [client?.leads]
   );
-
-  const invoiceTotals = useMemo(() => {
-    const total = invoices.reduce((s, i) => s + i.amount, 0);
-    const paid = invoices.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
-    const outstanding = invoices.filter((i) => i.status !== 'paid').reduce((s, i) => s + i.amount, 0);
-    return { total, paid, outstanding };
-  }, [invoices]);
 
   // ── Loading state ──
   if (loading) {
@@ -846,21 +738,17 @@ export default function ClientProfilePage({
             )}
 
             {activeTab === 'communications' && (
-              <CommunicationsTab communications={communications} client={client} organizationId={organization?.id || ''} />
+              <CommunicationsTab communications={communications} client={client} organizationId={organization?.id || ''} orgName={organization?.name || ''} />
             )}
 
             {activeTab === 'quotes' && (
               <QuotesJobsTab quotes={quotesData} wonLeads={wonLeads} />
             )}
 
-            {activeTab === 'financials' && (
-              <FinancialsTab
-                invoices={invoices}
-                totals={invoiceTotals}
-                addingInvoice={addingInvoice}
-                invoiceForm={invoiceForm}
-                setInvoiceForm={setInvoiceForm}
-                onAddInvoice={addInvoice}
+            {activeTab === 'financials' && organization && (
+              <InvoiceManager
+                organizationId={organization.id}
+                clientId={client.id}
               />
             )}
 
@@ -1212,10 +1100,12 @@ function CommunicationsTab({
   communications,
   client,
   organizationId,
+  orgName,
 }: {
   communications: TimelineEntry[];
   client: ClientDetail;
   organizationId: string;
+  orgName: string;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -1366,12 +1256,21 @@ function CommunicationsTab({
                   rows={4}
                   className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
                 />
-                <div className="flex items-center justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setComposeOpen(false)}>Cancel</Button>
-                  <Button size="sm" onClick={sendCompose} disabled={!composeBody.trim() || sending}>
-                    <Send className="w-3.5 h-3.5" />
-                    {sending ? 'Sending...' : 'Send'}
-                  </Button>
+                <div className="flex items-center justify-between gap-2">
+                  {composeChannel === 'email' ? (
+                    <TemplatePicker
+                      onSelect={(subject, body) => { setComposeSubject(subject); setComposeBody(body); }}
+                      clientName={client.first_name || undefined}
+                      orgName={orgName}
+                    />
+                  ) : <div />}
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setComposeOpen(false)}>Cancel</Button>
+                    <Button size="sm" onClick={sendCompose} disabled={!composeBody.trim() || sending}>
+                      <Send className="w-3.5 h-3.5" />
+                      {sending ? 'Sending...' : 'Send'}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1619,207 +1518,6 @@ function QuotesJobsTab({
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════
-// Financials Tab
-// ══════════════════════════════════════════════
-
-function FinancialsTab({
-  invoices,
-  totals,
-  addingInvoice,
-  invoiceForm,
-  setInvoiceForm,
-  onAddInvoice,
-}: {
-  invoices: InvoiceRow[];
-  totals: { total: number; paid: number; outstanding: number };
-  addingInvoice: boolean;
-  invoiceForm: Omit<InvoiceRow, 'id'>;
-  setInvoiceForm: React.Dispatch<React.SetStateAction<Omit<InvoiceRow, 'id'>>>;
-  onAddInvoice: () => void;
-}) {
-  const [showForm, setShowForm] = useState(false);
-
-  const invoiceStatusVariant: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
-    paid: 'success',
-    unpaid: 'warning',
-    overdue: 'error',
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-[var(--od-text-muted)] mb-1">Total</p>
-            <p className="text-lg font-bold text-[var(--od-text-primary)]">{currency(totals.total)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-[var(--od-text-muted)] mb-1">Paid</p>
-            <p className="text-lg font-bold text-[#1F9B5A]">{currency(totals.paid)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-[var(--od-text-muted)] mb-1">Outstanding</p>
-            <p className={`text-lg font-bold ${totals.outstanding > 0 ? 'text-[#C44E56]' : 'text-[var(--od-text-primary)]'}`}>
-              {currency(totals.outstanding)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Invoice list */}
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Invoices</CardTitle>
-          <Button variant="accent" size="sm" onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-3.5 h-3.5" />
-            Add Invoice
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {/* Add invoice form */}
-          <AnimatePresence>
-            {showForm && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="p-4 mb-4 rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      label="Description"
-                      value={invoiceForm.description}
-                      onChange={(e) =>
-                        setInvoiceForm((prev) => ({ ...prev, description: e.target.value }))
-                      }
-                      placeholder="Invoice description"
-                    />
-                    <Input
-                      label="Amount ($)"
-                      type="number"
-                      value={invoiceForm.amount || ''}
-                      onChange={(e) =>
-                        setInvoiceForm((prev) => ({
-                          ...prev,
-                          amount: parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium text-[var(--od-text-secondary)] tracking-wide">
-                        Status
-                      </label>
-                      <select
-                        value={invoiceForm.status}
-                        onChange={(e) =>
-                          setInvoiceForm((prev) => ({
-                            ...prev,
-                            status: e.target.value as 'paid' | 'unpaid' | 'overdue',
-                          }))
-                        }
-                        className="flex h-11 w-full rounded-[var(--od-radius-md)] border border-[var(--od-border-default)] bg-[var(--od-bg-tertiary)] px-4 text-sm text-[var(--od-text-primary)] outline-none focus:ring-2 focus:ring-[var(--od-accent)]/30 focus:border-[var(--od-accent)]/50 transition-all"
-                      >
-                        <option value="unpaid">Unpaid</option>
-                        <option value="paid">Paid</option>
-                        <option value="overdue">Overdue</option>
-                      </select>
-                    </div>
-                    <Input
-                      label="Date"
-                      type="date"
-                      value={invoiceForm.date}
-                      onChange={(e) =>
-                        setInvoiceForm((prev) => ({ ...prev, date: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-1">
-                    <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="accent"
-                      size="sm"
-                      onClick={() => {
-                        onAddInvoice();
-                        setShowForm(false);
-                      }}
-                      disabled={addingInvoice}
-                    >
-                      {addingInvoice ? 'Adding...' : 'Add Invoice'}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {invoices.length === 0 && !showForm ? (
-            <EmptyState
-              icon={DollarSign}
-              title="No invoices yet"
-              description="Track payments and invoices for this client."
-              action={{ label: 'Add First Invoice', onClick: () => setShowForm(true) }}
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--od-border-subtle)]">
-                    <th className="text-left py-2.5 px-3 text-xs font-medium text-[var(--od-text-muted)] uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--od-text-muted)] uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="text-center py-2.5 px-3 text-xs font-medium text-[var(--od-text-muted)] uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="text-right py-2.5 px-3 text-xs font-medium text-[var(--od-text-muted)] uppercase tracking-wider">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((inv) => (
-                    <tr
-                      key={inv.id}
-                      className="border-b border-[var(--od-border-subtle)] last:border-0 hover:bg-[var(--od-bg-tertiary)] transition-colors"
-                    >
-                      <td className="py-3 px-3 text-[var(--od-text-primary)]">{inv.description}</td>
-                      <td className="py-3 px-3 text-right font-medium text-[var(--od-text-primary)]">
-                        {currency(inv.amount)}
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <Badge variant={invoiceStatusVariant[inv.status] || 'default'} size="sm">
-                          {inv.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-3 text-right text-[var(--od-text-tertiary)]">
-                        {formatDate(inv.date)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -182,6 +182,11 @@ export interface Database {
         Insert: Omit<ClientActivity, 'id' | 'created_at'>;
         Update: Partial<Omit<ClientActivity, 'id'>>;
       };
+      invoices: {
+        Row: Invoice;
+        Insert: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Invoice, 'id'>>;
+      };
     };
   };
 }
@@ -206,6 +211,8 @@ export interface Organization {
   booking_enabled: boolean;
   quote_prefix: string;
   quote_next_number: number;
+  invoice_prefix: string;
+  invoice_next_number: number;
   chat_enabled: boolean;
   call_tracking_enabled: boolean;
   duplicate_detection_enabled: boolean;
@@ -956,6 +963,38 @@ export type ClientWithRelations = Client & {
   leads?: Lead[];
   activities?: ClientActivity[];
 };
+
+// ═══════════════════════════════════════════════════════════════
+// 17. INVOICES
+// ═══════════════════════════════════════════════════════════════
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+
+export interface InvoiceLineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  organization_id: string;
+  client_id: string | null;
+  lead_id: string | null;
+  invoice_number: string;
+  status: InvoiceStatus;
+  line_items: Json;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total: number;
+  notes: string | null;
+  due_date: string | null;
+  sent_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // Utility types for the frontend
