@@ -106,26 +106,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use raw SQL to merge into settings JSONB — more reliable than spread
+    const newSettings = {
+      outlook_access_token: access_token,
+      outlook_refresh_token: refresh_token || null,
+      outlook_token_expires_at: Date.now() + (expires_in || 3600) * 1000,
+      outlook_email: outlookEmail,
+      outlook_connected_at: new Date().toISOString(),
+    };
+
     const existingSettings = (org.settings as Record<string, unknown>) || {};
+    const merged = { ...existingSettings, ...newSettings };
 
     const { error: updateError } = await supabase
       .from('organizations')
-      .update({
-        settings: {
-          ...existingSettings,
-          outlook_access_token: access_token,
-          outlook_refresh_token: refresh_token || existingSettings.outlook_refresh_token || null,
-          outlook_token_expires_at: Date.now() + (expires_in || 3600) * 1000,
-          outlook_email: outlookEmail,
-          outlook_connected_at: new Date().toISOString(),
-        },
-      })
+      .update({ settings: merged })
       .eq('id', org.id);
 
     if (updateError) {
-      console.error('Failed to save Outlook tokens:', updateError);
+      console.error('Failed to save Outlook tokens:', JSON.stringify(updateError));
       return NextResponse.redirect(
-        `${appUrl}/dashboard/settings?outlook=error&reason=save_failed`
+        `${appUrl}/dashboard/settings?outlook=error&reason=save_failed&detail=${encodeURIComponent(JSON.stringify(updateError))}`
+      );
+    }
+
+    // Verify tokens were actually saved
+    const { data: verifyOrg } = await supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', org.id)
+      .single();
+
+    const verifySettings = (verifyOrg?.settings as Record<string, unknown>) || {};
+    if (!verifySettings.outlook_access_token) {
+      console.error('Outlook tokens verification failed — not in DB after save');
+      return NextResponse.redirect(
+        `${appUrl}/dashboard/settings?outlook=error&reason=verification_failed`
       );
     }
 

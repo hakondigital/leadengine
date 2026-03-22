@@ -100,26 +100,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Save tokens — use fallback approach for reliability
+    const newSettings = {
+      gmail_access_token: access_token,
+      gmail_refresh_token: refresh_token || null,
+      gmail_token_expires_at: Date.now() + (expires_in || 3600) * 1000,
+      gmail_email: gmailEmail,
+      gmail_connected_at: new Date().toISOString(),
+    };
+
     const existingSettings = (org.settings as Record<string, unknown>) || {};
+    const merged = { ...existingSettings, ...newSettings };
 
     const { error: updateError } = await supabase
       .from('organizations')
-      .update({
-        settings: {
-          ...existingSettings,
-          gmail_access_token: access_token,
-          gmail_refresh_token: refresh_token || existingSettings.gmail_refresh_token || null,
-          gmail_token_expires_at: Date.now() + (expires_in || 3600) * 1000,
-          gmail_email: gmailEmail,
-          gmail_connected_at: new Date().toISOString(),
-        },
-      })
+      .update({ settings: merged })
       .eq('id', org.id);
 
     if (updateError) {
       console.error('Failed to save Gmail tokens:', updateError);
       return NextResponse.redirect(
         `${appUrl}/dashboard/settings?gmail=error&reason=save_failed`
+      );
+    }
+
+    // Verify
+    const { data: verifyOrg } = await supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', org.id)
+      .single();
+
+    if (!(verifyOrg?.settings as Record<string, unknown>)?.gmail_access_token) {
+      console.error('Gmail tokens verification failed');
+      return NextResponse.redirect(
+        `${appUrl}/dashboard/settings?gmail=error&reason=verification_failed`
       );
     }
 
