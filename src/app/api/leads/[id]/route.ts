@@ -147,6 +147,88 @@ export async function PATCH(
       // Trigger job_completed sequences when lead is won
       if (newStatus === 'won') {
         triggerSequenceEvent('job_completed', id, current.organization_id, supabase).catch(console.error);
+
+        // ── Auto-create client record when lead is won ──────────
+        // Check if this lead is already linked to a client, if not create one
+        (async () => {
+          try {
+            if (current.client_id) return; // Already linked
+
+            // Check if a client with this email already exists
+            let existingClientId: string | null = null;
+            if (current.email) {
+              const { data: existing } = await supabase
+                .from('clients')
+                .select('id')
+                .eq('organization_id', current.organization_id)
+                .eq('email', current.email)
+                .limit(1)
+                .maybeSingle();
+              if (existing) existingClientId = existing.id;
+            }
+
+            if (existingClientId) {
+              // Link lead to existing client
+              await supabase.from('leads').update({ client_id: existingClientId }).eq('id', id);
+              // Update lifetime value
+              const wonVal = body.won_value || current.won_value || 0;
+              if (wonVal > 0) {
+                const { data: cli } = await supabase.from('clients').select('lifetime_value, total_invoiced').eq('id', existingClientId).single();
+                if (cli) {
+                  await supabase.from('clients').update({
+                    lifetime_value: (Number(cli.lifetime_value) || 0) + Number(wonVal),
+                    total_invoiced: (Number(cli.total_invoiced) || 0) + Number(wonVal),
+                    outstanding_balance: (Number(cli.total_invoiced) || 0) + Number(wonVal) - (Number(cli.lifetime_value) || 0),
+                  }).eq('id', existingClientId);
+                }
+              }
+              await supabase.from('client_activities').insert({
+                client_id: existingClientId,
+                organization_id: current.organization_id,
+                type: 'status_change',
+                title: 'Lead converted',
+                description: `${current.first_name} ${current.last_name} — lead marked as won and linked.`,
+              });
+            } else {
+              // Create new client from lead data
+              const wonVal = body.won_value || current.won_value || 0;
+              const { data: newClient } = await supabase
+                .from('clients')
+                .insert({
+                  organization_id: current.organization_id,
+                  first_name: current.first_name || '',
+                  last_name: current.last_name || '',
+                  email: current.email || null,
+                  phone: current.phone || null,
+                  company_name: current.company || null,
+                  address: current.location || null,
+                  postcode: current.postcode || null,
+                  source: current.source || 'lead',
+                  status: 'active',
+                  type: current.company ? 'company' : 'individual',
+                  primary_lead_id: id,
+                  lifetime_value: wonVal,
+                  total_invoiced: wonVal,
+                  outstanding_balance: wonVal,
+                })
+                .select('id')
+                .single();
+
+              if (newClient) {
+                await supabase.from('leads').update({ client_id: newClient.id }).eq('id', id);
+                await supabase.from('client_activities').insert({
+                  client_id: newClient.id,
+                  organization_id: current.organization_id,
+                  type: 'status_change',
+                  title: 'Client created from won lead',
+                  description: `${current.first_name} ${current.last_name} converted from lead to client.`,
+                });
+              }
+            }
+          } catch (err) {
+            console.error('Auto-create client error:', err);
+          }
+        })();
       }
     }
 
