@@ -63,40 +63,18 @@ function getCoreNavSections(showAdmin: boolean): NavSection[] {
         { name: 'Pipeline', href: '/dashboard/pipeline', icon: Inbox },
         { name: 'Clients', href: '/dashboard/clients', icon: Building2 },
         { name: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
+        { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
       ],
     },
     {
-      label: 'Engage',
       items: [
-        { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
         { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
         { name: 'Quotes', href: '/dashboard/quotes', icon: Receipt },
-        { name: 'Sequences', href: '/dashboard/sequences', icon: RefreshCw },
-        { name: 'Calls', href: '/dashboard/calls', icon: Phone },
-      ],
-    },
-    {
-      label: 'AI',
-      items: [
-        { name: 'Strategy Advisor', href: '/dashboard/tools/strategy', icon: Brain },
-        { name: 'Daily Game Plan', href: '/dashboard/game-plan', icon: Zap },
-      ],
-    },
-    {
-      label: 'Manage',
-      items: [
-        { name: 'Team', href: '/dashboard/team', icon: UsersRound },
-        { name: 'Estimator', href: '/dashboard/tools/estimator', icon: Calculator },
-        { name: 'Team Routing', href: '/dashboard/tools/routing', icon: Users },
-        { name: 'CSV Import', href: '/dashboard/tools/import', icon: Upload },
         { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-        { name: 'Forms', href: '/dashboard/forms', icon: FileText },
       ],
     },
     {
-      label: 'Account',
       items: [
-        { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
         ...(showAdmin ? [{ name: 'Admin', href: '/dashboard/admin', icon: Shield }] : []),
       ],
@@ -254,12 +232,12 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 64 : 240 }}
+        animate={{ width: collapsed ? 64 : 220 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         className="hidden lg:flex flex-col h-screen bg-[#1C2A3A] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
       >
         {/* Brand */}
-        <div className="flex items-center justify-between h-[84px] px-4 border-b border-white/[0.08]">
+        <div className="flex items-center justify-between h-[60px] px-4 border-b border-white/[0.08]">
           <AnimatePresence mode="wait">
             {!collapsed && (
               <motion.div

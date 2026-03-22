@@ -3,14 +3,14 @@
 
 export const tokens = {
   colors: {
-    // Core neutrals — cool light surfaces
+    // Core neutrals — clean light surfaces (HubSpot-level whitespace)
     bg: {
-      primary: '#D5DAE1',         // Main background — darker for contrast
-      secondary: '#E2E6EC',        // Card surface
-      tertiary: '#C8CED7',        // Muted panels
-      elevated: '#BEC5CF',        // Hover / raised
-      hover: '#B4BCC7',           // Interactive hover
-      muted: '#A8B1BC',           // Muted backgrounds
+      primary: '#F4F6F8',         // Main background — near-white
+      secondary: '#FFFFFF',        // Card surface — pure white
+      tertiary: '#EDF0F4',        // Muted panels / wells
+      elevated: '#E8ECF0',        // Hover / raised
+      hover: '#DEE3E9',           // Interactive hover
+      muted: '#CDD4DC',           // Muted backgrounds
     },
     // Text hierarchy
     text: {

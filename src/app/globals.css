@@ -3,13 +3,13 @@
 /* Odyssey Design System — Enterprise Light */
 
 :root {
-  /* Core surfaces — darker for contrast */
-  --od-bg-primary: #D5DAE1;
-  --od-bg-secondary: #E2E6EC;
-  --od-bg-tertiary: #C8CED7;
-  --od-bg-elevated: #BEC5CF;
-  --od-bg-hover: #B4BCC7;
-  --od-bg-muted: #A8B1BC;
+  /* Core surfaces — clean, light, professional */
+  --od-bg-primary: #F4F6F8;
+  --od-bg-secondary: #FFFFFF;
+  --od-bg-tertiary: #EDF0F4;
+  --od-bg-elevated: #E8ECF0;
+  --od-bg-hover: #DEE3E9;
+  --od-bg-muted: #CDD4DC;
   --od-bg-dark: #1C2A3A;
 
   /* Text — darkened for readability */
