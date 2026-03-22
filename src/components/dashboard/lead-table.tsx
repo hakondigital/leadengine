@@ -12,6 +12,7 @@ import {
 import type { Lead, LeadStatus, LeadPriority } from '@/lib/database.types';
 import { pipelineStages } from '@/lib/design-tokens';
 import { EmptyState } from '@/components/ui/empty-state';
+import { UrgencyBadge } from '@/components/dashboard/urgency-badge';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -150,11 +151,16 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                     onClick={() => onLeadClick(lead)}
                     className="w-full text-left grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_120px_140px_120px_100px_80px] lg:grid-cols-[1fr_140px_180px_140px_100px_100px_80px] gap-4 px-5 py-3.5 hover:bg-[rgba(0,0,0,0.015)] transition-colors duration-150 cursor-pointer items-center"
                   >
-                    {/* Name + company */}
+                    {/* Name + company + urgency */}
                     <div className="min-w-0">
-                      <p className="text-[14px] font-medium text-[#0A0A0A] truncate">
-                        {lead.first_name} {lead.last_name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[14px] font-medium text-[#0A0A0A] truncate">
+                          {lead.first_name} {lead.last_name}
+                        </p>
+                        {lead.status !== 'won' && lead.status !== 'lost' && (
+                          <UrgencyBadge lead={lead} />
+                        )}
+                      </div>
                       {lead.company && (
                         <p className="text-[12px] text-[#A3A3A3] truncate mt-0.5">{lead.company}</p>
                       )}

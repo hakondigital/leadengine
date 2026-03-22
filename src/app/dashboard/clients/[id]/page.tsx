@@ -47,6 +47,7 @@ import type {
   ClientActivityType,
   Json,
 } from '@/lib/database.types';
+import { MeetingPrep } from '@/components/dashboard/meeting-prep';
 
 // ──────────────────────────────────────────────
 // Types
@@ -972,8 +973,10 @@ function OverviewTab({
         </Card>
       </div>
 
-      {/* Right — Recent Activity + Communications */}
+      {/* Right — Meeting Prep + Communications + Activity */}
       <div className="lg:col-span-2 space-y-4">
+        {/* AI Meeting Prep — only shows when appointment within 48hrs */}
+        <MeetingPrep clientId={client.id} organizationId={client.organization_id} />
         {/* Collapsible Communications */}
         <Card>
           <button
