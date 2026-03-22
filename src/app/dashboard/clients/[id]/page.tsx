@@ -28,6 +28,7 @@ import {
   Star,
   Clock,
   User,
+  Send,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -845,7 +846,7 @@ export default function ClientProfilePage({
             )}
 
             {activeTab === 'communications' && (
-              <CommunicationsTab communications={communications} />
+              <CommunicationsTab communications={communications} client={client} organizationId={organization?.id || ''} />
             )}
 
             {activeTab === 'quotes' && (
@@ -1204,14 +1205,29 @@ function OverviewTab({
 }
 
 // ══════════════════════════════════════════════
-// Communications Tab
+// Communications Tab — full messages + reply
 // ══════════════════════════════════════════════
 
 function CommunicationsTab({
   communications,
+  client,
+  organizationId,
 }: {
   communications: TimelineEntry[];
+  client: ClientDetail;
+  organizationId: string;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyChannel, setReplyChannel] = useState<'email' | 'sms'>('email');
+  const [sending, setSending] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
+  const [composeChannel, setComposeChannel] = useState<'email' | 'sms'>('email');
+  const { success: showSuccess } = useToast();
+
   const channelIcons: Record<string, React.ElementType> = {
     email: Mail,
     sms: MessageSquare,
@@ -1219,63 +1235,275 @@ function CommunicationsTab({
     activity: Phone,
   };
 
-  if (communications.length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <EmptyState
-            icon={Mail}
-            title="No communications"
-            description="Emails, SMS messages, and calls with this client will appear here."
-          />
-        </CardContent>
-      </Card>
-    );
-  }
+  const channelColors: Record<string, string> = {
+    email: '#6366F1',
+    sms: '#22C55E',
+    inbox_message: '#0EA5E9',
+    activity: '#F59E0B',
+  };
+
+  const sendReply = async () => {
+    if (!replyText.trim() || sending) return;
+    setSending(true);
+    try {
+      const leadId = client.leads?.[0]?.id as string | undefined;
+      await fetch('/api/inbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: organizationId,
+          lead_id: leadId || null,
+          channel: replyChannel,
+          direction: 'outbound',
+          body: replyText,
+          recipient_email: client.email,
+          recipient_phone: client.phone,
+        }),
+      });
+      showSuccess(`${replyChannel === 'email' ? 'Email' : 'SMS'} sent`);
+      setReplyText('');
+      setReplyTo(null);
+    } catch {
+      // silent
+    }
+    setSending(false);
+  };
+
+  const sendCompose = async () => {
+    if (!composeBody.trim() || sending) return;
+    setSending(true);
+    try {
+      const leadId = client.leads?.[0]?.id as string | undefined;
+      await fetch('/api/inbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organization_id: organizationId,
+          lead_id: leadId || null,
+          channel: composeChannel,
+          direction: 'outbound',
+          subject: composeSubject || undefined,
+          body: composeBody,
+          recipient_email: client.email,
+          recipient_phone: client.phone,
+        }),
+      });
+      showSuccess(`${composeChannel === 'email' ? 'Email' : 'SMS'} sent`);
+      setComposeBody('');
+      setComposeSubject('');
+      setComposeOpen(false);
+    } catch {
+      // silent
+    }
+    setSending(false);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Communications</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-0">
-          {communications.map((item, i) => {
-            const Icon = channelIcons[item.type] || Mail;
-            const channel = item.type === 'email' ? 'Email' : item.type === 'sms' ? 'SMS' : item.type === 'inbox_message' ? 'Message' : 'Call';
-            const direction = (item.data?.direction as string) || '';
-
-            return (
-              <div
-                key={item.id}
-                className="relative flex gap-3 pb-4 last:pb-0"
-              >
-                {i < communications.length - 1 && (
-                  <div className="absolute left-[13px] top-7 bottom-0 w-px bg-[var(--od-border-subtle)]" />
-                )}
-                <div className="shrink-0 w-7 h-7 rounded-full bg-[var(--od-bg-tertiary)] border border-[var(--od-border-subtle)] flex items-center justify-center z-10">
-                  <Icon className="w-3 h-3 text-[var(--od-text-muted)]" />
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default" size="sm">{channel}</Badge>
-                    {direction && (
-                      <span className="text-xs text-[var(--od-text-muted)] capitalize">{direction}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-[var(--od-text-primary)] mt-1 line-clamp-2">
-                    {item.summary}
-                  </p>
-                  <p className="text-xs text-[var(--od-text-muted)] mt-1">
-                    {formatDateTime(item.date)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+    <div className="space-y-4">
+      {/* Compose button */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-[15px] font-semibold text-[#0A0A0A]">
+          Communications
+          {communications.length > 0 && (
+            <span className="text-[#A3A3A3] font-normal ml-2">({communications.length})</span>
+          )}
+        </h3>
+        <div className="flex items-center gap-2">
+          {client.phone && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => { setComposeChannel('sms'); setComposeOpen(!composeOpen); }}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              SMS
+            </Button>
+          )}
+          {client.email && (
+            <Button
+              size="sm"
+              onClick={() => { setComposeChannel('email'); setComposeOpen(!composeOpen); }}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Email
+            </Button>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Compose form */}
+      <AnimatePresence>
+        {composeOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <Card>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant={composeChannel === 'email' ? 'accent' : 'success'} size="sm">
+                    {composeChannel === 'email' ? 'Email' : 'SMS'}
+                  </Badge>
+                  <span className="text-[12px] text-[#A3A3A3]">
+                    to {composeChannel === 'email' ? client.email : client.phone}
+                  </span>
+                </div>
+                {composeChannel === 'email' && (
+                  <input
+                    type="text"
+                    placeholder="Subject"
+                    value={composeSubject}
+                    onChange={(e) => setComposeSubject(e.target.value)}
+                    className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20"
+                  />
+                )}
+                <textarea
+                  placeholder={composeChannel === 'email' ? 'Write your email...' : 'Write your message...'}
+                  value={composeBody}
+                  onChange={(e) => setComposeBody(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
+                />
+                <div className="flex items-center justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setComposeOpen(false)}>Cancel</Button>
+                  <Button size="sm" onClick={sendCompose} disabled={!composeBody.trim() || sending}>
+                    <Send className="w-3.5 h-3.5" />
+                    {sending ? 'Sending...' : 'Send'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Communication history */}
+      {communications.length === 0 ? (
+        <Card>
+          <CardContent>
+            <EmptyState
+              icon={Mail}
+              title="No communications"
+              description="Send an email or SMS to start a conversation with this client."
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <div className="divide-y divide-[rgba(0,0,0,0.04)]">
+            {communications.map((item) => {
+              const Icon = channelIcons[item.type] || Mail;
+              const color = channelColors[item.type] || '#6366F1';
+              const channel = item.type === 'email' ? 'Email' : item.type === 'sms' ? 'SMS' : item.type === 'inbox_message' ? 'Message' : 'Call';
+              const direction = (item.data?.direction as string) || '';
+              const body = (item.data?.body as string) || (item.data?.text as string) || item.summary || '';
+              const subject = (item.data?.subject as string) || '';
+              const isExpanded = expandedId === item.id;
+              const isInbound = direction === 'inbound';
+
+              return (
+                <div key={item.id} className="px-5 py-4">
+                  {/* Header — clickable to expand */}
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                    className="w-full text-left flex items-start gap-3 group"
+                  >
+                    <div
+                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5"
+                      style={{ backgroundColor: `${color}10` }}
+                    >
+                      <Icon className="w-4 h-4" style={{ color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="default" size="sm">{channel}</Badge>
+                        <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${isInbound ? 'text-[#0EA5E9] bg-[#F0F9FF]' : 'text-[#737373] bg-[#F5F5F5]'}`}>
+                          {isInbound ? '← Received' : '→ Sent'}
+                        </span>
+                        <span className="text-[11px] text-[#A3A3A3] ml-auto">{formatDateTime(item.date)}</span>
+                      </div>
+                      {subject && (
+                        <p className="text-[14px] font-medium text-[#0A0A0A] mt-1.5 truncate">{subject}</p>
+                      )}
+                      <p className={`text-[13px] text-[#737373] mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                        {body}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Expanded: full message + reply */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-3 ml-11 space-y-3">
+                          {/* Full message body */}
+                          {body.length > 200 && (
+                            <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[rgba(0,0,0,0.04)]">
+                              <p className="text-[13px] text-[#404040] whitespace-pre-wrap leading-relaxed">{body}</p>
+                            </div>
+                          )}
+
+                          {/* Quick reply */}
+                          {replyTo === item.id ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setReplyChannel('email')}
+                                  className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${replyChannel === 'email' ? 'bg-[#EEF2FF] text-[#4F46E5]' : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'}`}
+                                >
+                                  Email
+                                </button>
+                                {client.phone && (
+                                  <button
+                                    onClick={() => setReplyChannel('sms')}
+                                    className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${replyChannel === 'sms' ? 'bg-[#ECFDF5] text-[#059669]' : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'}`}
+                                  >
+                                    SMS
+                                  </button>
+                                )}
+                              </div>
+                              <textarea
+                                placeholder="Write your reply..."
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
+                                autoFocus
+                              />
+                              <div className="flex items-center gap-2 justify-end">
+                                <Button variant="ghost" size="sm" onClick={() => { setReplyTo(null); setReplyText(''); }}>Cancel</Button>
+                                <Button size="sm" onClick={sendReply} disabled={!replyText.trim() || sending}>
+                                  <Send className="w-3.5 h-3.5" />
+                                  {sending ? 'Sending...' : 'Reply'}
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setReplyTo(item.id); setReplyChannel(item.type === 'sms' ? 'sms' : 'email'); }}
+                              className="text-[12px] font-medium text-[#6366F1] hover:text-[#4F46E5] transition-colors"
+                            >
+                              Reply →
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }
 
