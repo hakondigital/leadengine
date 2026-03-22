@@ -241,16 +241,7 @@ export function OnboardingAgent() {
             id: uid(),
             role: 'assistant',
             content:
-              "Perfect. Now let's set up your notifications so you never miss a lead.\n\nWhat email should we send lead notifications to?",
-            inputType: 'email',
-            inputPlaceholder: 'you@example.com',
-          });
-        } else if (sub === 1) {
-          msgs.push({
-            id: uid(),
-            role: 'assistant',
-            content:
-              'And your phone number for SMS alerts? We support Australian mobile numbers.',
+              "Perfect. Now let's set up your notifications so you never miss a lead.\n\nWhat's your phone number for SMS alerts?",
             inputType: 'tel',
             inputPlaceholder: '0412 345 678',
           });
@@ -260,10 +251,11 @@ export function OnboardingAgent() {
           id: uid(),
           role: 'assistant',
           content:
-            "Let's connect your email so all your business enquiries flow into the CRM automatically.\n\nChoose your email provider below:",
+            "Now let's connect your email so all your business enquiries flow into the CRM automatically.\n\nChoose your email provider:",
           buttons: [
-            { label: 'Connect Gmail', value: 'gmail', icon: <Mail className="w-4 h-4" /> },
-            { label: 'Connect Outlook', value: 'outlook', icon: <Mail className="w-4 h-4" /> },
+            { label: 'Connect Gmail', value: 'gmail', icon: <img src="/gmail-logo.svg" alt="Gmail" className="w-5 h-5" /> },
+            { label: 'Connect Outlook', value: 'outlook', icon: <img src="/outlook-logo.svg" alt="Outlook" className="w-5 h-5" /> },
+            { label: 'I don\'t use either', value: 'manual_email' },
           ],
           inputType: 'none',
         });
@@ -354,28 +346,10 @@ export function OnboardingAgent() {
         ]);
       }, 500);
     } else if (step === 1 && subStep === 0) {
-      // Save notification email
-      await patchOrg({ notification_email: value });
-      toastSuccess('Notification email saved');
-      setSubStep(1);
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: uid(),
-            role: 'assistant',
-            content:
-              'And your phone number for SMS alerts? We support Australian mobile numbers.',
-            inputType: 'tel',
-            inputPlaceholder: '0412 345 678',
-          },
-        ]);
-      }, 500);
-    } else if (step === 1 && subStep === 1) {
       // Save phone + enable SMS
       const formatted = formatAuPhone(value);
       await patchOrg({ phone: formatted, sms_notifications_enabled: true });
-      toastSuccess('Phone number saved & SMS alerts enabled');
+      toastSuccess('Phone saved & SMS alerts enabled');
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
@@ -387,6 +361,22 @@ export function OnboardingAgent() {
           },
         ]);
         setTimeout(() => advanceStep(2), 1000);
+      }, 500);
+    } else if (step === 2 && subStep === 1) {
+      // Manual email input (user chose "I don't use either")
+      await patchOrg({ notification_email: value });
+      toastSuccess('Email saved');
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: uid(),
+            role: 'assistant',
+            content: `Email set to ${value}. Lead notifications will be sent there.`,
+            inputType: 'none',
+          },
+        ]);
+        setTimeout(() => advanceStep(3), 1000);
       }, 500);
     }
   }, [input, saving, step, subStep, patchOrg, toastSuccess, advanceStep]);
@@ -425,6 +415,21 @@ export function OnboardingAgent() {
           window.location.href = `/api/auth/google?organization_id=${organization?.id}`;
         } else if (value === 'outlook') {
           window.location.href = `/api/auth/outlook?organization_id=${organization?.id}`;
+        } else if (value === 'manual_email') {
+          // Show manual email input
+          setSubStep(1);
+          setTimeout(() => {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: uid(),
+                role: 'assistant',
+                content: 'No worries — just enter your email address and we\'ll send lead notifications there.',
+                inputType: 'email',
+                inputPlaceholder: 'you@yourbusiness.com',
+              },
+            ]);
+          }, 500);
         }
       }
     },
@@ -521,14 +526,14 @@ export function OnboardingAgent() {
 
             {/* Panel */}
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-              className="fixed inset-y-0 right-0 z-[90]
-                         w-full sm:w-[440px] lg:w-[500px]
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-0 z-[90] m-auto
+                         w-full sm:w-[520px] lg:w-[580px] h-[90vh] sm:h-[85vh] max-h-[700px]
                          flex flex-col
-                         bg-white
+                         bg-white rounded-2xl
                          shadow-2xl"
             >
               {/* Header */}
