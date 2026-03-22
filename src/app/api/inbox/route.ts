@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { requireCallerOwnsOrg } from '@/lib/require-org-access';
 import { sendFollowUpEmail } from '@/lib/email';
 import { sendFollowUpSMS } from '@/lib/sms';
+import { detectSignal, autoConvertLead, autoRejectLead } from '@/lib/auto-convert';
 
 export async function GET(request: NextRequest) {
   try {
@@ -160,6 +161,16 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Inbox message create error:', error);
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
+    }
+
+    // AI buying signal detection on inbound messages
+    if (direction === 'inbound' && lead_id && messageBody) {
+      const signal = detectSignal(messageBody);
+      if (signal === 'buying') {
+        autoConvertLead(lead_id).catch(console.error);
+      } else if (signal === 'rejection') {
+        autoRejectLead(lead_id).catch(console.error);
+      }
     }
 
     return NextResponse.json(message, { status: 201 });
