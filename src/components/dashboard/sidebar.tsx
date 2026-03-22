@@ -186,21 +186,14 @@ export function Sidebar() {
         className={cn(
           'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
           isActive
-            ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+            ? 'text-[#E4E4E7] bg-white/[0.08]'
             : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
         )}
       >
-        {isActive && (
-          <motion.div
-            layoutId="sidebar-active"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          />
-        )}
         <div className="relative shrink-0">
           <item.icon className={cn('w-[18px] h-[18px]', collapsed && 'mx-auto')} />
           {item.name === 'Leads' && newLeadCount > 0 && collapsed && (
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#EF6C6C] text-[8px] font-bold text-white flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#6366F1] text-[8px] font-bold text-white flex items-center justify-center">
               {newLeadCount > 9 ? '9+' : newLeadCount}
             </span>
           )}
@@ -219,7 +212,7 @@ export function Sidebar() {
           )}
         </AnimatePresence>
         {item.name === 'Leads' && newLeadCount > 0 && !collapsed && (
-          <span className="ml-auto px-1.5 py-0.5 rounded-full bg-[#EF6C6C] text-[9px] font-bold text-white leading-none">
+          <span className="ml-auto px-1.5 py-0.5 rounded-full bg-[#6366F1] text-[9px] font-bold text-white leading-none">
             {newLeadCount}
           </span>
         )}
@@ -234,7 +227,7 @@ export function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 64 : 220 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex flex-col h-screen bg-[#111827] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
+        className="hidden lg:flex flex-col h-screen bg-[#09090B] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
       >
         {/* Brand */}
         <div className="flex items-center justify-between h-[60px] px-4 border-b border-white/[0.08]">
@@ -336,17 +329,10 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
                 pathname === '/dashboard/marketplace'
-                  ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                  ? 'text-[#E4E4E7] bg-white/[0.08]'
                   : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
               )}
             >
-              {pathname === '/dashboard/marketplace' && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#4FD1E5]"
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
               <div className="relative shrink-0">
                 <Store className={cn('w-[18px] h-[18px]', collapsed && 'mx-auto')} />
               </div>
@@ -481,7 +467,7 @@ export function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-              className="lg:hidden fixed inset-y-0 left-0 z-[70] w-[280px] bg-[#111827] border-r border-white/[0.08] flex flex-col overflow-hidden"
+              className="lg:hidden fixed inset-y-0 left-0 z-[70] w-[280px] bg-[#09090B] border-r border-white/[0.08] flex flex-col overflow-hidden"
             >
               {/* Drawer header */}
               <div className="flex items-center justify-between h-[64px] px-4 border-b border-white/[0.08] shrink-0">
@@ -527,14 +513,14 @@ export function Sidebar() {
                             className={cn(
                               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                               isActive
-                                ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                                ? 'text-[#E4E4E7] bg-white/[0.08]'
                                 : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
                             )}
                           >
                             <item.icon className="w-[18px] h-[18px] shrink-0" />
                             <span className="flex-1">{item.name}</span>
                             {item.name === 'Leads' && newLeadCount > 0 && (
-                              <span className="px-1.5 py-0.5 rounded-full bg-[#EF6C6C] text-[9px] font-bold text-white leading-none">
+                              <span className="px-1.5 py-0.5 rounded-full bg-[#6366F1] text-[9px] font-bold text-white leading-none">
                                 {newLeadCount}
                               </span>
                             )}
@@ -561,7 +547,7 @@ export function Sidebar() {
                             className={cn(
                               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                               isActive
-                                ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                                ? 'text-[#E4E4E7] bg-white/[0.08]'
                                 : 'text-white/50 hover:text-white/80 hover:bg-white/[0.06]'
                             )}
                           >
@@ -582,7 +568,7 @@ export function Sidebar() {
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                       pathname === '/dashboard/marketplace'
-                        ? 'text-[#4FD1E5] bg-[rgba(79,209,229,0.12)]'
+                        ? 'text-[#E4E4E7] bg-white/[0.08]'
                         : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
                     )}
                   >

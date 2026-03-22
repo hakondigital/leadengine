@@ -9,12 +9,12 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-[#F3F4F6] text-[#374151]',
-        accent: 'bg-[#EFF6FF] text-[#2563EB]',
+        accent: 'bg-[#EEF2FF] text-[#4F46E5]',
         success: 'bg-[#ECFDF5] text-[#059669]',
         warning: 'bg-[#FFFBEB] text-[#D97706]',
         error: 'bg-[#FEF2F2] text-[#DC2626]',
-        info: 'bg-[#EFF6FF] text-[#2563EB]',
-        new: 'bg-[#EFF6FF] text-[#2563EB]',
+        info: 'bg-[#EEF2FF] text-[#4F46E5]',
+        new: 'bg-[#EEF2FF] text-[#4F46E5]',
         reviewed: 'bg-[#F5F3FF] text-[#7C3AED]',
         contacted: 'bg-[#ECFEFF] text-[#0891B2]',
         quote_sent: 'bg-[#FFFBEB] text-[#D97706]',

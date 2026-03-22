@@ -3,58 +3,58 @@
 
 export const tokens = {
   colors: {
-    // Surfaces — clean and airy
+    // Surfaces
     bg: {
-      primary: '#F7F8FA',
+      primary: '#FAFAFA',
       secondary: '#FFFFFF',
-      tertiary: '#F0F2F5',
-      elevated: '#E8EBF0',
-      hover: '#E1E5EB',
-      muted: '#D0D5DD',
+      tertiary: '#F5F5F5',
+      elevated: '#EBEBEB',
+      hover: '#E5E5E5',
+      muted: '#D4D4D4',
     },
-    // Text — high contrast hierarchy
+    // Text
     text: {
-      primary: '#111827',
-      secondary: '#374151',
-      tertiary: '#6B7280',
-      muted: '#9CA3AF',
+      primary: '#0A0A0A',
+      secondary: '#404040',
+      tertiary: '#737373',
+      muted: '#A3A3A3',
       inverse: '#FFFFFF',
     },
-    // Accent — blue (professional, trustworthy)
+    // Accent — indigo
     accent: {
-      primary: '#3B82F6',
-      hover: '#2563EB',
-      muted: 'rgba(59, 130, 246, 0.08)',
-      text: '#2563EB',
+      primary: '#6366F1',
+      hover: '#4F46E5',
+      muted: 'rgba(99, 102, 241, 0.08)',
+      text: '#4F46E5',
     },
     // Status
     status: {
-      new: '#3B82F6',
+      new: '#6366F1',
       reviewed: '#8B5CF6',
-      contacted: '#06B6D4',
-      quoted: '#F59E0B',
-      won: '#10B981',
+      contacted: '#0EA5E9',
+      quoted: '#EAB308',
+      won: '#22C55E',
       lost: '#EF4444',
     },
     // Priority
     priority: {
       critical: '#DC2626',
       high: '#F59E0B',
-      medium: '#3B82F6',
-      low: '#9CA3AF',
+      medium: '#6366F1',
+      low: '#A3A3A3',
     },
-    // Borders
+    // Borders — opacity-based
     border: {
-      subtle: '#F0F2F5',
-      default: '#E5E7EB',
-      strong: '#D1D5DB',
-      accent: 'rgba(59, 130, 246, 0.25)',
+      subtle: 'rgba(0, 0, 0, 0.04)',
+      default: 'rgba(0, 0, 0, 0.08)',
+      strong: 'rgba(0, 0, 0, 0.15)',
+      accent: 'rgba(99, 102, 241, 0.25)',
     },
     // Semantic
-    success: '#10B981',
-    warning: '#F59E0B',
+    success: '#22C55E',
+    warning: '#EAB308',
     error: '#EF4444',
-    info: '#3B82F6',
+    info: '#6366F1',
   },
 
   spacing: {
@@ -161,11 +161,11 @@ export const motionVariants = {
 
 // Lead pipeline stage config
 export const pipelineStages = [
-  { id: 'new', label: 'New', color: '#3B82F6' },
+  { id: 'new', label: 'New', color: '#6366F1' },
   { id: 'reviewed', label: 'Reviewed', color: '#8B5CF6' },
-  { id: 'contacted', label: 'Contacted', color: '#06B6D4' },
-  { id: 'quote_sent', label: 'Quote Sent', color: '#F59E0B' },
-  { id: 'won', label: 'Won', color: '#10B981' },
+  { id: 'contacted', label: 'Contacted', color: '#0EA5E9' },
+  { id: 'quote_sent', label: 'Quote Sent', color: '#EAB308' },
+  { id: 'won', label: 'Won', color: '#22C55E' },
   { id: 'lost', label: 'Lost', color: '#EF4444' },
 ] as const;
 
