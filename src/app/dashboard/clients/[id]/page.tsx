@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -1107,59 +1107,61 @@ function CommunicationsTab({
   organizationId: string;
   orgName: string;
 }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
-  const [replyChannel, setReplyChannel] = useState<'email' | 'sms'>('email');
   const [sending, setSending] = useState(false);
-  const [composeOpen, setComposeOpen] = useState(false);
   const [composeSubject, setComposeSubject] = useState('');
   const [composeBody, setComposeBody] = useState('');
   const [composeChannel, setComposeChannel] = useState<'email' | 'sms'>('email');
   const { success: showSuccess } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const channelIcons: Record<string, React.ElementType> = {
-    email: Mail,
-    sms: MessageSquare,
-    inbox_message: MessageSquare,
-    activity: Phone,
-  };
+  // Sort messages oldest-first (chat order)
+  const sortedMessages = useMemo(
+    () => [...communications].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [communications]
+  );
 
-  const channelColors: Record<string, string> = {
-    email: '#6366F1',
-    sms: '#22C55E',
-    inbox_message: '#0EA5E9',
-    activity: '#F59E0B',
-  };
-
-  const sendReply = async () => {
-    if (!replyText.trim() || sending) return;
-    setSending(true);
-    try {
-      const leadId = client.leads?.[0]?.id as string | undefined;
-      await fetch('/api/inbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organization_id: organizationId,
-          lead_id: leadId || null,
-          channel: replyChannel,
-          direction: 'outbound',
-          body: replyText,
-          recipient_email: client.email,
-          recipient_phone: client.phone,
-        }),
-      });
-      showSuccess(`${replyChannel === 'email' ? 'Email' : 'SMS'} sent`);
-      setReplyText('');
-      setReplyTo(null);
-    } catch {
-      // silent
+  // Group messages by date for date separators
+  const groupedMessages = useMemo(() => {
+    const groups: { label: string; messages: TimelineEntry[] }[] = [];
+    let currentLabel = '';
+    for (const msg of sortedMessages) {
+      const label = getDateLabel(msg.date);
+      if (label !== currentLabel) {
+        currentLabel = label;
+        groups.push({ label, messages: [msg] });
+      } else {
+        groups[groups.length - 1].messages.push(msg);
+      }
     }
-    setSending(false);
-  };
+    return groups;
+  }, [sortedMessages]);
 
-  const sendCompose = async () => {
+  // Auto-scroll to bottom on load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [communications.length]);
+
+  function getDateLabel(iso: string): string {
+    const date = new Date(iso);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diff = today.getTime() - msgDay.getTime();
+    const dayMs = 86_400_000;
+    if (diff < dayMs && diff >= 0) return 'Today';
+    if (diff < dayMs * 2 && diff >= dayMs) return 'Yesterday';
+    return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function formatTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  const sendMessage = async () => {
     if (!composeBody.trim() || sending) return;
     setSending(true);
     try {
@@ -1172,7 +1174,7 @@ function CommunicationsTab({
           lead_id: leadId || null,
           channel: composeChannel,
           direction: 'outbound',
-          subject: composeSubject || undefined,
+          subject: composeChannel === 'email' ? composeSubject || undefined : undefined,
           body: composeBody,
           recipient_email: client.email,
           recipient_phone: client.phone,
@@ -1181,7 +1183,6 @@ function CommunicationsTab({
       showSuccess(`${composeChannel === 'email' ? 'Email' : 'SMS'} sent`);
       setComposeBody('');
       setComposeSubject('');
-      setComposeOpen(false);
     } catch {
       // silent
     }
@@ -1189,220 +1190,193 @@ function CommunicationsTab({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Compose button */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-semibold text-[#0A0A0A]">
-          Communications
-          {communications.length > 0 && (
-            <span className="text-[#A3A3A3] font-normal ml-2">({communications.length})</span>
-          )}
-        </h3>
-        <div className="flex items-center gap-2">
-          {client.phone && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => { setComposeChannel('sms'); setComposeOpen(!composeOpen); }}
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              SMS
-            </Button>
-          )}
-          {client.email && (
-            <Button
-              size="sm"
-              onClick={() => { setComposeChannel('email'); setComposeOpen(!composeOpen); }}
-            >
-              <Mail className="w-3.5 h-3.5" />
-              Email
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Compose form */}
-      <AnimatePresence>
-        {composeOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <Card>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant={composeChannel === 'email' ? 'accent' : 'success'} size="sm">
-                    {composeChannel === 'email' ? 'Email' : 'SMS'}
-                  </Badge>
-                  <span className="text-[12px] text-[#A3A3A3]">
-                    to {composeChannel === 'email' ? client.email : client.phone}
-                  </span>
-                </div>
-                {composeChannel === 'email' && (
-                  <input
-                    type="text"
-                    placeholder="Subject"
-                    value={composeSubject}
-                    onChange={(e) => setComposeSubject(e.target.value)}
-                    className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20"
-                  />
-                )}
-                <textarea
-                  placeholder={composeChannel === 'email' ? 'Write your email...' : 'Write your message...'}
-                  value={composeBody}
-                  onChange={(e) => setComposeBody(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
-                />
-                <div className="flex items-center justify-between gap-2">
-                  {composeChannel === 'email' ? (
-                    <TemplatePicker
-                      onSelect={(subject, body) => { setComposeSubject(subject); setComposeBody(body); }}
-                      clientName={client.first_name || undefined}
-                      orgName={orgName}
-                    />
-                  ) : <div />}
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setComposeOpen(false)}>Cancel</Button>
-                    <Button size="sm" onClick={sendCompose} disabled={!composeBody.trim() || sending}>
-                      <Send className="w-3.5 h-3.5" />
-                      {sending ? 'Sending...' : 'Send'}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Communication history */}
-      {communications.length === 0 ? (
-        <Card>
-          <CardContent>
+    <Card className="flex flex-col h-[680px] overflow-hidden">
+      {/* Messages area */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-5 py-4">
+        {communications.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
             <EmptyState
               icon={Mail}
               title="No communications"
               description="Send an email or SMS to start a conversation with this client."
             />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <div className="divide-y divide-[rgba(0,0,0,0.04)]">
-            {communications.map((item) => {
-              const Icon = channelIcons[item.type] || Mail;
-              const color = channelColors[item.type] || '#6366F1';
-              const channel = item.type === 'email' ? 'Email' : item.type === 'sms' ? 'SMS' : item.type === 'inbox_message' ? 'Message' : 'Call';
-              const direction = (item.data?.direction as string) || '';
-              const body = (item.data?.body as string) || (item.data?.text as string) || item.summary || '';
-              const subject = (item.data?.subject as string) || '';
-              const isExpanded = expandedId === item.id;
-              const isInbound = direction === 'inbound';
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groupedMessages.map((group) => (
+              <div key={group.label}>
+                {/* Date separator */}
+                <div className="flex items-center gap-3 my-5">
+                  <div className="flex-1 h-px bg-[rgba(0,0,0,0.06)]" />
+                  <span className="text-[11px] font-medium text-[#A3A3A3] shrink-0">{group.label}</span>
+                  <div className="flex-1 h-px bg-[rgba(0,0,0,0.06)]" />
+                </div>
 
-              return (
-                <div key={item.id} className="px-5 py-4">
-                  {/* Header — clickable to expand */}
-                  <button
-                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                    className="w-full text-left flex items-start gap-3 group"
-                  >
-                    <div
-                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5"
-                      style={{ backgroundColor: `${color}10` }}
-                    >
-                      <Icon className="w-4 h-4" style={{ color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="default" size="sm">{channel}</Badge>
-                        <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${isInbound ? 'text-[#0EA5E9] bg-[#F0F9FF]' : 'text-[#737373] bg-[#F5F5F5]'}`}>
-                          {isInbound ? '← Received' : '→ Sent'}
-                        </span>
-                        <span className="text-[11px] text-[#A3A3A3] ml-auto">{formatDateTime(item.date)}</span>
-                      </div>
-                      {subject && (
-                        <p className="text-[14px] font-medium text-[#0A0A0A] mt-1.5 truncate">{subject}</p>
-                      )}
-                      <p className={`text-[13px] text-[#737373] mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                        {body}
-                      </p>
-                    </div>
-                  </button>
+                {/* Messages for this date */}
+                <div className="space-y-3">
+                  {group.messages.map((item) => {
+                    const direction = (item.data?.direction as string) || 'outbound';
+                    const body = (item.data?.body as string) || (item.data?.text as string) || item.summary || '';
+                    const subject = (item.data?.subject as string) || '';
+                    const isInbound = direction === 'inbound';
+                    const channel = item.type === 'email' ? 'Email' : item.type === 'sms' ? 'SMS' : item.type === 'inbox_message' ? 'Message' : 'Call';
+                    const senderName = isInbound
+                      ? (item.data?.from_name as string) || (item.data?.sender_name as string) || client.first_name || client.email || 'Client'
+                      : null;
+                    const senderEmail = isInbound ? (item.data?.from_email as string) || (item.data?.sender_email as string) || client.email || '' : '';
 
-                  {/* Expanded: full message + reply */}
-                  <AnimatePresence>
-                    {isExpanded && (
+                    return (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
+                        key={item.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}
                       >
-                        <div className="mt-3 ml-11 space-y-3">
-                          {/* Full message body */}
-                          {body.length > 200 && (
-                            <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[rgba(0,0,0,0.04)]">
-                              <p className="text-[13px] text-[#404040] whitespace-pre-wrap leading-relaxed">{body}</p>
+                        <div className={`max-w-[75%] ${isInbound ? '' : ''}`}>
+                          {/* Sender name for inbound */}
+                          {isInbound && senderName && (
+                            <div className="flex items-center gap-2 mb-1 ml-1">
+                              <span className="text-[12px] font-medium text-[#404040]">{senderName}</span>
+                              {senderEmail && senderEmail !== senderName && (
+                                <span className="text-[11px] text-[#A3A3A3]">{senderEmail}</span>
+                              )}
                             </div>
                           )}
 
-                          {/* Quick reply */}
-                          {replyTo === item.id ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => setReplyChannel('email')}
-                                  className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${replyChannel === 'email' ? 'bg-[#EEF2FF] text-[#4F46E5]' : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'}`}
-                                >
-                                  Email
-                                </button>
-                                {client.phone && (
-                                  <button
-                                    onClick={() => setReplyChannel('sms')}
-                                    className={`text-[11px] font-medium px-2 py-1 rounded-md transition-colors ${replyChannel === 'sms' ? 'bg-[#ECFDF5] text-[#059669]' : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'}`}
-                                  >
-                                    SMS
-                                  </button>
+                          {/* Message bubble */}
+                          <div
+                            className={`px-4 py-3 ${
+                              isInbound
+                                ? 'bg-[#F5F5F5] text-[#0A0A0A] rounded-2xl rounded-bl-md'
+                                : 'bg-[#6366F1] text-white rounded-2xl rounded-br-md'
+                            }`}
+                          >
+                            {/* Channel badge */}
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                                  isInbound
+                                    ? 'bg-[rgba(0,0,0,0.05)] text-[#737373]'
+                                    : 'bg-[rgba(255,255,255,0.2)] text-white/90'
+                                }`}
+                              >
+                                {item.type === 'email' || item.type === 'inbox_message' ? (
+                                  <Mail className="w-2.5 h-2.5" />
+                                ) : (
+                                  <MessageSquare className="w-2.5 h-2.5" />
                                 )}
-                              </div>
-                              <textarea
-                                placeholder="Write your reply..."
-                                value={replyText}
-                                onChange={(e) => setReplyText(e.target.value)}
-                                rows={3}
-                                className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
-                                autoFocus
-                              />
-                              <div className="flex items-center gap-2 justify-end">
-                                <Button variant="ghost" size="sm" onClick={() => { setReplyTo(null); setReplyText(''); }}>Cancel</Button>
-                                <Button size="sm" onClick={sendReply} disabled={!replyText.trim() || sending}>
-                                  <Send className="w-3.5 h-3.5" />
-                                  {sending ? 'Sending...' : 'Reply'}
-                                </Button>
-                              </div>
+                                {channel}
+                              </span>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => { setReplyTo(item.id); setReplyChannel(item.type === 'sms' ? 'sms' : 'email'); }}
-                              className="text-[12px] font-medium text-[#6366F1] hover:text-[#4F46E5] transition-colors"
-                            >
-                              Reply →
-                            </button>
-                          )}
+
+                            {/* Subject line for emails */}
+                            {subject && (
+                              <p className={`text-[14px] font-semibold mb-1 ${isInbound ? 'text-[#0A0A0A]' : 'text-white'}`}>
+                                {subject}
+                              </p>
+                            )}
+
+                            {/* Message body */}
+                            <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{body}</p>
+                          </div>
+
+                          {/* Timestamp */}
+                          <p className={`text-[11px] text-[#A3A3A3] mt-1 ${isInbound ? 'ml-1' : 'mr-1 text-right'}`}>
+                            {formatTime(item.date)}
+                          </p>
                         </div>
                       </motion.div>
-                    )}
-                  </AnimatePresence>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
-        </Card>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* Compose area — sticky bottom */}
+      <div className="shrink-0 border-t border-[rgba(0,0,0,0.06)] bg-white px-5 py-4 space-y-3">
+        {/* Channel toggle tabs */}
+        <div className="flex items-center gap-1">
+          {client.email && (
+            <button
+              onClick={() => setComposeChannel('email')}
+              className={`text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                composeChannel === 'email'
+                  ? 'bg-[#EEF2FF] text-[#4F46E5]'
+                  : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" />
+                Email
+              </span>
+            </button>
+          )}
+          {client.phone && (
+            <button
+              onClick={() => setComposeChannel('sms')}
+              className={`text-[12px] font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                composeChannel === 'sms'
+                  ? 'bg-[#ECFDF5] text-[#059669]'
+                  : 'text-[#A3A3A3] hover:bg-[#F5F5F5]'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" />
+                SMS
+              </span>
+            </button>
+          )}
+          <span className="text-[11px] text-[#A3A3A3] ml-auto">
+            to {composeChannel === 'email' ? client.email : client.phone}
+          </span>
+        </div>
+
+        {/* Subject field — email only */}
+        {composeChannel === 'email' && (
+          <input
+            type="text"
+            placeholder="Subject"
+            value={composeSubject}
+            onChange={(e) => setComposeSubject(e.target.value)}
+            className="w-full px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20"
+          />
+        )}
+
+        {/* Message input + actions */}
+        <div className="flex items-end gap-2">
+          <textarea
+            placeholder={composeChannel === 'email' ? 'Write your email...' : 'Write your message...'}
+            value={composeBody}
+            onChange={(e) => setComposeBody(e.target.value)}
+            rows={2}
+            className="flex-1 px-3 py-2 text-[13px] rounded-lg bg-[#F5F5F5] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 resize-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+          />
+          <div className="flex items-center gap-1.5 shrink-0 pb-0.5">
+            {composeChannel === 'email' && (
+              <TemplatePicker
+                onSelect={(subject, body) => { setComposeSubject(subject); setComposeBody(body); }}
+                clientName={client.first_name || undefined}
+                orgName={orgName}
+              />
+            )}
+            <Button size="sm" onClick={sendMessage} disabled={!composeBody.trim() || sending} className="h-9 px-4">
+              <Send className="w-3.5 h-3.5" />
+              {sending ? 'Sending...' : 'Send'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 

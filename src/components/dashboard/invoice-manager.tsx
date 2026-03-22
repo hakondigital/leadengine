@@ -12,6 +12,7 @@ import {
   X,
   Edit3,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -548,6 +549,17 @@ export function InvoiceManager({ organizationId, clientId }: InvoiceManagerProps
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                           )}
+
+                          {/* View PDF */}
+                          <a
+                            href={`/invoice/${inv.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md hover:bg-[var(--od-bg-tertiary)] text-[var(--od-text-muted)] hover:text-[var(--od-text-primary)] transition-colors"
+                            title="View invoice"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
 
                           {/* Send — for draft or sent */}
                           {(inv.status === 'draft' || inv.status === 'sent') && (
