@@ -4,16 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
-  ChevronRight,
-  Phone,
-  Mail,
-  MapPin,
-  Sparkles,
-  ArrowUpDown,
   Search,
-  Filter,
   X,
   Users,
 } from 'lucide-react';
@@ -37,7 +29,6 @@ const priorityConfig: Record<LeadPriority, { label: string; variant: 'error' | '
 export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch =
@@ -46,262 +37,164 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
       lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.location?.toLowerCase().includes(searchQuery.toLowerCase());
-
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-
     return matchesSearch && matchesStatus;
   });
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="rounded-2xl bg-white border border-[rgba(0,0,0,0.06)] overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton h-20 rounded-[var(--od-radius-lg)]" />
+          <div key={i} className="skeleton h-16 border-b border-[rgba(0,0,0,0.04)] last:border-0" />
         ))}
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Controls bar */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--od-text-muted)]" />
+    <div className="space-y-4">
+      {/* Search + filter row */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A3A3A3]" />
           <input
             type="text"
-            placeholder="Search leads..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-[var(--od-radius-md)] border border-[var(--od-border-default)] bg-[var(--od-bg-tertiary)] text-sm text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--od-accent)]/30 transition-all"
+            className="w-full h-9 pl-9 pr-4 rounded-xl bg-[#F5F5F5] text-[13px] text-[#0A0A0A] placeholder:text-[#A3A3A3] border-0 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 transition-all"
           />
           {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--od-text-muted)] hover:text-[var(--od-text-secondary)]"
-            >
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A3A3A3] hover:text-[#404040]">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-
-        <Button
-          variant={showFilters ? 'accent' : 'secondary'}
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="w-3.5 h-3.5" />
-          Filters
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={cn(
+              'px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all',
+              statusFilter === 'all' ? 'bg-[#0A0A0A] text-white' : 'text-[#737373] hover:bg-[#F5F5F5]'
+            )}
+          >
+            All
+          </button>
+          {pipelineStages.slice(0, 4).map((stage) => (
+            <button
+              key={stage.id}
+              onClick={() => setStatusFilter(statusFilter === stage.id ? 'all' : stage.id)}
+              className={cn(
+                'px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all hidden sm:block',
+                statusFilter === stage.id ? 'bg-[#0A0A0A] text-white' : 'text-[#737373] hover:bg-[#F5F5F5]'
+              )}
+            >
+              {stage.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Status filter pills */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden mb-4"
-          >
-            <div className="flex flex-wrap gap-2 pb-2">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
-                  statusFilter === 'all'
-                    ? 'bg-[var(--od-text-primary)] text-[var(--od-bg-primary)]'
-                    : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
-                )}
-              >
-                All
-              </button>
-              {pipelineStages.map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => setStatusFilter(stage.id)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
-                    statusFilter === stage.id
-                      ? 'text-[var(--od-bg-primary)]'
-                      : 'bg-[var(--od-bg-tertiary)] text-[var(--od-text-secondary)] hover:bg-[var(--od-bg-elevated)]'
-                  )}
-                  style={
-                    statusFilter === stage.id
-                      ? { backgroundColor: stage.color }
-                      : undefined
-                  }
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: stage.color }}
-                  />
-                  {stage.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Leads list */}
       {filteredLeads.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={searchQuery ? 'No matches found' : 'No leads yet'}
-          description={
-            searchQuery
-              ? 'Try a different search term or clear filters.'
-              : 'When leads come through your forms, they will appear here.'
-          }
-          action={
-            searchQuery
-              ? { label: 'Clear search', onClick: () => { setSearchQuery(''); setStatusFilter('all'); } }
-              : undefined
-          }
+          title={searchQuery ? 'No matches' : 'No leads yet'}
+          description={searchQuery ? 'Try a different search.' : 'Leads will appear here when they come through your forms.'}
+          action={searchQuery ? { label: 'Clear', onClick: () => { setSearchQuery(''); setStatusFilter('all'); } } : undefined}
         />
       ) : (
-        <div className="space-y-2">
-          <AnimatePresence>
-            {filteredLeads.map((lead, index) => (
-              <LeadRow
-                key={lead.id}
-                lead={lead}
-                onClick={() => onLeadClick(lead)}
-                index={index}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* Results count */}
-      {filteredLeads.length > 0 && (
-        <p className="text-xs text-[var(--od-text-muted)] mt-4 text-center">
-          Showing {filteredLeads.length} of {leads.length} leads
-        </p>
-      )}
-    </div>
-  );
-}
-
-function LeadRow({
-  lead,
-  onClick,
-  index,
-}: {
-  lead: Lead;
-  onClick: () => void;
-  index: number;
-}) {
-  const stage = pipelineStages.find((s) => s.id === lead.status);
-  const priority = priorityConfig[lead.priority] || priorityConfig.medium;
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.2, delay: index * 0.03 }}
-      onClick={onClick}
-      className="w-full text-left rounded-[var(--od-radius-lg)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-secondary)] p-4 hover:border-[var(--od-border-default)] hover:bg-[var(--od-bg-secondary)]/80 transition-all duration-200 group cursor-pointer"
-    >
-      <div className="flex items-center gap-4">
-        {/* Status indicator */}
-        <div
-          className="w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: stage?.color }}
-        />
-
-        {/* Lead info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-[var(--od-text-primary)] truncate">
-              {lead.first_name} {lead.last_name}
-            </h3>
-            <Badge variant={lead.status as LeadStatus} size="sm">
-              {stage?.label}
-            </Badge>
-            <Badge variant={priority.variant} size="sm">
-              {priority.label}
-            </Badge>
+        /* Table container */
+        <div className="rounded-2xl bg-white border border-[rgba(0,0,0,0.06)] overflow-hidden">
+          {/* Column headers */}
+          <div className="grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_140px_120px_100px_80px] lg:grid-cols-[1fr_200px_140px_120px_100px_80px] gap-4 px-5 py-3 border-b border-[rgba(0,0,0,0.06)] bg-[#FAFAFA]">
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider">Name</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider hidden lg:block">Email</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider hidden sm:block">Location</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider">Status</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider">Score</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider text-right">Time</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-[var(--od-text-tertiary)]">
-            <span className="flex items-center gap-1">
-              <Mail className="w-3 h-3" />
-              <span className="truncate max-w-[140px]">{lead.email}</span>
-            </span>
-            {lead.phone && (
-              <span className="hidden sm:flex items-center gap-1">
-                <Phone className="w-3 h-3" />
-                {lead.phone}
-              </span>
-            )}
-            {lead.location && (
-              <span className="hidden md:flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {lead.location}
-              </span>
-            )}
+          {/* Rows */}
+          <div className="divide-y divide-[rgba(0,0,0,0.04)]">
+            <AnimatePresence>
+              {filteredLeads.map((lead, index) => {
+                const stage = pipelineStages.find((s) => s.id === lead.status);
+                const priority = priorityConfig[lead.priority] || priorityConfig.medium;
+
+                return (
+                  <motion.button
+                    key={lead.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15, delay: index * 0.02 }}
+                    onClick={() => onLeadClick(lead)}
+                    className="w-full text-left grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_140px_120px_100px_80px] lg:grid-cols-[1fr_200px_140px_120px_100px_80px] gap-4 px-5 py-3.5 hover:bg-[rgba(0,0,0,0.015)] transition-colors duration-150 cursor-pointer items-center"
+                  >
+                    {/* Name + company */}
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-[#0A0A0A] truncate">
+                        {lead.first_name} {lead.last_name}
+                      </p>
+                      {lead.company && (
+                        <p className="text-[12px] text-[#A3A3A3] truncate mt-0.5">{lead.company}</p>
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <p className="text-[13px] text-[#737373] truncate hidden lg:block">{lead.email}</p>
+
+                    {/* Location */}
+                    <p className="text-[13px] text-[#737373] truncate hidden sm:block">{lead.location || '—'}</p>
+
+                    {/* Status */}
+                    <div>
+                      <Badge variant={lead.status as LeadStatus} size="sm">
+                        {stage?.label}
+                      </Badge>
+                    </div>
+
+                    {/* Score */}
+                    <div className="flex items-center gap-1.5">
+                      {lead.ai_score !== null && lead.ai_score !== undefined ? (
+                        <>
+                          <div className="w-8 h-1 rounded-full bg-[#F5F5F5] overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${lead.ai_score}%`,
+                                backgroundColor: lead.ai_score >= 70 ? '#22C55E' : lead.ai_score >= 40 ? '#F59E0B' : '#EF4444',
+                              }}
+                            />
+                          </div>
+                          <span className="text-[11px] text-[#A3A3A3] tabular-nums">{lead.ai_score}</span>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-[#D4D4D4]">—</span>
+                      )}
+                    </div>
+
+                    {/* Time */}
+                    <span className="text-[12px] text-[#A3A3A3] text-right tabular-nums">
+                      {formatRelativeTime(lead.created_at)}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </AnimatePresence>
           </div>
 
-          {/* AI summary preview */}
-          {lead.ai_summary && (
-            <div className="flex items-start gap-1.5 mt-2">
-              <Sparkles className="w-3 h-3 text-[var(--od-accent)] mt-0.5 shrink-0" />
-              <p className="text-xs text-[var(--od-text-tertiary)] line-clamp-1">
-                {lead.ai_summary}
+          {/* Footer */}
+          {filteredLeads.length > 0 && (
+            <div className="px-5 py-2.5 border-t border-[rgba(0,0,0,0.04)] bg-[#FAFAFA]">
+              <p className="text-[11px] text-[#A3A3A3]">
+                {filteredLeads.length} of {leads.length} leads
               </p>
             </div>
           )}
         </div>
-
-        {/* Right side */}
-        <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-          <span className="text-xs text-[var(--od-text-muted)]">
-            {formatRelativeTime(lead.created_at)}
-          </span>
-          {lead.ai_score !== null && lead.ai_score !== undefined && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-12 h-1.5 rounded-full bg-[var(--od-bg-elevated)] overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${lead.ai_score}%`,
-                    backgroundColor:
-                      lead.ai_score >= 70 ? '#4ADE80' : lead.ai_score >= 40 ? '#F59E0B' : '#EF6C6C',
-                  }}
-                />
-              </div>
-              <span className="text-[10px] text-[var(--od-text-muted)] w-5 text-right">
-                {lead.ai_score}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Ghost recovery stage indicator */}
-        {lead.ghost_recovery_stage && lead.ghost_recovery_stage > 0 && (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${
-              lead.ghost_recovery_stage === 1
-                ? 'bg-[#F59E0B]/10 text-[#F59E0B]'
-                : lead.ghost_recovery_stage === 2
-                ? 'bg-[#E8636C]/10 text-[#E8636C]'
-                : 'bg-[#8B5CF6]/10 text-[#8B5CF6]'
-            }`}
-          >
-            {lead.ghost_recovery_stage === 1 && '📧 Recovery email'}
-            {lead.ghost_recovery_stage === 2 && '💬 Recovery SMS'}
-            {lead.ghost_recovery_stage === 3 && '📞 Needs call'}
-          </span>
-        )}
-
-        <ChevronRight className="w-4 h-4 text-[var(--od-text-muted)] group-hover:text-[var(--od-text-tertiary)] transition-colors shrink-0" />
-      </div>
-    </motion.button>
+      )}
+    </div>
   );
 }
-

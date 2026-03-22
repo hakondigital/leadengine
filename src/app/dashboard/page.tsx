@@ -2,24 +2,23 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { StatCard } from '@/components/dashboard/stat-card';
 import { LeadTable } from '@/components/dashboard/lead-table';
 import { LeadDetailDrawer } from '@/components/dashboard/lead-detail-drawer';
 import { useOrganization } from '@/hooks/use-organization';
 import { useLeads } from '@/hooks/use-leads';
-// pipelineStages removed — pipeline bar now only on Pipeline page
-import { Skeleton } from '@/components/ui/skeleton';
 import type { Lead, LeadWithRelations, LeadStatus } from '@/lib/database.types';
 import {
-  Users,
-  UserPlus,
-  Clock,
-  Trophy,
+  ArrowUpRight,
+  ArrowDownRight,
   TrendingUp,
+  Users,
+  Zap,
+  Target,
 } from 'lucide-react';
 import { GettingStartedChecklist } from '@/components/dashboard/getting-started';
 import { DailyGamePlan } from '@/components/dashboard/daily-game-plan';
 import { RevenueGapCloser } from '@/components/dashboard/revenue-gap-closer';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { organization, loading: orgLoading } = useOrganization();
@@ -34,21 +33,17 @@ export default function DashboardPage() {
     const newLeads = leads.filter((l) => l.status === 'new').length;
     const active = leads.filter((l) => !['won', 'lost'].includes(l.status)).length;
     const won = leads.filter((l) => l.status === 'won').length;
-    const avgScore = leads.reduce((acc, l) => acc + (l.ai_score || 0), 0) / (total || 1);
-    const hotLeads = leads.filter((l) => (l.ai_score || 0) >= 70).length;
     const revenue = leads
       .filter((l) => l.status === 'won' && l.won_value)
       .reduce((acc, l) => acc + (l.won_value || 0), 0);
+    const convRate = total > 0 ? Math.round((won / total) * 100) : 0;
 
-    return { total, newLeads, active, won, avgScore: Math.round(avgScore), hotLeads, revenue };
+    return { total, newLeads, active, won, revenue, convRate };
   }, [leads]);
 
   const handleLeadClick = async (lead: Lead) => {
     const fullLead = await fetchLeadDetail(lead.id);
-    if (fullLead) {
-      setSelectedLead(fullLead);
-      setDrawerOpen(true);
-    }
+    if (fullLead) { setSelectedLead(fullLead); setDrawerOpen(true); }
   };
 
   const handleStatusChange = async (leadId: string, status: LeadStatus, wonValue?: number) => {
@@ -65,77 +60,121 @@ export default function DashboardPage() {
 
   const handleAddNote = async (leadId: string, content: string) => {
     await addNote(leadId, content);
-    // Refresh lead detail
     const updated = await fetchLeadDetail(leadId);
     if (updated) setSelectedLead(updated);
   };
 
   const handleLeadIdClick = async (leadId: string) => {
     const fullLead = await fetchLeadDetail(leadId);
-    if (fullLead) {
-      setSelectedLead(fullLead);
-      setDrawerOpen(true);
-    }
+    if (fullLead) { setSelectedLead(fullLead); setDrawerOpen(true); }
+  };
+
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-[var(--od-bg-primary)]/80 backdrop-blur-xl border-b border-[var(--od-border-subtle)]">
-        <div className="px-6 lg:px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[var(--od-text-primary)] tracking-tight">
-                Dashboard
-              </h1>
-              <p className="text-sm text-[var(--od-text-tertiary)] mt-0.5">
-                {new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header — clean, no border */}
+      <div className="px-8 lg:px-10 pt-8 pb-2">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-[28px] font-semibold text-[#0A0A0A] tracking-[-0.035em]"
+              style={{ fontFamily: 'var(--font-display, inherit)' }}>
+            {greeting()}{organization?.name ? `, ${organization.name.split(' ')[0]}` : ''}
+          </h1>
+          <p className="text-[15px] text-[#737373] mt-1">
+            {new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </motion.div>
+      </div>
 
-      <div className="px-6 lg:px-8 py-8 space-y-8">
+      <div className="px-8 lg:px-10 py-6 space-y-8">
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <div key={i} className="skeleton h-[100px] rounded-2xl" />
             ))}
           </div>
         ) : (
           <>
-            {/* Getting started checklist */}
             <GettingStartedChecklist />
 
-            <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard label="Total Leads" value={stats.total} icon={Users} color="#6C8EEF" index={0} />
-              <StatCard label="New" value={stats.newLeads} icon={UserPlus} color="#4ADE80" index={1} />
-              <StatCard label="Active Pipeline" value={stats.active} icon={Clock} color="#4FD1E5" index={2} />
-              <StatCard label="Won" value={stats.won} icon={Trophy} color="#34C77B" index={3} />
-            </div>
+            {/* Stats — integrated row, not separate cards */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="rounded-2xl bg-white border border-[rgba(0,0,0,0.06)] overflow-hidden"
+            >
+              <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-[rgba(0,0,0,0.06)]">
+                {[
+                  { label: 'Total leads', value: stats.total, icon: Users, change: null, color: '#6366F1' },
+                  { label: 'New this week', value: stats.newLeads, icon: Zap, change: null, color: '#0EA5E9' },
+                  { label: 'In pipeline', value: stats.active, icon: Target, change: null, color: '#F59E0B' },
+                  { label: 'Conversion rate', value: `${stats.convRate}%`, icon: TrendingUp, change: stats.convRate > 20 ? 'up' : stats.convRate > 0 ? 'neutral' : null, color: '#22C55E' },
+                ].map((stat, i) => (
+                  <div key={i} className="px-6 py-5 group">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[13px] text-[#737373] font-medium">{stat.label}</span>
+                      <stat.icon className="w-4 h-4 text-[#A3A3A3]" />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <span className="text-[28px] font-semibold text-[#0A0A0A] tracking-[-0.03em] leading-none"
+                            style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                        {stat.value}
+                      </span>
+                      {stat.change === 'up' && (
+                        <span className="flex items-center gap-0.5 text-[11px] font-medium text-[#059669] mb-1">
+                          <ArrowUpRight className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
 
-            {/* AI Game Plan + Revenue Gap */}
+            {/* Two-column: AI insights + Pipeline snapshot */}
             {organization?.id && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <DailyGamePlan organizationId={organization.id} onLeadClick={handleLeadIdClick} />
-                <RevenueGapCloser organizationId={organization.id} onLeadClick={handleLeadIdClick} />
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* AI Game Plan — wider */}
+                <div className="lg:col-span-3">
+                  <DailyGamePlan organizationId={organization.id} onLeadClick={handleLeadIdClick} />
+                </div>
+                {/* Revenue tracker — narrower */}
+                <div className="lg:col-span-2">
+                  <RevenueGapCloser organizationId={organization.id} onLeadClick={handleLeadIdClick} />
+                </div>
               </div>
             )}
 
-            {/* Recent leads */}
+            {/* Recent leads — proper table */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-[var(--od-text-primary)] tracking-tight">
-                  Recent Leads
-                </h2>
-                <a
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-[17px] font-semibold text-[#0A0A0A] tracking-[-0.02em]"
+                      style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                    Recent leads
+                  </h2>
+                  <p className="text-[13px] text-[#A3A3A3] mt-0.5">
+                    {leads.length} total · {stats.newLeads} unreviewed
+                  </p>
+                </div>
+                <Link
                   href="/dashboard/leads"
-                  className="text-xs font-medium text-[var(--od-accent)] hover:underline"
+                  className="text-[13px] font-medium text-[#6366F1] hover:text-[#4F46E5] transition-colors"
                 >
-                  View all
-                </a>
+                  View all →
+                </Link>
               </div>
-              <LeadTable leads={leads.slice(0, 10)} onLeadClick={handleLeadClick} />
+              <LeadTable leads={leads.slice(0, 8)} onLeadClick={handleLeadClick} />
             </div>
           </>
         )}
