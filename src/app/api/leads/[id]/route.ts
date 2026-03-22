@@ -99,6 +99,71 @@ export async function PATCH(
         to_status: newStatus,
       });
 
+      // ── Auto-create client when lead is first acknowledged ──
+      // When status changes from "new" to anything, the business has reviewed
+      // the lead — create a client record (if not already linked).
+      if (oldStatus === 'new' && newStatus !== 'new' && !current.client_id) {
+        (async () => {
+          try {
+            // Check for existing client by email
+            let existingClientId: string | null = null;
+            if (current.email) {
+              const { data: existing } = await supabase
+                .from('clients')
+                .select('id')
+                .eq('organization_id', current.organization_id)
+                .eq('email', current.email)
+                .limit(1)
+                .maybeSingle();
+              if (existing) existingClientId = existing.id;
+            }
+
+            if (existingClientId) {
+              await supabase.from('leads').update({ client_id: existingClientId }).eq('id', id);
+              await supabase.from('client_activities').insert({
+                client_id: existingClientId,
+                organization_id: current.organization_id,
+                type: 'note',
+                title: 'Lead reviewed and linked',
+                description: `${current.first_name} ${current.last_name} — lead reviewed and linked to this client.`,
+              });
+            } else {
+              const { data: newClient } = await supabase
+                .from('clients')
+                .insert({
+                  organization_id: current.organization_id,
+                  first_name: current.first_name || '',
+                  last_name: current.last_name || '',
+                  email: current.email || null,
+                  phone: current.phone || null,
+                  company_name: current.company || null,
+                  address: current.location || null,
+                  postcode: current.postcode || null,
+                  source: current.source || 'lead',
+                  status: 'active',
+                  type: current.company ? 'company' : 'individual',
+                  primary_lead_id: id,
+                })
+                .select('id')
+                .single();
+
+              if (newClient) {
+                await supabase.from('leads').update({ client_id: newClient.id }).eq('id', id);
+                await supabase.from('client_activities').insert({
+                  client_id: newClient.id,
+                  organization_id: current.organization_id,
+                  type: 'status_change',
+                  title: 'Client created from reviewed lead',
+                  description: `${current.first_name} ${current.last_name} was reviewed and added to the client database.`,
+                });
+              }
+            }
+          } catch (err) {
+            console.error('Auto-create client on review error:', err);
+          }
+        })();
+      }
+
       // Auto-set won_date when marking as Won
       if (newStatus === 'won' && !body.won_date) {
         body.won_date = new Date().toISOString();
