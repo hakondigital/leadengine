@@ -216,6 +216,7 @@ export default function ClientProfilePage({
   const [editForm, setEditForm] = useState<Partial<Client>>({});
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -874,7 +875,7 @@ export default function ClientProfilePage({
           </motion.div>
         </AnimatePresence>
 
-        {/* ── Delete confirmation ── */}
+        {/* ── Delete confirmation — must type "Remove this Client" ── */}
         <AnimatePresence>
           {showDeleteConfirm && (
             <motion.div
@@ -882,7 +883,7 @@ export default function ClientProfilePage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowDeleteConfirm(false)}
+              onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
             >
               <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
@@ -897,14 +898,25 @@ export default function ClientProfilePage({
                 <h3 className="text-base font-semibold text-[var(--od-text-primary)] text-center mb-1">
                   Delete client?
                 </h3>
-                <p className="text-sm text-[var(--od-text-tertiary)] text-center mb-6">
+                <p className="text-sm text-[var(--od-text-tertiary)] text-center mb-4">
                   This will permanently delete <strong>{name}</strong> and all their data. This action cannot be undone.
                 </p>
+                <p className="text-xs text-[var(--od-text-muted)] text-center mb-2">
+                  Type <strong className="text-[#C44E56]">Remove this Client</strong> to confirm
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Remove this Client"
+                  className="w-full px-3 py-2 text-sm rounded-[var(--od-radius-md)] border border-[var(--od-border-subtle)] bg-[var(--od-bg-primary)] text-[var(--od-text-primary)] placeholder:text-[var(--od-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#C44E56]/30 mb-4"
+                  autoFocus
+                />
                 <div className="flex gap-3">
                   <Button
                     variant="secondary"
                     className="flex-1"
-                    onClick={() => setShowDeleteConfirm(false)}
+                    onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
                   >
                     Cancel
                   </Button>
@@ -912,7 +924,7 @@ export default function ClientProfilePage({
                     variant="destructive"
                     className="flex-1"
                     onClick={handleDelete}
-                    disabled={deleting}
+                    disabled={deleting || deleteConfirmText !== 'Remove this Client'}
                   >
                     {deleting ? 'Deleting...' : 'Delete'}
                   </Button>
