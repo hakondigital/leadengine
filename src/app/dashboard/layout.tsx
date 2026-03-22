@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { OnboardingWrapper } from '@/components/dashboard/onboarding-wrapper';
+import { AIChatWidget } from '@/components/dashboard/ai-chat-widget';
 import { ToastProvider } from '@/components/ui/toast';
 import { TourProvider } from '@/components/tour/tour-provider';
 import { TourOverlay } from '@/components/tour/tour-overlay';
@@ -22,6 +23,7 @@ export default function DashboardLayout({
           </main>
           <OnboardingWrapper />
           <TourOverlay />
+          <AIChatWidget />
         </div>
       </TourProvider>
     </ToastProvider>
