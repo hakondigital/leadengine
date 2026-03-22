@@ -231,6 +231,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // Skip if org has Gmail or Outlook connected — those handle email sync directly
+    const { data: orgData } = await supabase
+      .from('organizations')
+      .select('settings')
+      .eq('id', orgId)
+      .single();
+
+    const orgSettings = (orgData?.settings as Record<string, unknown>) || {};
+    if (orgSettings.gmail_refresh_token || orgSettings.outlook_refresh_token) {
+      return NextResponse.json({ received: true, skipped: 'direct_email_connected' });
+    }
+
     // AI classify the email
     const classification = await classifyEmail(inboundEmail);
 
