@@ -82,11 +82,22 @@ export async function GET(request: NextRequest) {
     // Store tokens in organization settings
     const supabase = await createServiceRoleClient();
 
-    const { data: org } = await supabase
+    // Try to find org by state (organization_id) — fallback to slug match
+    let { data: org } = await supabase
       .from('organizations')
-      .select('settings')
+      .select('id, settings')
       .eq('id', state)
       .single();
+
+    // If state isn't a valid UUID, try matching by slug
+    if (!org) {
+      const { data: orgBySlug } = await supabase
+        .from('organizations')
+        .select('id, settings')
+        .eq('slug', state)
+        .single();
+      org = orgBySlug;
+    }
 
     if (!org) {
       return NextResponse.redirect(
@@ -108,7 +119,7 @@ export async function GET(request: NextRequest) {
           outlook_connected_at: new Date().toISOString(),
         },
       })
-      .eq('id', state);
+      .eq('id', org.id);
 
     if (updateError) {
       console.error('Failed to save Outlook tokens:', updateError);
@@ -119,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     // Trigger immediate email sync (fire and forget)
     import('@/app/api/outlook/sync/route').then(({ syncOutlookForOrg }) => {
-      syncOutlookForOrg(state).catch(console.error);
+      syncOutlookForOrg(org!.id).catch(console.error);
     }).catch(console.error);
 
     return NextResponse.redirect(`${appUrl}/dashboard/settings?outlook=connected`);

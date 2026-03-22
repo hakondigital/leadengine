@@ -79,11 +79,20 @@ export async function GET(request: NextRequest) {
     // Store tokens in organization settings
     const supabase = await createServiceRoleClient();
 
-    const { data: org } = await supabase
+    let { data: org } = await supabase
       .from('organizations')
-      .select('settings')
+      .select('id, settings')
       .eq('id', state)
       .single();
+
+    if (!org) {
+      const { data: orgBySlug } = await supabase
+        .from('organizations')
+        .select('id, settings')
+        .eq('slug', state)
+        .single();
+      org = orgBySlug;
+    }
 
     if (!org) {
       return NextResponse.redirect(
@@ -105,7 +114,7 @@ export async function GET(request: NextRequest) {
           gmail_connected_at: new Date().toISOString(),
         },
       })
-      .eq('id', state);
+      .eq('id', org.id);
 
     if (updateError) {
       console.error('Failed to save Gmail tokens:', updateError);
@@ -116,7 +125,7 @@ export async function GET(request: NextRequest) {
 
     // Trigger immediate email sync (fire and forget)
     import('@/app/api/gmail/sync/route').then(({ syncGmailForOrg }) => {
-      syncGmailForOrg(state).catch(console.error);
+      syncGmailForOrg(org!.id).catch(console.error);
     }).catch(console.error);
 
     return NextResponse.redirect(`${appUrl}/dashboard/settings?gmail=connected`);
