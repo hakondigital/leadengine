@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest) {
       'name', 'notification_email', 'phone', 'sms_notifications_enabled',
       'auto_reply_enabled', 'google_review_link', 'follow_up_enabled',
       'primary_color', 'accent_color', 'logo_url', 'timezone',
-      'enabled_addons',
+      'enabled_addons', 'industry',
     ];
 
     const updates: Record<string, unknown> = {};
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
 
       const currentSettings = (currentOrg?.settings as Record<string, unknown>) || {};
       // Only allow safe keys in settings_update
-      const safeSettingsKeys = ['onboarding_completed', 'ai_model', 'ai_temperature', 'ai_custom_prompt', 'form_template'];
+      const safeSettingsKeys = ['onboarding_completed', 'onboarding_step', 'onboarding_completed_at', 'ai_model', 'ai_temperature', 'ai_custom_prompt', 'form_template'];
       const settingsUpdate: Record<string, unknown> = {};
       for (const key of safeSettingsKeys) {
         if (key in body.settings_update) {

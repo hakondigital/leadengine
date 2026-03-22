@@ -15,7 +15,6 @@ import {
   Zap,
   Target,
 } from 'lucide-react';
-import { GettingStartedChecklist } from '@/components/dashboard/getting-started';
 import { DailyGamePlan } from '@/components/dashboard/daily-game-plan';
 import { RevenueGapCloser } from '@/components/dashboard/revenue-gap-closer';
 import Link from 'next/link';
@@ -104,8 +103,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            <GettingStartedChecklist />
-
             {/* Stats — integrated row, not separate cards */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
