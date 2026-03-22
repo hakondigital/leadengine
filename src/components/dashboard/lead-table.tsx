@@ -106,8 +106,9 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
         /* Table container */
         <div className="rounded-2xl bg-white border border-[rgba(0,0,0,0.06)] overflow-hidden">
           {/* Column headers */}
-          <div className="grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_140px_120px_100px_80px] lg:grid-cols-[1fr_200px_140px_120px_100px_80px] gap-4 px-5 py-3 border-b border-[rgba(0,0,0,0.06)] bg-[#FAFAFA]">
+          <div className="grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_120px_140px_120px_100px_80px] lg:grid-cols-[1fr_140px_180px_140px_100px_100px_80px] gap-4 px-5 py-3 border-b border-[rgba(0,0,0,0.06)] bg-[#FAFAFA]">
             <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider">Name</span>
+            <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider hidden sm:block">Phone</span>
             <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider hidden lg:block">Email</span>
             <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider hidden sm:block">Location</span>
             <span className="text-[11px] font-semibold text-[#A3A3A3] uppercase tracking-wider">Status</span>
@@ -130,7 +131,7 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15, delay: index * 0.02 }}
                     onClick={() => onLeadClick(lead)}
-                    className="w-full text-left grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_140px_120px_100px_80px] lg:grid-cols-[1fr_200px_140px_120px_100px_80px] gap-4 px-5 py-3.5 hover:bg-[rgba(0,0,0,0.015)] transition-colors duration-150 cursor-pointer items-center"
+                    className="w-full text-left grid grid-cols-[1fr_100px_100px_80px] sm:grid-cols-[1fr_120px_140px_120px_100px_80px] lg:grid-cols-[1fr_140px_180px_140px_100px_100px_80px] gap-4 px-5 py-3.5 hover:bg-[rgba(0,0,0,0.015)] transition-colors duration-150 cursor-pointer items-center"
                   >
                     {/* Name + company */}
                     <div className="min-w-0">
@@ -141,6 +142,9 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                         <p className="text-[12px] text-[#A3A3A3] truncate mt-0.5">{lead.company}</p>
                       )}
                     </div>
+
+                    {/* Phone */}
+                    <p className="text-[13px] text-[#737373] truncate hidden sm:block">{lead.phone || '—'}</p>
 
                     {/* Email */}
                     <p className="text-[13px] text-[#737373] truncate hidden lg:block">{lead.email}</p>
