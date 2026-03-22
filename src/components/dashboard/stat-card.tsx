@@ -16,28 +16,42 @@ interface StatCardProps {
 export function StatCard({ label, value, change, icon: Icon, color, index = 0 }: StatCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-[var(--od-radius-lg)] border border-[var(--od-border-default)] bg-white p-5 hover:shadow-[0_4px_12px_rgba(28,42,58,0.08)] transition-all duration-200 group"
+      transition={{ duration: 0.4, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="relative overflow-hidden rounded-2xl bg-white border border-[#E5E9F0] p-6 group
+                 hover:border-[#D1D5DB] hover:shadow-[0_4px_16px_rgba(16,24,40,0.06)]
+                 transition-all duration-300"
     >
-      <div className="flex items-start justify-between mb-4">
+      {/* Subtle gradient accent at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity"
+        style={{ background: `linear-gradient(90deg, ${color}, ${color}40)` }}
+      />
+
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[13px] font-medium text-[#6B7280] tracking-wide uppercase">
+          {label}
+        </p>
         <div
-          className="flex items-center justify-center w-10 h-10 rounded-xl border transition-transform duration-200 group-hover:scale-105"
-          style={{
-            backgroundColor: `${color}10`,
-            borderColor: `${color}20`,
-          }}
+          className="flex items-center justify-center w-9 h-9 rounded-xl transition-transform duration-200 group-hover:scale-110"
+          style={{ backgroundColor: `${color}0D` }}
         >
-          <Icon className="w-5 h-5" style={{ color }} />
+          <Icon className="w-[18px] h-[18px]" style={{ color }} />
         </div>
+      </div>
+
+      <div className="flex items-end gap-2">
+        <p className="text-3xl font-bold text-[#111827] tracking-tight leading-none">
+          {value}
+        </p>
         {change && (
           <span
             className={cn(
-              'text-xs font-medium px-2 py-0.5 rounded-full',
+              'text-xs font-semibold px-2 py-0.5 rounded-full mb-1',
               change.value >= 0
-                ? 'text-[#4ADE80] bg-[#4ADE80]/10'
-                : 'text-[#EF6C6C] bg-[#EF6C6C]/10'
+                ? 'text-[#059669] bg-[#D1FAE5]'
+                : 'text-[#DC2626] bg-[#FEE2E2]'
             )}
           >
             {change.value >= 0 ? '+' : ''}
@@ -45,17 +59,10 @@ export function StatCard({ label, value, change, icon: Icon, color, index = 0 }:
           </span>
         )}
       </div>
-      <div>
-        <p className="text-2xl font-bold text-[var(--od-text-primary)] tracking-tight">
-          {value}
-        </p>
-        <p className="text-xs text-[var(--od-text-tertiary)] mt-0.5">
-          {label}
-          {change && (
-            <span className="text-[var(--od-text-muted)]"> &middot; {change.label}</span>
-          )}
-        </p>
-      </div>
+
+      {change && (
+        <p className="text-[11px] text-[#9CA3AF] mt-1">{change.label}</p>
+      )}
     </motion.div>
   );
 }

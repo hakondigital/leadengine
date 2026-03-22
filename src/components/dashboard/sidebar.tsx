@@ -234,7 +234,7 @@ export function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 64 : 220 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex flex-col h-screen bg-[#1C2A3A] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
+        className="hidden lg:flex flex-col h-screen bg-[#111827] border-r border-white/[0.08] sticky top-0 z-30 shrink-0"
       >
         {/* Brand */}
         <div className="flex items-center justify-between h-[60px] px-4 border-b border-white/[0.08]">
@@ -481,7 +481,7 @@ export function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-              className="lg:hidden fixed inset-y-0 left-0 z-[70] w-[280px] bg-[#1C2A3A] border-r border-white/[0.08] flex flex-col overflow-hidden"
+              className="lg:hidden fixed inset-y-0 left-0 z-[70] w-[280px] bg-[#111827] border-r border-white/[0.08] flex flex-col overflow-hidden"
             >
               {/* Drawer header */}
               <div className="flex items-center justify-between h-[64px] px-4 border-b border-white/[0.08] shrink-0">

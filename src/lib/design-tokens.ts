@@ -3,58 +3,58 @@
 
 export const tokens = {
   colors: {
-    // Core neutrals — clean light surfaces (HubSpot-level whitespace)
+    // Surfaces — clean and airy
     bg: {
-      primary: '#F4F6F8',         // Main background — near-white
-      secondary: '#FFFFFF',        // Card surface — pure white
-      tertiary: '#EDF0F4',        // Muted panels / wells
-      elevated: '#E8ECF0',        // Hover / raised
-      hover: '#DEE3E9',           // Interactive hover
-      muted: '#CDD4DC',           // Muted backgrounds
+      primary: '#F7F8FA',
+      secondary: '#FFFFFF',
+      tertiary: '#F0F2F5',
+      elevated: '#E8EBF0',
+      hover: '#E1E5EB',
+      muted: '#D0D5DD',
     },
-    // Text hierarchy
+    // Text — high contrast hierarchy
     text: {
-      primary: '#0F1419',         // Primary text — near black
-      secondary: '#2D3748',       // Secondary text — dark slate
-      tertiary: '#4A5568',        // Tertiary / labels
-      muted: '#6B7B8D',          // Muted — still readable
-      inverse: '#F7F9FB',        // On dark surfaces
+      primary: '#111827',
+      secondary: '#374151',
+      tertiary: '#6B7280',
+      muted: '#9CA3AF',
+      inverse: '#FFFFFF',
     },
-    // Accent — cyan/electric blue from logo
+    // Accent — blue (professional, trustworthy)
     accent: {
-      primary: '#4FD1E5',        // Primary accent
-      hover: '#38BCD0',          // Accent hover
-      muted: 'rgba(79, 209, 229, 0.10)', // Accent background
-      text: '#2DA8BC',           // Accent as text
+      primary: '#3B82F6',
+      hover: '#2563EB',
+      muted: 'rgba(59, 130, 246, 0.08)',
+      text: '#2563EB',
     },
-    // Status colors
+    // Status
     status: {
-      new: '#5B8DEF',
-      reviewed: '#8B7CF6',
-      contacted: '#4FD1E5',
-      quoted: '#F0A030',
-      won: '#34C77B',
-      lost: '#E8636C',
+      new: '#3B82F6',
+      reviewed: '#8B5CF6',
+      contacted: '#06B6D4',
+      quoted: '#F59E0B',
+      won: '#10B981',
+      lost: '#EF4444',
     },
     // Priority
     priority: {
-      critical: '#DC3545',
-      high: '#E8963C',
-      medium: '#5B8DEF',
-      low: '#A0ADB8',
+      critical: '#DC2626',
+      high: '#F59E0B',
+      medium: '#3B82F6',
+      low: '#9CA3AF',
     },
     // Borders
     border: {
-      subtle: '#EEF1F5',
-      default: '#DDE3EA',
-      strong: '#CBD3DC',
-      accent: 'rgba(79, 209, 229, 0.30)',
+      subtle: '#F0F2F5',
+      default: '#E5E7EB',
+      strong: '#D1D5DB',
+      accent: 'rgba(59, 130, 246, 0.25)',
     },
     // Semantic
-    success: '#34C77B',
-    warning: '#E8963C',
-    error: '#E8636C',
-    info: '#5B8DEF',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6',
   },
 
   spacing: {
@@ -161,12 +161,12 @@ export const motionVariants = {
 
 // Lead pipeline stage config
 export const pipelineStages = [
-  { id: 'new', label: 'New', color: tokens.colors.status.new },
-  { id: 'reviewed', label: 'Reviewed', color: tokens.colors.status.reviewed },
-  { id: 'contacted', label: 'Contacted', color: tokens.colors.status.contacted },
-  { id: 'quote_sent', label: 'Quote Sent', color: tokens.colors.status.quoted },
-  { id: 'won', label: 'Won', color: tokens.colors.status.won },
-  { id: 'lost', label: 'Lost', color: tokens.colors.status.lost },
+  { id: 'new', label: 'New', color: '#3B82F6' },
+  { id: 'reviewed', label: 'Reviewed', color: '#8B5CF6' },
+  { id: 'contacted', label: 'Contacted', color: '#06B6D4' },
+  { id: 'quote_sent', label: 'Quote Sent', color: '#F59E0B' },
+  { id: 'won', label: 'Won', color: '#10B981' },
+  { id: 'lost', label: 'Lost', color: '#EF4444' },
 ] as const;
 
 export type PipelineStage = typeof pipelineStages[number]['id'];
