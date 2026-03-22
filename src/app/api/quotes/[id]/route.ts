@@ -51,6 +51,13 @@ export async function PUT(
       body.total = subtotal + body.tax_amount;
     }
 
+    // Fetch current quote to check for status transition
+    const { data: currentQuote } = await supabase
+      .from('quotes')
+      .select('status, lead_id, organization_id, total')
+      .eq('id', id)
+      .single();
+
     const { data: quote, error } = await supabase
       .from('quotes')
       .update(body)
@@ -61,6 +68,104 @@ export async function PUT(
     if (error) {
       console.error('Quote update error:', error);
       return NextResponse.json({ error: 'Failed to update quote' }, { status: 500 });
+    }
+
+    // ── Auto-win lead when quote is accepted ────────────────
+    if (body.status === 'accepted' && currentQuote?.status !== 'accepted' && currentQuote?.lead_id) {
+      (async () => {
+        try {
+          // Check lead isn't already won
+          const { data: lead } = await supabase
+            .from('leads')
+            .select('status')
+            .eq('id', currentQuote.lead_id)
+            .single();
+
+          if (lead && lead.status !== 'won') {
+            const wonValue = quote.total || currentQuote.total || 0;
+
+            // Mark lead as won
+            await supabase.from('leads').update({
+              status: 'won',
+              won_date: new Date().toISOString(),
+              won_value: wonValue,
+            }).eq('id', currentQuote.lead_id);
+
+            // Log status change
+            await supabase.from('lead_status_changes').insert({
+              lead_id: currentQuote.lead_id,
+              from_status: lead.status,
+              to_status: 'won',
+            });
+
+            await supabase.from('lead_notes').insert({
+              lead_id: currentQuote.lead_id,
+              content: `Automatically marked as won — quote ${quote.quote_number || id} accepted ($${Number(wonValue).toLocaleString()})`,
+              is_system: true,
+            });
+
+            // Auto-create client (same logic as lead [id] route)
+            const { data: fullLead } = await supabase
+              .from('leads')
+              .select('*')
+              .eq('id', currentQuote.lead_id)
+              .single();
+
+            if (fullLead && !fullLead.client_id) {
+              let existingClientId: string | null = null;
+              if (fullLead.email) {
+                const { data: existing } = await supabase
+                  .from('clients')
+                  .select('id')
+                  .eq('organization_id', currentQuote.organization_id)
+                  .eq('email', fullLead.email)
+                  .limit(1)
+                  .maybeSingle();
+                if (existing) existingClientId = existing.id;
+              }
+
+              if (existingClientId) {
+                await supabase.from('leads').update({ client_id: existingClientId }).eq('id', currentQuote.lead_id);
+              } else {
+                const { data: newClient } = await supabase
+                  .from('clients')
+                  .insert({
+                    organization_id: currentQuote.organization_id,
+                    first_name: fullLead.first_name || '',
+                    last_name: fullLead.last_name || '',
+                    email: fullLead.email || null,
+                    phone: fullLead.phone || null,
+                    company_name: fullLead.company || null,
+                    address: fullLead.location || null,
+                    postcode: fullLead.postcode || null,
+                    source: 'quote_accepted',
+                    status: 'active',
+                    type: fullLead.company ? 'company' : 'individual',
+                    primary_lead_id: currentQuote.lead_id,
+                    lifetime_value: wonValue,
+                    total_invoiced: wonValue,
+                    outstanding_balance: wonValue,
+                  })
+                  .select('id')
+                  .single();
+
+                if (newClient) {
+                  await supabase.from('leads').update({ client_id: newClient.id }).eq('id', currentQuote.lead_id);
+                  await supabase.from('client_activities').insert({
+                    client_id: newClient.id,
+                    organization_id: currentQuote.organization_id,
+                    type: 'quote',
+                    title: 'Quote accepted — client created',
+                    description: `Quote ${quote.quote_number || ''} for $${Number(wonValue).toLocaleString()} was accepted. Client record automatically created.`,
+                  });
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Auto-win from quote error:', err);
+        }
+      })();
     }
 
     return NextResponse.json(quote);

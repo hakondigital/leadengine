@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { detectSignal, autoConvertLead, autoRejectLead } from '@/lib/auto-convert';
 
 // POST /api/call-tracking/inbound-sms
 // Twilio SMS webhook — receives inbound SMS messages sent to tracked numbers.
@@ -50,6 +51,16 @@ export async function POST(request: NextRequest) {
         is_read: false,
         metadata: { twilio_sid: messageSid, to_number: to },
       });
+
+      // AI buying signal detection — auto-convert or auto-reject
+      if (lead?.id) {
+        const signal = detectSignal(body);
+        if (signal === 'buying') {
+          autoConvertLead(lead.id).catch(console.error);
+        } else if (signal === 'rejection') {
+          autoRejectLead(lead.id).catch(console.error);
+        }
+      }
     }
 
     // Return empty TwiML — no auto-reply
