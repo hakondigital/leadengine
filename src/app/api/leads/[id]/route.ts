@@ -23,6 +23,68 @@ export async function GET(
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
+    // Auto-mark as "reviewed" when opened for the first time
+    if (lead.status === 'new') {
+      await supabase.from('leads').update({ status: 'reviewed' }).eq('id', id);
+      await supabase.from('lead_status_changes').insert({
+        lead_id: id,
+        from_status: 'new',
+        to_status: 'reviewed',
+      });
+      await supabase.from('lead_notes').insert({
+        lead_id: id,
+        content: 'Lead opened and marked as reviewed.',
+        is_system: true,
+      });
+      lead.status = 'reviewed';
+
+      // Auto-create client record (fire and forget)
+      if (!lead.client_id) {
+        (async () => {
+          try {
+            let existingClientId: string | null = null;
+            if (lead.email) {
+              const { data: existing } = await supabase
+                .from('clients')
+                .select('id')
+                .eq('organization_id', lead.organization_id)
+                .eq('email', lead.email)
+                .limit(1)
+                .maybeSingle();
+              if (existing) existingClientId = existing.id;
+            }
+            if (existingClientId) {
+              await supabase.from('leads').update({ client_id: existingClientId }).eq('id', id);
+            } else {
+              const { data: newClient } = await supabase
+                .from('clients')
+                .insert({
+                  organization_id: lead.organization_id,
+                  first_name: lead.first_name || '',
+                  last_name: lead.last_name || '',
+                  email: lead.email || null,
+                  phone: lead.phone || null,
+                  company_name: lead.company || null,
+                  address: lead.location || null,
+                  postcode: lead.postcode || null,
+                  source: lead.source || 'lead',
+                  status: 'active',
+                  type: lead.company ? 'company' : 'individual',
+                  primary_lead_id: id,
+                })
+                .select('id')
+                .single();
+              if (newClient) {
+                await supabase.from('leads').update({ client_id: newClient.id }).eq('id', id);
+              }
+            }
+          } catch (err) {
+            console.error('Auto-create client on view error:', err);
+          }
+        })();
+      }
+    }
+
     // Fetch related data
     const [notesResult, statusChangesResult, aiResult, tagsResult, remindersResult] = await Promise.all([
       supabase
