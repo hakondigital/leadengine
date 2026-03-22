@@ -172,6 +172,16 @@ export interface Database {
         Insert: Omit<ImportLog, 'id' | 'created_at'>;
         Update: Partial<Omit<ImportLog, 'id'>>;
       };
+      clients: {
+        Row: Client;
+        Insert: Omit<Client, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Client, 'id'>>;
+      };
+      client_activities: {
+        Row: ClientActivity;
+        Insert: Omit<ClientActivity, 'id' | 'created_at'>;
+        Update: Partial<Omit<ClientActivity, 'id'>>;
+      };
     };
   };
 }
@@ -890,6 +900,62 @@ export interface ImportLog {
   status: ImportStatus;
   created_at: string;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 16. CLIENT DATABASE
+// ═══════════════════════════════════════════════════════════════
+export type ClientStatus = 'active' | 'inactive' | 'vip' | 'archived';
+export type ClientType = 'individual' | 'company';
+
+export interface Client {
+  id: string;
+  organization_id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  company_name: string | null;
+  company_abn: string | null;
+  job_title: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  postcode: string | null;
+  country: string;
+  status: ClientStatus;
+  type: ClientType;
+  tags: string[];
+  source: string | null;
+  total_invoiced: number;
+  total_paid: number;
+  outstanding_balance: number;
+  lifetime_value: number;
+  notes: string | null;
+  custom_fields: Json;
+  avatar_url: string | null;
+  primary_lead_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ClientActivityType = 'note' | 'email' | 'sms' | 'call' | 'quote' | 'job' | 'payment' | 'status_change';
+
+export interface ClientActivity {
+  id: string;
+  client_id: string;
+  organization_id: string;
+  type: ClientActivityType;
+  title: string;
+  description: string | null;
+  metadata: Json;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type ClientWithRelations = Client & {
+  leads?: Lead[];
+  activities?: ClientActivity[];
+};
 
 // ═══════════════════════════════════════════════════════════════
 // Utility types for the frontend

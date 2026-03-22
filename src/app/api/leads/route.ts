@@ -247,6 +247,68 @@ export async function POST(request: NextRequest) {
       to_status: 'new',
     });
 
+    // ── Auto-link to existing client ──────────────────────────
+    // Check if email domain or company name matches an existing client.
+    // If found, link this lead to the client record.
+    (async () => {
+      try {
+        let clientId: string | null = null;
+
+        // Match by email
+        if (email) {
+          const { data: emailMatch } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('organization_id', organization_id)
+            .eq('email', email)
+            .limit(1)
+            .maybeSingle();
+          if (emailMatch) clientId = emailMatch.id;
+        }
+
+        // Match by company name
+        if (!clientId && company) {
+          const { data: companyMatch } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('organization_id', organization_id)
+            .ilike('company_name', company)
+            .limit(1)
+            .maybeSingle();
+          if (companyMatch) clientId = companyMatch.id;
+        }
+
+        // Match by email domain (e.g. two leads from @smithbuilders.com.au)
+        if (!clientId && email && !email.endsWith('@gmail.com') && !email.endsWith('@outlook.com') && !email.endsWith('@hotmail.com') && !email.endsWith('@yahoo.com') && !email.endsWith('@icloud.com')) {
+          const domain = email.split('@')[1];
+          if (domain) {
+            const { data: domainMatch } = await supabase
+              .from('clients')
+              .select('id')
+              .eq('organization_id', organization_id)
+              .ilike('email', `%@${domain}`)
+              .limit(1)
+              .maybeSingle();
+            if (domainMatch) clientId = domainMatch.id;
+          }
+        }
+
+        if (clientId) {
+          await supabase.from('leads').update({ client_id: clientId }).eq('id', lead.id);
+          // Log activity on the client
+          await supabase.from('client_activities').insert({
+            client_id: clientId,
+            organization_id,
+            type: 'note',
+            title: 'New lead linked',
+            description: `${first_name} ${last_name} (${email}) was automatically linked to this client.`,
+          });
+        }
+      } catch (err) {
+        console.error('Client auto-link error:', err);
+      }
+    })();
+
     // Fire async tasks (don't block the response)
 
     // 1. AI qualification
