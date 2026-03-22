@@ -1111,6 +1111,9 @@ function CommunicationsTab({
   const [composeSubject, setComposeSubject] = useState('');
   const [composeBody, setComposeBody] = useState('');
   const [composeChannel, setComposeChannel] = useState<'email' | 'sms'>('email');
+  const [draftReply, setDraftReply] = useState<string | null>(null);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [dismissedDraftForId, setDismissedDraftForId] = useState<string | null>(null);
   const { success: showSuccess } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1144,6 +1147,48 @@ function CommunicationsTab({
     }, 100);
     return () => clearTimeout(timer);
   }, [communications.length]);
+
+  // Auto-draft reply when last message is inbound
+  useEffect(() => {
+    if (sortedMessages.length === 0) return;
+    const lastMsg = sortedMessages[sortedMessages.length - 1];
+    const direction = (lastMsg.data?.direction as string) || 'outbound';
+    if (direction !== 'inbound') {
+      setDraftReply(null);
+      return;
+    }
+    // Don't re-fetch if dismissed for this specific message
+    if (dismissedDraftForId === lastMsg.id) return;
+
+    const body = (lastMsg.data?.body as string) || (lastMsg.data?.text as string) || lastMsg.summary || '';
+    if (!body.trim()) return;
+
+    let cancelled = false;
+    setDraftLoading(true);
+    setDraftReply(null);
+
+    fetch('/api/ai/draft-reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message_body: body,
+        client_name: client.first_name || client.company_name || 'Customer',
+        org_name: orgName,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && data.draft) {
+          setDraftReply(data.draft);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setDraftLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [sortedMessages, dismissedDraftForId, client.first_name, client.company_name, orgName]);
 
   function getDateLabel(iso: string): string {
     const date = new Date(iso);
@@ -1291,6 +1336,54 @@ function CommunicationsTab({
                 </div>
               </div>
             ))}
+            {/* AI suggested reply */}
+            {(draftReply || draftLoading) && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="border border-dashed border-[#6366F1]/30 bg-[#6366F1]/[0.03] rounded-xl p-4 mt-4"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[13px]">&#10024;</span>
+                  <span className="text-[13px] font-semibold text-[#6366F1]">Suggested reply</span>
+                </div>
+                {draftLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <RefreshCw className="w-3.5 h-3.5 text-[#6366F1] animate-spin" />
+                    <span className="text-[12px] text-[#A3A3A3]">Drafting reply…</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[13px] text-[#404040] leading-relaxed mb-3 whitespace-pre-wrap">
+                      &ldquo;{draftReply}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setComposeBody(draftReply || '');
+                          setDraftReply(null);
+                        }}
+                        className="text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#6366F1] text-white hover:bg-[#4F46E5] transition-colors"
+                      >
+                        Use this
+                      </button>
+                      <button
+                        onClick={() => {
+                          const lastMsg = sortedMessages[sortedMessages.length - 1];
+                          setDismissedDraftForId(lastMsg?.id || null);
+                          setDraftReply(null);
+                        }}
+                        className="text-[12px] font-medium px-3 py-1.5 rounded-lg text-[#737373] hover:bg-[#F5F5F5] transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         )}

@@ -26,6 +26,80 @@ const priorityConfig: Record<LeadPriority, { label: string; variant: 'error' | '
   low: { label: 'Low', variant: 'default' },
 };
 
+function ScorePopover({ lead }: { lead: Lead }) {
+  const [open, setOpen] = useState(false);
+  const scoreColor =
+    lead.ai_score! >= 70 ? '#22C55E' : lead.ai_score! >= 40 ? '#F59E0B' : '#EF4444';
+  const scoreLabel =
+    lead.ai_score! >= 70 ? 'High' : lead.ai_score! >= 40 ? 'Medium' : 'Low';
+
+  return (
+    <div
+      className="relative flex items-center gap-1.5"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+    >
+      <div className="w-8 h-1 rounded-full bg-[#F5F5F5] overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${lead.ai_score}%`,
+            backgroundColor: scoreColor,
+          }}
+        />
+      </div>
+      <span className="text-[11px] text-[#A3A3A3] tabular-nums">{lead.ai_score}</span>
+
+      <AnimatePresence>
+        {open && (lead.ai_summary || lead.ai_recommended_action) && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-white rounded-xl shadow-lg border border-[rgba(0,0,0,0.08)] p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-r border-b border-[rgba(0,0,0,0.08)] rotate-45 -mt-1.25" />
+
+            {/* Score badge */}
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${scoreColor}20` }}
+              >
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: scoreColor }} />
+              </div>
+              <span className="text-[12px] font-semibold text-[#0A0A0A]">
+                {scoreLabel} Quality — {lead.ai_score}/100
+              </span>
+            </div>
+
+            {/* Summary */}
+            {lead.ai_summary && (
+              <p className="text-[12px] text-[#404040] leading-relaxed mb-2">{lead.ai_summary}</p>
+            )}
+
+            {/* Recommended action */}
+            {lead.ai_recommended_action && (
+              <div className="bg-[#F5F5F5] rounded-lg px-2.5 py-2">
+                <p className="text-[11px] font-medium text-[#737373] uppercase tracking-wider mb-0.5">
+                  Recommended action
+                </p>
+                <p className="text-[12px] text-[#0A0A0A] leading-relaxed">
+                  {lead.ai_recommended_action}
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -160,20 +234,9 @@ export function LeadTable({ leads, onLeadClick, isLoading }: LeadTableProps) {
                     </div>
 
                     {/* Score */}
-                    <div className="flex items-center gap-1.5">
+                    <div>
                       {lead.ai_score !== null && lead.ai_score !== undefined ? (
-                        <>
-                          <div className="w-8 h-1 rounded-full bg-[#F5F5F5] overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${lead.ai_score}%`,
-                                backgroundColor: lead.ai_score >= 70 ? '#22C55E' : lead.ai_score >= 40 ? '#F59E0B' : '#EF4444',
-                              }}
-                            />
-                          </div>
-                          <span className="text-[11px] text-[#A3A3A3] tabular-nums">{lead.ai_score}</span>
-                        </>
+                        <ScorePopover lead={lead} />
                       ) : (
                         <span className="text-[11px] text-[#D4D4D4]">—</span>
                       )}
